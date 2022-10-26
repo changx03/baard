@@ -23,14 +23,25 @@ python ./examples/check_gpu.py
 
 ## Train clasifiers
 
+The Python script for training the classifier takes command line arguments and passes them to `PyTorch-Lightning`'s `Trainer` class.
+A full list of parameters can be found [here](https://pytorch-lightning.readthedocs.io/en/latest/common/trainer.html#trainer-flags).
+
 To train CNN for MNIST:
 
 ```bash
+# To test the environment, run:
+python ./classifiers/mnist_cnn.py --fast_dev_run=true
+
+# To train the model, run:
 # By default this code check if GPU is available.
 # Default seed is 1234, use `--seed=1234` to change it.
 python ./classifiers/mnist_cnn.py
 
-# To test the environment, run:
-python ./classifiers/mnist_cnn.py --fast_dev_run=true
+```
 
+To train ResNet18 for CIFAR10:
+
+```bash
+# This Python script takes the same arguments as `mnist_cnn.py`
+python ./classifiers/cifar10_resnet18.py
 ```

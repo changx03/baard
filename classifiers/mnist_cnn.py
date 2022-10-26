@@ -117,13 +117,16 @@ class MNIST_CNN(pl.LightningModule):
 
 if __name__ == '__main__':
     """Examples:
-    $ python ./classifiers/mnist_cnn.py
+    python ./classifiers/mnist_cnn.py
     """
 
     parser = ArgumentParser()
     parser = pl.Trainer.add_argparse_args(parser)
     parser.add_argument('--seed', type=int, default=1234)
     args = parser.parse_args()
+
+    if not args.max_epochs:
+        args.max_epochs = MAX_EPOCHS
 
     if not args.default_root_dir:
         args.logger = TensorBoardLogger(save_dir=PATH_DEFAULT_LOGS, name='mnist_cnn')
@@ -134,7 +137,6 @@ if __name__ == '__main__':
     print('NUM_WORKERS:', NUM_WORKERS)
     print('BATCH_SIZE:', BATCH_SIZE)
     print('MAX_EPOCHS:', args.max_epochs)
-    print('GPUS:', args.gpus)
     print('SEED:', args.seed)
 
     pl.seed_everything(args.seed)
@@ -146,7 +148,7 @@ if __name__ == '__main__':
         precision=16,
         callbacks=[
             LearningRateMonitor(logging_interval='step'),
-            EarlyStopping(monitor='train_loss', mode='min', patience=5)
+            # EarlyStopping(monitor='val_loss', mode='min', patience=5)
         ],
     )
 
@@ -157,7 +159,10 @@ if __name__ == '__main__':
 
     # To train with only 10% of data
     # trainer = pl.Trainer(
-    #     limit_train_batches=0.1, max_epochs=5, default_root_dir=PATH_DEFAULT_LOGS,
+    #     accelerator='auto',
+    #     limit_train_batches=0.1,
+    #     max_epochs=5,
+    #     default_root_dir=PATH_DEFAULT_LOGS, # Save to `./logs/lightning_logs`
     #     callbacks=[
     #         LearningRateMonitor(logging_interval='step'),
     #         EarlyStopping(monitor='train_loss', mode='min', patience=5)

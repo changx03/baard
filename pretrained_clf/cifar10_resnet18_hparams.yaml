@@ -1,0 +1,4 @@
+batch_size: 256
+lr: 0.05
+num_workers: 22
+path_data: /home/lukec/workspace/baard_v4/data
