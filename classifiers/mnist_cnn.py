@@ -81,6 +81,11 @@ class MNIST_CNN(pl.LightningModule):
     def test_step(self, batch, batch_idx):
         self.evaluate(batch, 'test')
 
+    def predict_step(self, batch, batch_idx, dataloader_idx=0):
+        outputs = self(batch[0])
+        probs = F.softmax(outputs, dim=1)
+        return probs
+
     def configure_optimizers(self):
         optimizer = torch.optim.SGD(
             self.parameters(),

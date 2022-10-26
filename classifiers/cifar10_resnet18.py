@@ -84,6 +84,11 @@ class CIFAR10_ResNet18(pl.LightningModule):
     def test_step(self, batch, batch_idx):
         self.evaluate(batch, 'test')
 
+    def predict_step(self, batch, batch_idx, dataloader_idx=0):
+        outputs = self(batch[0])
+        probs = F.softmax(outputs, dim=1)
+        return probs
+
     def configure_optimizers(self):
         optimizer = torch.optim.SGD(
             self.parameters(),
@@ -164,9 +169,9 @@ if __name__ == '__main__':
 
     # To train with only 10% of data
     # trainer = pl.Trainer(
-    #     accelerator='auto', 
-    #     limit_train_batches=0.1, 
-    #     max_epochs=5, 
+    #     accelerator='auto',
+    #     limit_train_batches=0.1,
+    #     max_epochs=5,
     #     default_root_dir=PATH_DEFAULT_LOGS, # Save to `./logs/lightning_logs`
     #     callbacks=[
     #         LearningRateMonitor(logging_interval='step'),
