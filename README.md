@@ -26,7 +26,7 @@ python ./examples/check_gpu.py
 The Python script for training the classifier takes command line arguments and passes them to `PyTorch-Lightning`'s `Trainer` class.
 A full list of parameters can be found [here](https://pytorch-lightning.readthedocs.io/en/latest/common/trainer.html#trainer-flags).
 
-To train CNN for MNIST:
+To train `CNN` for `MNIST`:
 
 ```bash
 # To test the environment, run:
@@ -39,9 +39,15 @@ python ./classifiers/mnist_cnn.py
 
 ```
 
-To train ResNet18 for CIFAR10:
+To train `ResNet-18` for `CIFAR-10`:
 
 ```bash
 # This Python script takes the same arguments as `mnist_cnn.py`
 python ./classifiers/cifar10_resnet18.py
+```
+
+To check log files from `TensorBoard`, run:
+
+```bash
+tensorboard --logdir logs
 ```
