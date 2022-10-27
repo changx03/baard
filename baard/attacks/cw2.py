@@ -10,7 +10,6 @@ Carlini & Wagner L2 attack
 import torch
 from torch import Tensor
 from torch.nn import Module
-from tqdm import tqdm
 
 INF = float('inf')
 
@@ -139,7 +138,7 @@ def carlini_wagner_l2(
     optimizer = torch.optim.Adam([modifier], lr=lr)
 
     # Outer loop performing binary search on const
-    for outer_step in tqdm(range(binary_search_steps)):
+    for outer_step in range(binary_search_steps):
         # Initialize some values needed for the inner loop
         bestl2 = [INF] * len(x)
         bestscore = [-1.0] * len(x)
