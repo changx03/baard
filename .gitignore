@@ -167,3 +167,6 @@ logs/
 
 # Files that start with `playgounrd_` are only used for preliminary testing.
 playground_*
+
+# Ignore results
+results/

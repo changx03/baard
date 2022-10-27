@@ -41,8 +41,13 @@ def dataloader2tensor(dataloader: DataLoader) -> Union[tuple[Tensor, Tensor], Te
         return x
 
 
-def get_correct_examples(model: LightningModule, dataloader: DataLoader) -> DataLoader:
-    """Removes incorrect predictions from the dataloader."""
+def get_correct_examples(model: LightningModule,
+                         dataloader: DataLoader,
+                         return_loader=True
+                         ) -> Union[DataLoader, TensorDataset]:
+    """Removes incorrect predictions from the dataloader. If `return_loader` is set
+    to False, returns a TensorDataset.
+    """
     if check_dataloader_shuffling(dataloader):
         warnings.warn('Dataloader should not have `shuffle=True`!')
 
@@ -54,9 +59,12 @@ def get_correct_examples(model: LightningModule, dataloader: DataLoader) -> Data
     corrects = preds == y_true
     indices = torch.squeeze(torch.nonzero(corrects))
     correct_dataset = TensorDataset(x[indices], y_true[indices])
-    batch_size = dataloader.batch_size
-    num_workers = dataloader.num_workers
-    return DataLoader(correct_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
+    if return_loader:
+        batch_size = dataloader.batch_size
+        num_workers = dataloader.num_workers
+        return DataLoader(correct_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
+    else:
+        return correct_dataset
 
 
 def check_dataloader_shuffling(dataloader: DataLoader) -> bool:
