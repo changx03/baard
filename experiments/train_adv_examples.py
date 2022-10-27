@@ -19,7 +19,7 @@ print(sys.path)
 PATH_ROOT = os.getcwd()
 PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf')
 DATASETS = ['MNIST', 'CIFAR10']
-ATTACKS = ['FGSM', 'PGD', 'CW2']
+ATTACKS = ['FGSM', 'PGD', 'CW2', 'APGD']
 ADV_BATCH_SIZE = 32  # Training adversarial examples in small batches.
 
 
@@ -48,18 +48,16 @@ def get_model(data: str) -> LightningModule:
 
 
 def get_attack(attack_name: str, adv_params: dict):
+    from baard.attacks.apgd import auto_projected_gradient_descent
     from baard.attacks.cw2 import carlini_wagner_l2
     from baard.attacks.fast_gradient_method import fast_gradient_method
-    from baard.attacks.projected_gradient_descent import \
-        projected_gradient_descent
+    from baard.attacks.projected_gradient_descent import projected_gradient_descent
 
     adv_params = dict(adv_params)  # Create a copy
     attack = None
     if attack_name == ATTACKS[0]:
         attack = fast_gradient_method
     elif attack_name == ATTACKS[1]:
-        # adv_params['eps_iter'] = e / adv_params['nb_iter']
-        adv_params['eps_iter'] = 0.03
         attack = projected_gradient_descent
     elif attack_name == ATTACKS[2]:
         attack = carlini_wagner_l2
@@ -71,6 +69,8 @@ def get_attack(attack_name: str, adv_params: dict):
             del adv_params['eps_iter']
         if 'nb_iter' in adv_params.keys():
             del adv_params['nb_iter']
+    elif attack_name == ATTACKS[3]:
+        attack = auto_projected_gradient_descent
     else:
         raise NotImplementedError()
     return attack, adv_params
@@ -185,24 +185,31 @@ if __name__ == '__main__':
     """Examples:
     # For quick develop only. Set `n_att` to a larger value when running the experiment!
     # Data: MNIST, Attack: FGSM
-    python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":"inf", "clip_min":0, "clip_max":1}' --eps="[0.03,0.06,0.09,0.12,0.16,0.19,0.22,0.25,0.28,0.31]"
-    python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":2, "clip_min":0, "clip_max":1}' --eps="[1, 2, 4, 8, 16, 32, 48, 64, 80, 96, 112, 128]"
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":"inf"}' --eps="[0.03,0.06,0.09,0.12,0.16,0.19,0.22,0.25,0.28,0.31]"
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":2}' --eps="[1, 2, 4, 8, 16, 32, 48, 64, 80, 96, 112, 128]"
 
     # Data: MNIST, Attack: PGD
-    python ./experiments/train_adv_examples.py -d=MNIST --attack=PGD --params='{"norm":"inf", "clip_min":0, "clip_max":1, "nb_iter": 100}' --eps="[0.03,0.06,0.09,0.12,0.16,0.19,0.22,0.25,0.28,0.31]"
-    python ./experiments/train_adv_examples.py -d=MNIST --attack=PGD --params='{"norm":2, "clip_min":0, "clip_max":1, "nb_iter": 100, "eps_iter": 0.5}' --eps="[1, 2, 4, 8, 16, 32, 48, 64]"
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=PGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.06,0.09,0.12,0.16,0.19,0.22,0.25,0.28,0.31]"
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=PGD --params='{"norm":2, "eps_iter":0.1}' --eps="[1, 2, 4, 8, 16, 32, 48, 64]"
+
+    # Data: MNIST, Attack: APGD
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=APGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.06,0.09,0.12,0.16,0.19,0.22,0.25,0.28,0.31]"
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=APGD --params='{"norm":"inf", "eps_iter":0.1}' --eps="[1, 2, 4, 8, 16, 32, 48, 64]"
 
     # Data: MNIST, Attack: CW2
     python ./experiments/train_adv_examples.py -d=MNIST --attack=CW2 --params='{"n_classes": 10, "max_iterations": 200}' --eps="[0, 1, 10]"
 
-
     # Data: CIFAR10, Attack: FGSM
-    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=FGSM --params='{"norm":"inf", "clip_min":0, "clip_max":1}' --eps="[0.03,0.06,0.09,0.12,0.16,0.19,0.22,0.25,0.28,0.31]"
-    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=FGSM --params='{"norm":2, "clip_min":0, "clip_max":1}' --eps="[1, 2, 4, 8, 16, 32, 48, 64]"
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=FGSM --params='{"norm":"inf"}' --eps="[0.03,0.06,0.09,0.12,0.16,0.19,0.22,0.25,0.28,0.31]"
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=FGSM --params='{"norm":2}' --eps="[1, 2, 4, 8, 16, 32, 48, 64]"
 
     # Data: CIFAR10, Attack: PGD
-    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=PGD --params='{"norm":"inf", "clip_min":0, "clip_max":1, "nb_iter": 100}' --eps="[0.03,0.06,0.09,0.12,0.16]"
-    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=PGD --params='{"norm":2, "clip_min":0, "clip_max":1, "nb_iter": 100, "eps_iter": 0.5}' --eps="[0.5, 1, 2, 4, 8, 16, 32]"
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=PGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.06,0.09,0.12,0.16]"
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=PGD --params='{"norm":2, "eps_iter":0.1}' --eps="[0.5, 1, 2, 4, 8, 16, 32]"
+
+    # Data: CIFAR10, Attack: APGD
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=APGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.06,0.09,0.12,0.16]"
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=APGD --params='{"norm":2, "eps_iter":0.1}' --eps="[0.5, 1, 2, 4, 8, 16, 32]"
 
     # Data: CIFAR10, Attack: CW2
     python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=CW2 --params='{"n_classes": 10, "max_iterations": 200}' --eps="[0, 1, 10]"
@@ -217,8 +224,8 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--attack', default=ATTACKS[0], choices=ATTACKS)
     parser.add_argument('--eps', type=json.loads, default='[0.06]',
                         help='A list of epsilons as a JSON string. e.g., "[0.06, 0.13, 0.25]".')
-    parser.add_argument('--params', type=json.loads, default='{"norm":"inf", "clip_min":0, "clip_max":1}',
-                        help='Parameters for the adversarial attack as a JSON string. e.g., \'{"norm":"inf", "clip_min":0, "clip_max":1}\'.')
+    parser.add_argument('--params', type=json.loads, default='{"norm":"inf"}',
+                        help='Parameters for the adversarial attack as a JSON string. e.g., \'{"norm":"inf"}\'.')
     args = parser.parse_args()
     seed = args.seed
     data = args.data

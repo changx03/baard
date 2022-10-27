@@ -51,3 +51,24 @@ To check log files from `TensorBoard`, run:
 ```bash
 tensorboard --logdir logs
 ```
+
+## Generate adversarial examples
+
+### Basic usage
+
+Generating 100 adversarial examples on `MNIST` using FGSM on L2 norm with Epsilon=0.06
+
+```bash
+python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":"inf", "clip_min":0, "clip_max":1}' --eps="[0.06]"
+```
+
+### Available options  
+
+- '-s', '--seed': Seed value
+- '-d', '--data': Dataset. Either `MNIST` or `CIFAR10`. (TODO: Add SVHN, and tabular datasets.)
+- '--n_att': Number of adversarial examples want to generate. Default is `100`.
+- '--n_val': Number of validation examples. The validation set comes from the correctly classified test set.
+This set will be used by the defense. In the experiment, use `1000`. `n_att + n_val` must be smaller than test set. Default is `0`.
+- '-a', '--attack': Adversarial attack. One of 'FGSM', 'PGD', 'APGD', 'CW2'.
+- '--eps': A list of epsilons as a JSON string. e.g., --eps="[0.06, 0.13, 0.25]". In C&W attack, this controls the confidence parameter c. Default is "[0.06]".
+- '--params': Parameters for the adversarial attack as a JSON string. e.g., '{"norm":"inf", "clip_min":0, "clip_max":1}'. This JSON string will be converted into a dictionary and pass directly to the attack. Check `./baard/attacks` to see the specific parameters for each attack.

@@ -22,8 +22,8 @@ def fast_gradient_method(
     x: Tensor,
     eps: float,
     norm: Union[float, int] = np.inf,
-    clip_min: float = None,
-    clip_max: float = None,
+    clip_min: float = 0,
+    clip_max: float = 1,
     y: Tensor = None,
     targeted: bool = False,
     sanity_checks: bool = False,
@@ -36,7 +36,9 @@ def fast_gradient_method(
     :param norm: Order of the norm (mimics NumPy). Possible values: np.inf, 1 or 2.
               Default is np.inf.
     :param clip_min: (optional) float. Minimum float value for adversarial example components.
+              Can be None. Default is 0.
     :param clip_max: (optional) float. Maximum float value for adversarial example components.
+              Can be None. Default is 1.
     :param y: (optional) Tensor with true labels. If targeted is true, then provide the
               target label. Otherwise, only provide this parameter if you'd like to use true
               labels when crafting adversarial samples. Otherwise, model predictions are used

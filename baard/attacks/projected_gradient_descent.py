@@ -15,10 +15,10 @@ def projected_gradient_descent(
     x: Tensor,
     eps: float,
     eps_iter: float,
-    nb_iter: int,
+    nb_iter: int = 100,
     norm: Union[float, int] = np.inf,
-    clip_min: float = None,
-    clip_max: float = None,
+    clip_min: float = 0,
+    clip_max: float = 1,
     y: Tensor = None,
     targeted: bool = False,
     rand_init: bool = True,
@@ -35,11 +35,13 @@ def projected_gradient_descent(
     :param x: input tensor.
     :param eps: epsilon (input variation parameter); see https://arxiv.org/abs/1412.6572.
     :param eps_iter: step size for each attack iteration
-    :param nb_iter: Number of attack iterations.
+    :param nb_iter: Number of attack iterations. Default is 100.
     :param norm: Order of the norm (mimics NumPy). Possible values: np.inf, 1 or 2.
               Default is np.inf.
     :param clip_min: (optional) float. Minimum float value for adversarial example components.
+              Can be None. Default is 0.
     :param clip_max: (optional) float. Maximum float value for adversarial example components.
+              Can be None. Default is 1.
     :param y: (optional) Tensor with true labels. If targeted is true, then provide the
               target label. Otherwise, only provide this parameter if you'd like to use true
               labels when crafting adversarial samples. Otherwise, model predictions are used
