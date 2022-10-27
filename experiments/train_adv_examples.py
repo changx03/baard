@@ -10,6 +10,7 @@ import torch
 from pytorch_lightning import LightningModule
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
+from tqdm import tqdm
 
 # Add project root to system path
 sys.path.append(os.getcwd())
@@ -17,8 +18,9 @@ print(sys.path)
 
 PATH_ROOT = os.getcwd()
 PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf')
-DATASETS = ['mnist', 'cifar10']
+DATASETS = ['MNIST', 'CIFAR10']
 ATTACKS = ['FGSM', 'PGD', 'CW2']
+ADV_BATCH_SIZE = 32  # Training adversarial examples in small batches.
 
 
 def check_file_exist(path_file):
@@ -97,11 +99,12 @@ def generate_adv_examples(
         torch.save(dataset, path_correct_val_dataset)
     else:
         dataset = torch.load(path_correct_val_dataset)
-        print(f'Load existing dataset...')
+        print(f'Load existing `CorrectValDataset.pt`...')
     dataloader = DataLoader(dataset, batch_size=val_loader.batch_size,
                             num_workers=val_loader.num_workers, shuffle=False)
     _dataset = get_correct_examples(model, dataloader, return_loader=False)
     print(f'{len(_dataset) / len(dataset) * 100}% out of {len(dataset)} examples are correctly classified.')
+    del _dataset
 
     # Step 2: Split the data
     if n_att + n_val > len(dataset):
@@ -109,23 +112,29 @@ def generate_adv_examples(
 
     x, y = dataloader2tensor(dataloader)
     path_adv_clean = os.path.join(path_outputs, f'AdvClean.n_{n_att}.pt')
-    if not os.path.isfile(path_correct_val_dataset):
+    if not os.path.isfile(path_adv_clean):
         # `train_test_split` can work directly with PyTorch Tensor
         X_leftover, X_adv_clean, y_leftover, y_adv_clean = train_test_split(x, y, test_size=n_att, random_state=seed)
         assert len(X_adv_clean) == n_att
         torch.save(TensorDataset(X_adv_clean, y_adv_clean), path_adv_clean)
 
-        # NOTE: Validation set can only create from initial split!
+        # Validation set can only create from initial split!
         if n_val > 0:
             _, X_val, _, y_val = train_test_split(X_leftover, y_leftover, test_size=n_val, random_state=seed)
             assert len(X_val) == n_val
             path_val_clean = os.path.join(path_outputs, f'ValClean.n_{n_val}.pt')
             torch.save(TensorDataset(X_val, y_val), path_val_clean)
     else:
+        print(f'Load existing `ValClean.n_{n_val}.pt`...')
         dataset_adv_clean = torch.load(path_adv_clean)
         dataloader_adv_clean = DataLoader(dataset_adv_clean, batch_size=val_loader.batch_size,
                                           num_workers=val_loader.num_workers, shuffle=False)
         X_adv_clean, y_adv_clean = dataloader2tensor(dataloader_adv_clean)
+
+        path_val_clean = os.path.join(path_outputs, f'ValClean.n_{n_val}.pt')
+        if n_val > 0 and not os.path.isfile(path_val_clean):
+            print(f'WARNING: Validation dataset is missing! Delete `AdvClean.n_{n_att}.pt` and run the code again!')
+    del x, y, dataset, dataloader
 
     # Step 3: Generate adversarial examples
     # Same trainer, the model has no change.
@@ -134,23 +143,31 @@ def generate_adv_examples(
 
     # NOTE: C&W is only on L2 for now.
     attack_norm = 2 if attack_name == ATTACKS[2] else str(adv_params['norm'])
-    path_log_results = os.path.join(path_outputs, f'{attack_name}_L{attack_norm}_success_rate.txt')
+    path_log_results = os.path.join(path_outputs, f'{attack_name}_L{attack_norm}_success_rate.csv')
 
     with open(path_log_results, 'a') as file:
         file.write(','.join(['eps', 'success_rate']) + '\n')
         for e in eps:
-            print(f'Running on eps={e}...')
-
             adv_params['eps'] = e
             # Epsilon represent param `confidence` in C&W attack.
             if attack_name == ATTACKS[2]:
                 del adv_params['eps']
                 adv_params['confidence'] = e
 
-            X_adv = attack(model, X_adv_clean, **adv_params)
+            X_adv = torch.zeros_like(X_adv_clean)
+            dataloader = DataLoader(TensorDataset(X_adv_clean), batch_size=ADV_BATCH_SIZE,
+                                    num_workers=val_loader.num_workers, shuffle=False)
+            start = 0
+            pbar = tqdm(enumerate(dataloader), total=len(dataloader))
+            pbar.set_description(f'Running {attack_name} eps/c={e} attack')
+            for i, batch in pbar:
+                x = batch[0]
+                end = start + len(x)
+                X_adv[start:end] = attack(model, x, **adv_params)
+                start = end
 
             # Save adversarial examples
-            path_adv = os.path.join(path_outputs, f'{attack_name}.n_{n_att}.e_{e}.pt')
+            path_adv = os.path.join(path_outputs, f'{attack_name}.L{attack_norm}.n_{n_att}.e_{e}.pt')
             torch.save(TensorDataset(X_adv, y_adv_clean), path_adv)
 
             # Checking results
@@ -166,12 +183,29 @@ def generate_adv_examples(
 
 if __name__ == '__main__':
     """Examples:
-    For FGSM L-inf:
-    python ./experiments/train_adv_examples.py --attack=FGSM --params='{"norm":"inf", "clip_min":0, "clip_max":1}' --eps="[0.03,0.06,0.09,0.12,0.16,0.19,0.22,0.25,0.28,0.31]"
-    For PGD L-inf:
-    python ./experiments/train_adv_examples.py --attack=PGD --params='{"norm":"inf", "clip_min":0, "clip_max":1, "nb_iter": 100}' --eps="[0.03,0.06,0.09,0.12,0.16,0.19,0.22,0.25,0.28,0.31]"
-    For CW2:
-    python ./experiments/train_adv_examples.py --attack=CW2 --params='{"n_classes": 10}' --eps="[0, 10, 100]"
+    # For quick develop only. Set `n_att` to a larger value when running the experiment!
+    # Data: MNIST, Attack: FGSM
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":"inf", "clip_min":0, "clip_max":1}' --eps="[0.03,0.06,0.09,0.12,0.16,0.19,0.22,0.25,0.28,0.31]"
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":2, "clip_min":0, "clip_max":1}' --eps="[1, 2, 4, 8, 16, 32, 48, 64, 80, 96, 112, 128]"
+
+    # Data: MNIST, Attack: PGD
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=PGD --params='{"norm":"inf", "clip_min":0, "clip_max":1, "nb_iter": 100}' --eps="[0.03,0.06,0.09,0.12,0.16,0.19,0.22,0.25,0.28,0.31]"
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=PGD --params='{"norm":2, "clip_min":0, "clip_max":1, "nb_iter": 100, "eps_iter": 0.5}' --eps="[1, 2, 4, 8, 16, 32, 48, 64]"
+
+    # Data: MNIST, Attack: CW2
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=CW2 --params='{"n_classes": 10, "max_iterations": 200}' --eps="[0, 1, 10]"
+
+
+    # Data: CIFAR10, Attack: FGSM
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=FGSM --params='{"norm":"inf", "clip_min":0, "clip_max":1}' --eps="[0.03,0.06,0.09,0.12,0.16,0.19,0.22,0.25,0.28,0.31]"
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=FGSM --params='{"norm":2, "clip_min":0, "clip_max":1}' --eps="[1, 2, 4, 8, 16, 32, 48, 64]"
+
+    # Data: CIFAR10, Attack: PGD
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=PGD --params='{"norm":"inf", "clip_min":0, "clip_max":1, "nb_iter": 100}' --eps="[0.03,0.06,0.09,0.12,0.16]"
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=PGD --params='{"norm":2, "clip_min":0, "clip_max":1, "nb_iter": 100, "eps_iter": 0.5}' --eps="[0.5, 1, 2, 4, 8, 16, 32]"
+
+    # Data: CIFAR10, Attack: CW2
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=CW2 --params='{"n_classes": 10, "max_iterations": 200}' --eps="[0, 1, 10]"
     """
     parser = ArgumentParser()
     parser.add_argument('-s', '--seed', type=int, default=1234)
