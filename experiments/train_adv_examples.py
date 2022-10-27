@@ -242,7 +242,7 @@ if __name__ == '__main__':
     print('SEED:', seed)
     print('DATA:', data)
     print('N_ATT:', n_att)
-    print('N_ATT:', n_val)
+    print('N_VAL:', n_val)
     print('ATTACK:', attack)
     print('EPS:', eps)
 
