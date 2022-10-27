@@ -30,12 +30,12 @@ To train `CNN` for `MNIST`:
 
 ```bash
 # To test the environment, run:
-python ./classifiers/mnist_cnn.py --fast_dev_run=true
+python ./baard/classifiers/mnist_cnn.py --fast_dev_run=true
 
 # To train the model, run:
 # By default this code check if GPU is available.
 # Default seed is 1234, use `--seed=1234` to change it.
-python ./classifiers/mnist_cnn.py
+python ./baard/classifiers/mnist_cnn.py
 
 ```
 
@@ -43,7 +43,7 @@ To train `ResNet-18` for `CIFAR-10`:
 
 ```bash
 # This Python script takes the same arguments as `mnist_cnn.py`
-python ./classifiers/cifar10_resnet18.py
+python ./baard/classifiers/cifar10_resnet18.py
 ```
 
 To check log files from `TensorBoard`, run:

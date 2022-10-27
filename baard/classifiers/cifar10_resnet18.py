@@ -39,17 +39,18 @@ class CIFAR10_ResNet18(pl.LightningModule):
         self.save_hyperparameters()
 
         self.model = create_model()
-
         self.loss_fn = F.cross_entropy
+
+        # WARNING: Do NOT normalized the data! The default range is [0, 1]
         self.train_transforms = tv.transforms.Compose([
             tv.transforms.RandomCrop(32, padding=4),
             tv.transforms.RandomHorizontalFlip(),
             tv.transforms.ToTensor(),
-            cifar10_normalization(),
+            # cifar10_normalization(),  
         ])
         self.test_transforms = tv.transforms.Compose([
             tv.transforms.ToTensor(),
-            cifar10_normalization(),
+            # cifar10_normalization(),
         ])
 
     def forward(self, x):
