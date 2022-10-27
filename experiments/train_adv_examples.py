@@ -148,37 +148,40 @@ def generate_adv_examples(
     with open(path_log_results, 'a') as file:
         file.write(','.join(['eps', 'success_rate']) + '\n')
         for e in eps:
-            adv_params['eps'] = e
-            # Epsilon represent param `confidence` in C&W attack.
-            if attack_name == ATTACKS[2]:
-                del adv_params['eps']
-                adv_params['confidence'] = e
+            try:
+                adv_params['eps'] = e
+                # Epsilon represent param `confidence` in C&W attack.
+                if attack_name == ATTACKS[2]:
+                    del adv_params['eps']
+                    adv_params['confidence'] = e
 
-            X_adv = torch.zeros_like(X_adv_clean)
-            dataloader = DataLoader(TensorDataset(X_adv_clean), batch_size=ADV_BATCH_SIZE,
-                                    num_workers=val_loader.num_workers, shuffle=False)
-            start = 0
-            pbar = tqdm(enumerate(dataloader), total=len(dataloader))
-            pbar.set_description(f'Running {attack_name} eps/c={e} attack')
-            for i, batch in pbar:
-                x = batch[0]
-                end = start + len(x)
-                X_adv[start:end] = attack(model, x, **adv_params)
-                start = end
+                X_adv = torch.zeros_like(X_adv_clean)
+                dataloader = DataLoader(TensorDataset(X_adv_clean), batch_size=ADV_BATCH_SIZE,
+                                        num_workers=val_loader.num_workers, shuffle=False)
+                start = 0
+                pbar = tqdm(enumerate(dataloader), total=len(dataloader))
+                pbar.set_description(f'Running {attack_name} eps/c={e} attack')
+                for i, batch in pbar:
+                    x = batch[0]
+                    end = start + len(x)
+                    X_adv[start:end] = attack(model, x, **adv_params)
+                    start = end
 
-            # Save adversarial examples
-            path_adv = os.path.join(path_outputs, f'{attack_name}.L{attack_norm}.n_{n_att}.e_{e}.pt')
-            torch.save(TensorDataset(X_adv, y_adv_clean), path_adv)
+                # Save adversarial examples
+                path_adv = os.path.join(path_outputs, f'{attack_name}.L{attack_norm}.n_{n_att}.e_{e}.pt')
+                torch.save(TensorDataset(X_adv, y_adv_clean), path_adv)
 
-            # Checking results
-            dataset_adv = TensorDataset(X_adv)
-            loader_adv = DataLoader(dataset_adv, batch_size=val_loader.batch_size, num_workers=val_loader.num_workers, shuffle=False)
-            outputs_adv = torch.vstack(trainer.predict(model, loader_adv))
-            preds_adv = torch.argmax(outputs_adv, dim=1)
-            success_rate = (preds_adv == y_adv_clean).float().mean() * 100
+                # Checking results
+                dataset_adv = TensorDataset(X_adv)
+                loader_adv = DataLoader(dataset_adv, batch_size=val_loader.batch_size, num_workers=val_loader.num_workers, shuffle=False)
+                outputs_adv = torch.vstack(trainer.predict(model, loader_adv))
+                preds_adv = torch.argmax(outputs_adv, dim=1)
+                success_rate = (preds_adv == y_adv_clean).float().mean() * 100
 
-            print(f'[e={e}]{success_rate}% out of {len(preds_adv)} examples are correctly classified.')
-            file.write(','.join([f'{i}' for i in [e, success_rate]]) + '\n')
+                print(f'[e={e}]{success_rate}% out of {len(preds_adv)} examples are correctly classified.')
+                file.write(','.join([f'{i}' for i in [e, success_rate]]) + '\n')
+            except BaseException as err:
+                print(f'WARNING: Catch an exception: {err}')
 
 
 if __name__ == '__main__':
@@ -189,30 +192,30 @@ if __name__ == '__main__':
     python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":2}' --eps="[1, 2, 4]"
 
     # Data: MNIST, Attack: PGD
-    python ./experiments/train_adv_examples.py -d=MNIST --attack=PGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.12,0.31]"
-    python ./experiments/train_adv_examples.py -d=MNIST --attack=PGD --params='{"norm":2, "eps_iter":0.1}' --eps="[1, 2, 4]"
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=PGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.31]"
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=PGD --params='{"norm":2, "eps_iter":0.1}' --eps="[1, 4]"
 
     # Data: MNIST, Attack: APGD
-    python ./experiments/train_adv_examples.py -d=MNIST --attack=APGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.12,0.31]"
-    python ./experiments/train_adv_examples.py -d=MNIST --attack=APGD --params='{"norm":2, "eps_iter":0.1}' --eps="[1, 2, 4]"
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=APGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.31]"
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=APGD --params='{"norm":2, "eps_iter":0.1}' --eps="[1, 4]"
 
     # Data: MNIST, Attack: CW2
-    python ./experiments/train_adv_examples.py -d=MNIST --attack=CW2 --params='{"max_iterations": 200}' --eps="[0, 1, 10]"
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=CW2 --params='{"max_iterations": 200}' --eps="[0]"
 
     # Data: CIFAR10, Attack: FGSM
     python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=FGSM --params='{"norm":"inf"}' --eps="[0.03,0.09,0.16]"
-    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=FGSM --params='{"norm":2}' --eps="[0.5,1,2,4]"
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=FGSM --params='{"norm":2}' --eps="[0.3,2]"
 
     # Data: CIFAR10, Attack: PGD
-    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=PGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.09,0.16]"
-    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=PGD --params='{"norm":2, "eps_iter":0.1}' --eps="[0.5,1,2,4]"
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=PGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.16]"
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=PGD --params='{"norm":2, "eps_iter":0.1}' --eps="[0.3,2]"
 
     # Data: CIFAR10, Attack: APGD
-    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=APGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.09,0.16]"
-    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=APGD --params='{"norm":2, "eps_iter":0.1}' --eps="[0.5,1,2,4]"
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=APGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.16]"
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=APGD --params='{"norm":2, "eps_iter":0.1}' --eps="[0.3,2]"
 
     # # Data: CIFAR10, Attack: CW2
-    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=CW2 --params='{"max_iterations": 200}' --eps="[0, 1, 10]"
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=CW2 --params='{"max_iterations": 200}' --eps="[0]"
     """
     parser = ArgumentParser()
     parser.add_argument('-s', '--seed', type=int, default=1234)
