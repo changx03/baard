@@ -4,15 +4,15 @@ source ./venv/bin/activate
 
 # For quick develop only. Set `n_att` to a larger value when running the experiment!
 # Data:MNIST,Attack:FGSM
-python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":"inf"}' --eps="[0.03,0.09,0.16,0.22,0.28,0.34,0.41,0.47,0.53,0.59,0.66,0.72,0.78,0.84,0.91,0.97,1.03,1.09]"
+python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":"inf"}' --eps="[0.03,0.09,0.16,0.22,0.28,0.34,0.41,0.47,0.53,0.59,0.66,0.72,0.78,0.84,0.91,0.97]"
 python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":2}' --eps="[0.5,1,2,4,6,8,10,12,14,16,18,20,22]"
 
 # Data:MNIST,Attack:PGD
-python ./experiments/train_adv_examples.py -d=MNIST --attack=PGD --params='{"norm":"inf","eps_iter":0.03}' --eps="[0.03,0.09,0.16,0.22,0.28,0.34,0.41,0.47,0.53,0.59,0.66,0.72,0.78,0.84,0.91,0.97,1.03,1.09]"
+python ./experiments/train_adv_examples.py -d=MNIST --attack=PGD --params='{"norm":"inf","eps_iter":0.03}' --eps="[0.03,0.09,0.16,0.22,0.28,0.34,0.41,0.47,0.53,0.59,0.66,0.72,0.78,0.84,0.91,0.97]"
 python ./experiments/train_adv_examples.py -d=MNIST --attack=PGD --params='{"norm":2,"eps_iter":0.1}' --eps="[0.5,1,2,4,6,8,10,12,14,16,18,20,22]"
 
 # Data:MNIST,Attack:APGD
-python ./experiments/train_adv_examples.py -d=MNIST --attack=APGD --params='{"norm":"inf","eps_iter":0.03}' --eps="[0.03,0.09,0.16,0.22,0.28,0.34,0.41,0.47,0.53,0.59,0.66,0.72,0.78,0.84,0.91,0.97,1.03,1.09]"
+python ./experiments/train_adv_examples.py -d=MNIST --attack=APGD --params='{"norm":"inf","eps_iter":0.03}' --eps="[0.03,0.09,0.16,0.22,0.28,0.34,0.41,0.47,0.53,0.59,0.66,0.72,0.78,0.84,0.91,0.97]"
 python ./experiments/train_adv_examples.py -d=MNIST --attack=APGD --params='{"norm":2,"eps_iter":0.1}' --eps="[0.5,1,2,4,6,8,10,12,14,16,18,20,22]"
 
 # Data:MNIST,Attack:CW2
