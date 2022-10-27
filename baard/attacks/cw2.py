@@ -1,6 +1,6 @@
 """
 This code is based on cleverhans-lab/cleverhans repository.
-Link here: `https://github.com/cleverhans-lab/cleverhans/blob/master/cleverhans/torch/attacks/carlini_wagner_l2.py`,
+Link here: `https://github.com/cleverhans-lab/cleverhans`,
 accessed  on 27-Oct-2022.
 The owner and the collaborators of the original GitHub repo holds the copyright.
 The original code is licensed under the MIT License.
@@ -8,23 +8,27 @@ The original code is licensed under the MIT License.
 Carlini & Wagner L2 attack
 """
 import torch
+from torch import Tensor
+from torch.nn import Module
+from tqdm import tqdm
 
 INF = float('inf')
 
+
 def carlini_wagner_l2(
-    model_fn,
-    x,
-    n_classes,
-    y=None,
-    targeted=False,
-    lr=5e-3,
-    confidence=0,
-    clip_min=0,
-    clip_max=1,
-    initial_const=1e-2,
-    binary_search_steps=5,
-    max_iterations=1000,
-):
+    model_fn: Module,
+    x: Tensor,
+    n_classes: int,
+    y: Tensor = None,
+    targeted: bool = False,
+    lr: float = 5e-3,
+    confidence: float = 0,
+    clip_min: float = 0,
+    clip_max: float = 1,
+    initial_const: float = 1e-2,
+    binary_search_steps: float = 5,
+    max_iterations: int = 1000,
+) -> Tensor:
     """
     This attack was originally proposed by Carlini and Wagner. It is an
     iterative attack that finds adversarial examples on many defenses that
@@ -127,15 +131,15 @@ def carlini_wagner_l2(
     y_onehot = torch.nn.functional.one_hot(y, n_classes).to(torch.float)
 
     # Define loss functions and optimizer
-    f_fn = lambda real, other, targeted: torch.max(
+    def f_fn(real, other, targeted): return torch.max(
         ((other - real) if targeted else (real - other)) + confidence,
         torch.tensor(0.0).to(real.device),
     )
-    l2dist_fn = lambda x, y: torch.pow(x - y, 2).sum(list(range(len(x.size())))[1:])
+    def l2dist_fn(x, y): return torch.pow(x - y, 2).sum(list(range(len(x.size())))[1:])
     optimizer = torch.optim.Adam([modifier], lr=lr)
 
     # Outer loop performing binary search on const
-    for outer_step in range(binary_search_steps):
+    for outer_step in tqdm(range(binary_search_steps)):
         # Initialize some values needed for the inner loop
         bestl2 = [INF] * len(x)
         bestscore = [-1.0] * len(x)
@@ -197,7 +201,7 @@ def carlini_wagner_l2(
 if __name__ == "__main__":
     x = torch.clamp(torch.randn(5, 10), 0, 1)
     y = torch.randint(0, 9, (5,))
-    model_fn = lambda x: x
+    def model_fn(x): return x
 
     # targeted
     new_x = carlini_wagner_l2(model_fn, x, 10, targeted=True, y=y)
