@@ -17,7 +17,7 @@ INF = float('inf')
 def carlini_wagner_l2(
     model_fn: Module,
     x: Tensor,
-    n_classes: int,
+    n_classes: int = 10,
     y: Tensor = None,
     targeted: bool = False,
     lr: float = 5e-3,
