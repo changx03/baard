@@ -29,6 +29,15 @@ A full list of parameters can be found [here](https://pytorch-lightning.readthed
 To train `CNN` for `MNIST`:
 
 ```bash
+# Usage:
+python ./baard/classifiers/mnist_cnn.py [--max_epochs MAX_EPOCHS] [--seed SEED] ...
+
+python ./baard/classifiers/cifar10_resnet18.py [--max_epochs MAX_EPOCHS] [--seed SEED] ...
+```
+
+### Classifier Example
+
+```bash
 # To test the environment, run:
 python ./baard/classifiers/mnist_cnn.py --fast_dev_run=true
 
@@ -59,7 +68,8 @@ tensorboard --logdir logs
 Generating 100 adversarial examples on `MNIST` using FGSM on L2 norm with Epsilon=0.06
 
 ```bash
-python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":"inf", "clip_min":0, "clip_max":1}' --eps="[0.06]"
+# Usage
+python ./experiments/train_adv_examples.py [-s SEED] [-d DATASET_NAME] [--n_att NB_ADV_EXAMPLES] [--n_val NB_VAL_EXAMPLES] [-a ATTACK_NAME]  [--eps LIST_OF_EPSILON] [--params ATTACK_PARAMS]
 ```
 
 ### Available options
@@ -73,3 +83,10 @@ python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"no
 - '--eps': A list of epsilons as a JSON string. e.g., --eps="[0.06, 0.13, 0.25]". In C&W attack, this controls the confidence parameter c. Default is "[0.06]".
 - '--params': Parameters for the adversarial attack as a JSON string. e.g., `{"norm":"inf", "clip_min":0, "clip_max":1}`.
   This JSON string will be converted into a dictionary and pass directly to the attack. Check `./baard/attacks` to see the specific parameters for each attack.
+
+### Attack Example
+
+```bash
+python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":"inf", "clip_min":0, "clip_max":1}' --eps="[0.06]"
+```
+
