@@ -5,9 +5,9 @@ URL for the package: https://github.com/Trusted-AI/adversarial-robustness-toolbo
 from typing import Any, Union
 
 import numpy as np
+import torch
 from art.attacks.evasion import AutoProjectedGradientDescent
 from art.estimators.classification import PyTorchClassifier
-import torch
 from torch import Tensor
 from torch.nn import Module
 

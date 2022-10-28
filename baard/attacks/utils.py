@@ -8,7 +8,6 @@ The original code is licensed under the MIT License.
 Utils for PyTorch
 """
 import numpy as np
-
 import torch
 
 

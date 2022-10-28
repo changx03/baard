@@ -1,3 +1,4 @@
+"""Custom package file for BAARD."""
 from setuptools import setup, find_packages
 
 setup(

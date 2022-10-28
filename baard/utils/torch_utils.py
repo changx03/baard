@@ -1,12 +1,15 @@
-from typing import Tuple, Union
+"""Utility functions for PyTorch."""
+import os
 import warnings
+from typing import Tuple, Union
 
-import torch
-from torch import Tensor
-from torch.utils.data import DataLoader
 import pytorch_lightning as pl
+import torch
 from pytorch_lightning import LightningModule
-from torch.utils.data import DataLoader, TensorDataset, SequentialSampler, IterableDataset
+from torch import Tensor
+from torch.nn import Module
+from torch.utils.data import (DataLoader, IterableDataset, SequentialSampler,
+                              TensorDataset)
 
 
 def get_dataloader_shape(dataloader: DataLoader) -> Tuple:
@@ -75,3 +78,57 @@ def check_dataloader_shuffling(dataloader: DataLoader) -> bool:
         return True
     else:
         return False
+
+
+def create_noisy_examples(x: Tensor, n_samples: int = 30, noise_eps: str = 'u0.1',
+                          clip_range: Tuple = (0, 1)) -> Tensor:
+    """Create n noise examples aground x.
+
+    :param Tensor x: Single input example.
+    :param int n_samples: Number of random samples. Default is 256.
+    :param str noise_eps: noise strength. `u[VALUE]`: adds uniform noise.
+        `n[VALUE]`: adds normal distributed noise. `s[VALUE]`: adds noise with fixed value.
+        Default is 'u0.1'.
+    :param Tuple clip_range: (optional) Clipping range. Default is (0, 1).
+    :return: A Tensor noisy X in shape of (n_samples, x.size()).
+    """
+    kind, eps = noise_eps[:1], float(noise_eps[1:])
+    shape = (n_samples,) + tuple(x.size())
+    if kind == 'u':
+        noise = x.new_zeros(shape).uniform_(-1., 1.)
+    elif kind == 'n':
+        noise = x.new_zeros(shape).normal_(0., 1.)
+    elif kind == 's':
+        noise = torch.sign(x.new_zeros(shape).uniform_(-1., 1.))
+
+    x_noisy = x.unsqueeze(0) + noise * eps
+
+    if clip_range:
+        x_noisy = torch.clamp(x_noisy, clip_range[0], clip_range[1])
+    return x_noisy
+
+
+def batch_forward(model: Module, X: Tensor, batch_size: int = 256, device='cuda', num_workers=-1):
+    """Forward propagation in mini-batch."""
+    if num_workers <= 0 or num_workers > os.cpu_count():
+        num_workers = os.cpu_count()
+
+    if not torch.cuda.is_available():
+        device = 'cpu'
+
+    with torch.no_grad():
+        model.eval()
+        model = model.to(device)
+        # Probe output shape
+        outputs = model(X[:1].to(device))
+        outputs_shape = (len(X),) + tuple(outputs.size()[1:])
+
+        outputs = X.new_zeros(outputs_shape)
+        loader = DataLoader(TensorDataset(X), num_workers=num_workers, shuffle=False, batch_size=batch_size)
+        start = 0
+        for batch in loader:
+            _x = batch[0].to(device)
+            end = start + len(_x)
+            outputs[start: end] = model(_x).cpu()
+            start = end
+    return outputs

@@ -1,7 +1,6 @@
 """Train adversarial examples"""
 import json
 import os
-import sys
 from argparse import ArgumentParser
 
 import numpy as np
@@ -12,9 +11,11 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
-# Add project root to system path
-sys.path.append(os.getcwd())
-print(sys.path)
+from baard.attacks.apgd import auto_projected_gradient_descent
+from baard.attacks.cw2 import carlini_wagner_l2
+from baard.attacks.fast_gradient_method import fast_gradient_method
+from baard.attacks.projected_gradient_descent import projected_gradient_descent
+from baard.utils.torch_utils import dataloader2tensor, get_correct_examples
 
 PATH_ROOT = os.getcwd()
 PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf')
@@ -24,12 +25,14 @@ ADV_BATCH_SIZE = 32  # Training adversarial examples in small batches.
 
 
 def check_file_exist(path_file):
+    """Shortcut for check a file is exist."""
     if not os.path.isfile(path_file):
         raise FileExistsError(f"{path_file} does not exist!")
     return True
 
 
 def get_model(data: str) -> LightningModule:
+    """Return a PyTorch Lightning Module."""
     from baard.classifiers.cifar10_resnet18 import CIFAR10_ResNet18
     from baard.classifiers.mnist_cnn import MNIST_CNN
 
@@ -48,11 +51,7 @@ def get_model(data: str) -> LightningModule:
 
 
 def get_attack(attack_name: str, adv_params: dict):
-    from baard.attacks.apgd import auto_projected_gradient_descent
-    from baard.attacks.cw2 import carlini_wagner_l2
-    from baard.attacks.fast_gradient_method import fast_gradient_method
-    from baard.attacks.projected_gradient_descent import projected_gradient_descent
-
+    """Return an Adversarial Attack function."""
     adv_params = dict(adv_params)  # Create a copy
     attack = None
     if attack_name == ATTACKS[0]:
@@ -87,7 +86,6 @@ def generate_adv_examples(
     seed: int
 ):
     """Generate adversarial examples based on given epsilons (perturbation)."""
-    from baard.utils.torch_utils import dataloader2tensor, get_correct_examples
 
     # Step 1: Get correct labelled data
     model = get_model(data)
@@ -99,7 +97,7 @@ def generate_adv_examples(
         torch.save(dataset, path_correct_val_dataset)
     else:
         dataset = torch.load(path_correct_val_dataset)
-        print(f'Load existing `CorrectValDataset.pt`...')
+        print('Load existing `CorrectValDataset.pt`...')
     dataloader = DataLoader(dataset, batch_size=val_loader.batch_size,
                             num_workers=val_loader.num_workers, shuffle=False)
     _dataset = get_correct_examples(model, dataloader, return_loader=False)
@@ -217,6 +215,7 @@ if __name__ == '__main__':
     # # Data: CIFAR10, Attack: CW2
     python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=CW2 --params='{"max_iterations": 200}' --eps="[0]"
     """
+
     parser = ArgumentParser()
     parser.add_argument('-s', '--seed', type=int, default=1234)
     parser.add_argument('-d', '--data', default=DATASETS[0], choices=DATASETS)

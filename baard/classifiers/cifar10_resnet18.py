@@ -1,3 +1,4 @@
+"""ResNet-18 model for CIFAR10 dataset."""
 import os
 from argparse import ArgumentParser
 from pathlib import Path
@@ -7,8 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision as tv
-from pl_bolts.transforms.dataset_normalizations import cifar10_normalization
-from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor
+from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.loggers import TensorBoardLogger
 from torch.utils.data import DataLoader
 
@@ -21,6 +21,7 @@ MAX_EPOCHS = 50 if torch.cuda.is_available() else 5
 
 
 def create_model():
+    """Return a ResNet-18 model for CIFAR10. Input shape: (3, 32, 32)."""
     model = tv.models.resnet18(weights=None, num_classes=10)
     model.conv1 = nn.Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
     model.maxpool = nn.Identity()
@@ -28,6 +29,8 @@ def create_model():
 
 
 class CIFAR10_ResNet18(pl.LightningModule):
+    """ResNet-18 model for CIFAR10 dataset."""
+
     def __init__(self,
                  lr=0.05,
                  batch_size=BATCH_SIZE,
@@ -46,7 +49,7 @@ class CIFAR10_ResNet18(pl.LightningModule):
             tv.transforms.RandomCrop(32, padding=4),
             tv.transforms.RandomHorizontalFlip(),
             tv.transforms.ToTensor(),
-            # cifar10_normalization(),  
+            # cifar10_normalization(),
         ])
         self.test_transforms = tv.transforms.Compose([
             tv.transforms.ToTensor(),

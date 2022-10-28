@@ -17,6 +17,9 @@ pip install torch==1.12.1 torchvision==0.13.1 --extra-index-url https://download
 # Install other requirements
 pip install -r requirements.txt
 
+# Install local package
+pip install --upgrade .
+
 # To check if PyTorch is correctly installed and GPU is working.
 python ./examples/check_gpu.py
 ```
@@ -89,4 +92,3 @@ python ./experiments/train_adv_examples.py [-s SEED] [-d DATASET_NAME] [--n_att 
 ```bash
 python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":"inf", "clip_min":0, "clip_max":1}' --eps="[0.06]"
 ```
-

@@ -1,3 +1,4 @@
+"""Check if GPU is available. """
 import torch
 
 if __name__ == '__main__':

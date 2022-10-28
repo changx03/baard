@@ -1,3 +1,4 @@
+"""Convolutional Neural Network for MNIST dataset."""
 import os
 from argparse import ArgumentParser
 from pathlib import Path
@@ -7,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision as tv
-from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor
+from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.loggers import TensorBoardLogger
 from torch.utils.data import DataLoader
 
@@ -20,6 +21,8 @@ MAX_EPOCHS = 50 if torch.cuda.is_available() else 5
 
 
 class MNIST_CNN(pl.LightningModule):
+    """Convolutional Neural Network for MNIST dataset."""
+
     def __init__(self,
                  lr=0.05,
                  batch_size=BATCH_SIZE,
@@ -153,7 +156,6 @@ if __name__ == '__main__':
         precision=16,
         callbacks=[
             LearningRateMonitor(logging_interval='step'),
-            # EarlyStopping(monitor='val_loss', mode='min', patience=5)
         ],
     )
 
