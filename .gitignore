@@ -170,3 +170,4 @@ playground_*
 
 # Ignore results
 results/
+.vscode/
