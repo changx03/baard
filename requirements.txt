@@ -10,6 +10,7 @@ asttokens==2.0.8
 async-timeout==4.0.2
 attrs==22.1.0
 autopep8==1.7.0
+baard @ file:///home/lukec/workspace/baard_v4
 Babel==2.10.3
 backcall==0.2.0
 beautifulsoup4==4.11.1
@@ -125,6 +126,7 @@ tomli==2.0.1
 tomlkit==0.11.6
 torch==1.12.1+cu116
 torch-tb-profiler==0.4.0
+torchinfo==1.7.1
 torchmetrics==0.10.0
 torchvision==0.13.1+cu116
 tornado==6.2
