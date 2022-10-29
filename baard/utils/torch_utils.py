@@ -12,6 +12,12 @@ from torch.utils.data import (DataLoader, IterableDataset, SequentialSampler,
                               TensorDataset)
 
 
+def get_num_items_per_example(dataloader: DataLoader) -> int:
+    """Get the number of items per example."""
+    batch = next(iter(dataloader))
+    return len(batch)
+
+
 def get_dataloader_shape(dataloader: DataLoader) -> Tuple:
     """Get the shape of X in a PyTorch Dataloader. Ignore the shape of labels y."""
     n = len(dataloader.dataset)
@@ -44,6 +50,21 @@ def dataloader2tensor(dataloader: DataLoader) -> Union[tuple[Tensor, Tensor], Te
         return x
 
 
+def dataset2tensor(dataset: TensorDataset) -> Union[tuple[Tensor, Tensor], Tensor]:
+    """Convert a PyTorch Dataset back to tensor."""
+    one_example = dataset[0]
+    has_y = len(one_example) > 1
+    n = len(dataset)
+    data_shape = tuple([n] + list(one_example[0].size()))
+    X = one_example[0].new_zeros(data_shape)
+    y = torch.zeros(n, dtype=torch.long)
+    for i, example in enumerate(dataset):
+        X[i] = example[0]
+        if has_y:
+            y[i] = example[1]
+    return (X, y) if has_y else X
+
+
 def get_correct_examples(model: LightningModule,
                          dataloader: DataLoader,
                          return_loader=True
@@ -51,13 +72,13 @@ def get_correct_examples(model: LightningModule,
     """Removes incorrect predictions from the dataloader. If `return_loader` is set
     to False, returns a TensorDataset.
     """
+    if get_num_items_per_example(dataloader) != 2:
+        raise Exception('True labels are not in the dataloader!')
+
     if check_dataloader_shuffling(dataloader):
         warnings.warn('Dataloader should not have `shuffle=True`!')
 
-    trainer = pl.Trainer(accelerator='auto', logger=False)
-    outputs = torch.vstack(trainer.predict(model, dataloader))
-    preds = torch.argmax(outputs, dim=1)
-
+    preds = predict(model, dataloader)
     x, y_true = dataloader2tensor(dataloader)
     corrects = preds == y_true
     indices = torch.squeeze(torch.nonzero(corrects))
@@ -108,6 +129,14 @@ def create_noisy_examples(x: Tensor, n_samples: int = 30, noise_eps: str = 'u0.1
     return x_noisy
 
 
+def predict(model: LightningModule, dataloader: DataLoader) -> Tensor:
+    """Predict the labels."""
+    trainer = pl.Trainer(accelerator='auto', logger=False)
+    outputs = torch.vstack(trainer.predict(model, dataloader))
+    preds = torch.argmax(outputs, dim=1)
+    return preds
+
+
 def batch_forward(model: Module, X: Tensor, batch_size: int = 256, device='cuda', num_workers=-1):
     """Forward propagation in mini-batch."""
     if num_workers <= 0 or num_workers > os.cpu_count():
@@ -132,3 +161,16 @@ def batch_forward(model: Module, X: Tensor, batch_size: int = 256, device='cuda'
             outputs[start: end] = model(_x).cpu()
             start = end
     return outputs
+
+
+if __name__ == '__main__':
+    # Test dataset2tensor
+    X = torch.rand(5, 3, 10)
+    y = torch.arange(5)
+    dataset1 = TensorDataset(X, y)
+    X_new, y_new = dataset2tensor(dataset1)
+    assert torch.all(X == X_new)
+
+    dataset2 = TensorDataset(X)
+    X_new = dataset2tensor(dataset2)
+    assert torch.all(X == X_new)
