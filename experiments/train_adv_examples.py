@@ -15,11 +15,11 @@ from baard.attacks.apgd import auto_projected_gradient_descent
 from baard.attacks.cw2 import carlini_wagner_l2
 from baard.attacks.fast_gradient_method import fast_gradient_method
 from baard.attacks.projected_gradient_descent import projected_gradient_descent
+from baard.classifiers import DATASETS
 from baard.utils.torch_utils import dataloader2tensor, get_correct_examples
 
 PATH_ROOT = os.getcwd()
 PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf')
-DATASETS = ['MNIST', 'CIFAR10']
 ATTACKS = ['FGSM', 'PGD', 'CW2', 'APGD']
 ADV_BATCH_SIZE = 32  # Training adversarial examples in small batches.
 

@@ -56,11 +56,18 @@ class OddsAreOddDetector:
                  model: LightningModule,
                  data_name: str,
                  noise_list: List,
-                 n_noise_samples: int = 100):
+                 n_noise_samples: int = 100,
+                 device: str = 'cuda',
+                 ):
         self.model = model
         self.data_name = data_name
         self.noise_list = noise_list
         self.n_noise_samples = n_noise_samples
+        self.device = device
+
+        if not torch.cuda.is_available() and device == 'cuda':
+            warnings.warn('GPU is not available. Using CPU...')
+            device = 'cpu'
 
         # Parameters from LightningModule:
         self.batch_size = self.model.train_dataloader().batch_size
@@ -168,7 +175,8 @@ class OddsAreOddDetector:
         if isinstance(pred, Tensor):
             pred = int(pred.item())
 
-        hidden_out_x = batch_forward(self.latent_net, x.unsqueeze(0))
+        hidden_out_x = batch_forward(self.latent_net, x.unsqueeze(0),
+                                     num_workers=self.num_workers, device=self.device)
         weight_relevant = self.weight_diff[:, pred]
         negative_labels = get_negative_labels(pred, self.n_classes)
         alignments = OrderedDict()
@@ -177,7 +185,8 @@ class OddsAreOddDetector:
                                             n_samples=self.n_noise_samples,
                                             noise_eps=noise_eps,
                                             clip_range=self.noise_clip_range)
-            hidden_out_noise = batch_forward(self.latent_net, x_noisy)
+            hidden_out_noise = batch_forward(self.latent_net, x_noisy,
+                                             num_workers=self.num_workers, device=self.device)
             odds = self.__compute_single_noise_alignment(hidden_out_x,
                                                          hidden_out_noise,
                                                          negative_labels,
@@ -229,7 +238,7 @@ if __name__ == '__main__':
                                   n_noise_samples=N_NOISE_DEV)
 
     PATH_VAL_DATA = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'ValClean.n_1000.pt')
-    PATH_WEIGHTS_DEV = os.path.join('examples', 'dev_odds_detector.odds')
+    PATH_WEIGHTS_DEV = os.path.join('temp', 'dev_odds_detector.odds')
 
     val_dataset = torch.load(PATH_VAL_DATA)
     X_val, y_val = dataset2tensor(val_dataset)
