@@ -10,7 +10,6 @@ asttokens==2.0.8
 async-timeout==4.0.2
 attrs==22.1.0
 autopep8==1.7.0
-baard @ file:///home/lukec/workspace/baard_v4
 Babel==2.10.3
 backcall==0.2.0
 beautifulsoup4==4.11.1
