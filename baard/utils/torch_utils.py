@@ -73,7 +73,7 @@ def get_correct_examples(model: LightningModule,
     to False, returns a TensorDataset.
     """
     if get_num_items_per_example(dataloader) != 2:
-        raise Exception('True labels are not in the dataloader!')
+        raise Exception('Labels are not in the dataloader!')
 
     if check_dataloader_shuffling(dataloader):
         warnings.warn('Dataloader should not have `shuffle=True`!')
@@ -81,6 +81,32 @@ def get_correct_examples(model: LightningModule,
     preds = predict(model, dataloader)
     x, y_true = dataloader2tensor(dataloader)
     corrects = preds == y_true
+    indices = torch.squeeze(torch.nonzero(corrects))
+    correct_dataset = TensorDataset(x[indices], y_true[indices])
+    if return_loader:
+        batch_size = dataloader.batch_size
+        num_workers = dataloader.num_workers
+        return DataLoader(correct_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
+    else:
+        return correct_dataset
+
+
+def get_incorrect_examples(model: LightningModule,
+                           dataloader: DataLoader,
+                           return_loader=True
+                           ) -> Union[DataLoader, TensorDataset]:
+    """Get incorrect predictions from the dataloader. This function is used to return
+    successful adversarial examples. If `return_loader` is set to False, returns a TensorDataset.
+    """
+    if get_num_items_per_example(dataloader) != 2:
+        raise Exception('Labels are not in the dataloader!')
+
+    if check_dataloader_shuffling(dataloader):
+        warnings.warn('Dataloader should not have `shuffle=True`!')
+
+    preds = predict(model, dataloader)
+    x, y_true = dataloader2tensor(dataloader)
+    corrects = preds != y_true
     indices = torch.squeeze(torch.nonzero(corrects))
     correct_dataset = TensorDataset(x[indices], y_true[indices])
     if return_loader:

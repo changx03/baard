@@ -87,6 +87,10 @@ python ./experiments/train_adv_examples.py [-s SEED] [-d DATASET_NAME] [--n_att 
 - '--params': Parameters for the adversarial attack as a JSON string. e.g., `{"norm":"inf", "clip_min":0, "clip_max":1}`.
   This JSON string will be converted into a dictionary and pass directly to the attack. Check `./baard/attacks` to see the specific parameters for each attack.
 
+#### Note
+
+Windows OS cannot pass single quote as string wrapper, e.g., `'{"norm":"inf", }'`. Use `\` to escape the double quote `"` symbol, e.g., `"{\"norm\":\"inf\", }"`.
+
 ### Attack Example
 
 ```bash

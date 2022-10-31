@@ -14,11 +14,10 @@ from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
+from baard.classifiers import DATASETS
 from baard.utils.torch_utils import (batch_forward, create_noisy_examples,
                                      dataloader2tensor, get_correct_examples,
                                      get_dataloader_shape, predict)
-
-DATASETS = ['MNIST', 'CIFAR10']
 
 
 def get_negative_labels(y, n_classes=10):
@@ -87,7 +86,6 @@ class OddsAreOddDetector:
     def train(self, X: Tensor, y: Tensor):
         """Train detector."""
         # Check predictions and true labels
-        assert len(X) == len(y)
         dataloader = DataLoader(TensorDataset(X, y),
                                 batch_size=self.batch_size,
                                 num_workers=self.num_workers,
@@ -144,7 +142,7 @@ class OddsAreOddDetector:
 
         return np.max(max_Z_scores)
 
-    def save_weights_stats(self, path_output: str) -> None:
+    def save(self, path_output: str) -> None:
         """Save weight statistics as binary. The ideal extension is `.odds`. """
         path_output_dir = Path(path_output).resolve().parent
         if not os.path.exists(path_output_dir):
@@ -153,12 +151,12 @@ class OddsAreOddDetector:
 
         pickle.dump(self.weights_stats, open(path_output, 'wb'))
 
-    def load_weights_stats(self, path_weights: str) -> object:
-        """Load trained weight statistics. The default extension is `.odds`."""
-        if os.path.isfile(path_weights):
-            self.weights_stats = pickle.load(open(path_weights, 'rb'))
+    def load(self, path_pretrained_results: str) -> object:
+        """Load pre-trained statistics. The default extension is `.odds`."""
+        if os.path.isfile(path_pretrained_results):
+            self.weights_stats = pickle.load(open(path_pretrained_results, 'rb'))
         else:
-            raise FileExistsError(f'{path_weights} does not exist!')
+            raise FileExistsError(f'{path_pretrained_results} does not exist!')
 
     def __compute_single_noise_alignment(self, hidden_out_x: Tensor, hidden_out_noise: Tensor,
                                          negative_labels, weight_relevant: Tensor
@@ -216,9 +214,11 @@ class OddsAreOddDetector:
 
 
 if __name__ == '__main__':
+    # Testing
+    from sklearn.model_selection import train_test_split
+
     from baard.classifiers.mnist_cnn import MNIST_CNN
     from baard.utils.torch_utils import dataset2tensor
-    from sklearn.model_selection import train_test_split
 
     PATH_ROOT = Path(os.getcwd()).absolute()
     PATH_DATA = os.path.join(PATH_ROOT, 'data')
@@ -255,7 +255,7 @@ if __name__ == '__main__':
                                    DATASETS[0],
                                    noise_list=NOIST_LIST_DEV,
                                    n_noise_samples=N_NOISE_DEV)
-    detector2.load_weights_stats(PATH_WEIGHTS_DEV)
+    detector2.load(PATH_WEIGHTS_DEV)
     # for key in detector2.weights_stats:
     #     mean1 = detector.weights_stats[key]['mean']
     #     mean2 = detector2.weights_stats[key]['mean']
