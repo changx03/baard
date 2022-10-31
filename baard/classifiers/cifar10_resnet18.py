@@ -130,9 +130,8 @@ class CIFAR10_ResNet18(pl.LightningModule):
 
 
 if __name__ == '__main__':
-    """Examples:
-    python ./classifiers/cifar10_resnet18.py
-    """
+    # Examples:
+    # python ./classifiers/cifar10_resnet18.py
 
     parser = ArgumentParser()
     parser = pl.Trainer.add_argparse_args(parser)
@@ -155,7 +154,7 @@ if __name__ == '__main__':
 
     pl.seed_everything(args.seed)
 
-    model = CIFAR10_ResNet18()
+    my_model = CIFAR10_ResNet18()
     trainer = pl.Trainer.from_argparse_args(
         args,
         accelerator='auto',
@@ -184,10 +183,10 @@ if __name__ == '__main__':
     # )
     ############################################################################
 
-    trainer.fit(model)
+    trainer.fit(my_model)
 
     print('On train set:')
-    trainer.test(model, model.train_dataloader())
+    trainer.test(my_model, my_model.train_dataloader())
 
     print('On test set:')
-    trainer.test(model, model.val_dataloader())
+    trainer.test(my_model, my_model.val_dataloader())

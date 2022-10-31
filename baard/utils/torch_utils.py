@@ -158,6 +158,7 @@ def create_noisy_examples(x: Tensor, n_samples: int = 30, noise_eps: str = 'u0.1
 def predict(model: LightningModule, dataloader: DataLoader) -> Tensor:
     """Predict the labels."""
     trainer = pl.Trainer(accelerator='auto', logger=False)
+    # PyTorch Lightening trainer saves outputs as a list of mini-batches.
     outputs = torch.vstack(trainer.predict(model, dataloader))
     preds = torch.argmax(outputs, dim=1)
     return preds
@@ -187,16 +188,3 @@ def batch_forward(model: Module, X: Tensor, batch_size: int = 256, device='cuda'
             outputs[start: end] = model(_x).cpu()
             start = end
     return outputs
-
-
-if __name__ == '__main__':
-    # Test dataset2tensor
-    X = torch.rand(5, 3, 10)
-    y = torch.arange(5)
-    dataset1 = TensorDataset(X, y)
-    X_new, y_new = dataset2tensor(dataset1)
-    assert torch.all(X == X_new)
-
-    dataset2 = TensorDataset(X)
-    X_new = dataset2tensor(dataset2)
-    assert torch.all(X == X_new)

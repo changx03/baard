@@ -61,7 +61,7 @@ def med_pdist(score: ArrayLike) -> ArrayLike:
     return pd
 
 
-def pd(score: ArrayLike) -> ArrayLike:
+def pdist(score: ArrayLike) -> ArrayLike:
     """Mean Pairwise Distance"""
     pd = []
     for i in range(len(score)):
@@ -102,7 +102,7 @@ def calculate_stats(net_outputs: ArrayLike, stats_name: str) -> ArrayLike:
     elif stats_name == 'std':
         results = np.std(net_outputs, axis=-1)
     elif stats_name == 'pdist':
-        results = pd(net_outputs)
+        results = pdist(net_outputs)
     elif stats_name == 'con':
         results = con(net_outputs)
     elif stats_name == 'med_pdist':

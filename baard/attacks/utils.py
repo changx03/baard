@@ -121,7 +121,7 @@ def optimize_linear(grad, eps, norm=np.inf):
         assert torch.allclose(opt_pert_norm, one_mask, rtol=1e-05, atol=1e-08)
     else:
         raise NotImplementedError(
-            "Only L-inf, L1 and L2 norms are " "currently implemented."
+            "Only L-inf, L1 and L2 norms are currently implemented."
         )
 
     # Scale perturbation to be the solution for the norm=eps rather than

@@ -124,9 +124,8 @@ class MNIST_CNN(pl.LightningModule):
 
 
 if __name__ == '__main__':
-    """Examples:
-    python ./classifiers/mnist_cnn.py
-    """
+    # Examples:
+    # python ./classifiers/mnist_cnn.py
 
     parser = ArgumentParser()
     parser = pl.Trainer.add_argparse_args(parser)
