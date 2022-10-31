@@ -3,13 +3,12 @@ import os
 import pickle
 import warnings
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import torch
 from numpy.typing import ArrayLike
 from pytorch_lightning import LightningModule
-from scipy.spatial.distance import pdist
 from scipy.stats import kurtosis, skew
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.preprocessing import StandardScaler
@@ -24,10 +23,10 @@ from baard.utils.torch_utils import (batch_forward, dataloader2tensor,
                                      get_dataloader_shape,
                                      get_incorrect_examples)
 
-AVAILABLE_STATS_LIST = ['std', 'variance', 'con', 'kurtosis', 'skewness', 'quantile', 'mad']
+AVAILABLE_STATS_LIST = ('std', 'variance', 'con', 'mad', 'kurtosis', 'skewness', 'quantile')
 
 
-def con(score: ArrayLike) -> ArrayLike:
+def mean_abs_dev(score: ArrayLike) -> ArrayLike:
     """Mean Absolute Deviation"""
     # score (n, d)
     score = score.reshape(len(score), -1)
@@ -37,39 +36,41 @@ def con(score: ArrayLike) -> ArrayLike:
     return np.mean(c_score, axis=-1)
 
 
-def mad(score: ArrayLike) -> ArrayLike:
+def med_abs_dev(score: ArrayLike) -> ArrayLike:
     """Median Absolute Deviation"""
     pd = []
     for i in range(len(score)):
         d = score[i]
         median = np.median(d)
         abs_dev = np.abs(d - median)
-        med_abs_dev = np.median(abs_dev)
-        pd.append(med_abs_dev)
+        _med_abs_dev = np.median(abs_dev)
+        pd.append(_med_abs_dev)
     pd = np.array(pd)
     return pd
 
 
-def med_pdist(score: ArrayLike) -> ArrayLike:
-    """Median Pairwise Distance"""
-    pd = []
-    for i in range(len(score)):
-        d = score[i]
-        k = np.median(pdist(d.reshape(-1, 1)))
-        pd.append(k)
-    pd = np.array(pd)
-    return pd
+# def med_pdist(score: ArrayLike) -> ArrayLike:
+#     """Median Pairwise Distance"""
+#     from scipy.spatial.distance import pdist
+#     pd = []
+#     for i in range(len(score)):
+#         d = score[i]
+#         k = np.median(pdist(d.reshape(-1, 1)))
+#         pd.append(k)
+#     pd = np.array(pd)
+#     return pd
 
 
-def pdist(score: ArrayLike) -> ArrayLike:
-    """Mean Pairwise Distance"""
-    pd = []
-    for i in range(len(score)):
-        d = score[i]
-        k = np.mean(pdist(d.reshape(-1, 1)))
-        pd.append(k)
-    pd = np.array(pd)
-    return pd
+# def mean_pdist(score: ArrayLike) -> ArrayLike:
+#     """Mean Pairwise Distance"""
+#     from scipy.spatial.distance import pdist
+#     pd = []
+#     for i in range(len(score)):
+#         d = score[i]
+#         k = np.mean(pdist(d.reshape(-1, 1)))
+#         pd.append(k)
+#     pd = np.array(pd)
+#     return pd
 
 
 def neg_kurtosis(score: ArrayLike) -> ArrayLike:
@@ -97,24 +98,24 @@ def calculate_stats(net_outputs: ArrayLike, stats_name: str) -> ArrayLike:
     """Compute statistics metrics."""
     # net_outputs.shape == (N_SAMPLES, N_LATENT_OUTPUTS)
     # We are looking at the features vertically, so results should be in (N_LATENT_OUTPUTS,).
-    if stats_name == 'variance':
-        results = np.var(net_outputs, axis=-1)
-    elif stats_name == 'std':
+    if stats_name == 'std':
         results = np.std(net_outputs, axis=-1)
-    elif stats_name == 'pdist':
-        results = pdist(net_outputs)
+    elif stats_name == 'variance':
+        results = np.var(net_outputs, axis=-1)
     elif stats_name == 'con':
-        results = con(net_outputs)
-    elif stats_name == 'med_pdist':
-        results = med_pdist(net_outputs)
+        results = mean_abs_dev(net_outputs)
+    elif stats_name == 'mad':
+        results = med_abs_dev(net_outputs)
+    # elif stats_name == 'pdist':
+    #     results = mean_pdist(net_outputs)
+    # elif stats_name == 'med_pdist':
+    #     results = med_pdist(net_outputs)
     elif stats_name == 'kurtosis':
         results = neg_kurtosis(net_outputs)
     elif stats_name == 'skewness':
         results = -skew(net_outputs, axis=-1)
     elif stats_name == 'quantile':
         results = quantile(net_outputs)
-    elif stats_name == 'mad':
-        results = mad(net_outputs)
     return results
 
 
@@ -144,7 +145,7 @@ class MLLooDetector:
                  model: LightningModule,
                  data_name: str,
                  device: str = 'cuda',
-                 stats_list: List = AVAILABLE_STATS_LIST,
+                 stats_list: Tuple = AVAILABLE_STATS_LIST,
                  ):
         self.model = model
         self.data_name = data_name

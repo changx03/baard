@@ -87,9 +87,9 @@ if __name__ == '__main__':
     ############################################################################
     # Uncomment the block below to train the detector:
 
-    # detector = MLLooDetector(model, DATASET)
-    # detector.train(X_train_clean, y_train_true, X_train_adv)
-    # detector.save(PATH_MLLOO_DEV)
+    detector = MLLooDetector(model, DATASET)
+    detector.train(X_train_clean, y_train_true, X_train_adv)
+    detector.save(PATH_MLLOO_DEV)
     ############################################################################
 
     # Load detector
