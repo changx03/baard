@@ -1,4 +1,4 @@
-"""Implementing the paper "THe odds are odd" detector."""
+"""Implementing the paper "The Odds are Odd: A Statistical Test for Detecting Adversarial Examples" -- Roth et. al. (2019)"""
 import os
 import pickle
 import warnings
@@ -8,7 +8,6 @@ from typing import Dict, List
 
 import numpy as np
 import torch
-import pytorch_lightning as pl
 from pytorch_lightning import LightningModule
 from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
@@ -211,65 +210,3 @@ class OddsAreOddDetector:
             weights_stats[key] = {'mean': weights.mean(0), 'std': weights.std(0)}
 
         return weights_stats
-
-
-if __name__ == '__main__':
-    # Testing
-    from sklearn.model_selection import train_test_split
-
-    from baard.classifiers.mnist_cnn import MNIST_CNN
-    from baard.utils.torch_utils import dataset2tensor
-
-    PATH_ROOT = Path(os.getcwd()).absolute()
-    PATH_DATA = os.path.join(PATH_ROOT, 'data')
-    PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf')
-
-    # Parameters for development:
-    NOIST_LIST_DEV = ['n0.01', 'u0.01']
-    N_NOISE_DEV = 30
-    SEED_DEV = 0
-
-    pl.seed_everything(SEED_DEV)
-
-    model = MNIST_CNN.load_from_checkpoint(os.path.join(PATH_CHECKPOINT, 'mnist_cnn.ckpt'))
-    detector = OddsAreOddDetector(model,
-                                  DATASETS[0],
-                                  noise_list=NOIST_LIST_DEV,
-                                  n_noise_samples=N_NOISE_DEV)
-
-    PATH_VAL_DATA = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'ValClean.n_1000.pt')
-    PATH_WEIGHTS_DEV = os.path.join('temp', 'dev_odds_detector.odds')
-
-    val_dataset = torch.load(PATH_VAL_DATA)
-    X_val, y_val = dataset2tensor(val_dataset)
-    # Limit the size for quick development. Using stratified sampling to ensure class distribution.
-    SIZE_DEV = 100
-    _, X_dev, _, y_dev = train_test_split(X_val, y_val, test_size=SIZE_DEV, random_state=SEED_DEV)
-
-    # Train detector
-    # detector.train(X_dev, y_dev)
-    # detector.save_weights_stats(PATH_WEIGHTS_DEV)
-
-    # Evaluate detector
-    detector2 = OddsAreOddDetector(model,
-                                   DATASETS[0],
-                                   noise_list=NOIST_LIST_DEV,
-                                   n_noise_samples=N_NOISE_DEV)
-    detector2.load(PATH_WEIGHTS_DEV)
-    # for key in detector2.weights_stats:
-    #     mean1 = detector.weights_stats[key]['mean']
-    #     mean2 = detector2.weights_stats[key]['mean']
-    #     assert torch.all(mean1 == mean2)
-    #     std1 = detector.weights_stats[key]['std']
-    #     std2 = detector2.weights_stats[key]['std']
-    #     assert torch.all(std1 == std2)
-
-    scores = detector2.extract_features(X_dev[:30])
-    print(scores)
-
-    # Load adversarial examples
-    PATH_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'APGD.Linf.n_100.e_0.22.pt')
-    adv_dataset = torch.load(PATH_ADV)
-    X_adv, y_adv_true = dataset2tensor(adv_dataset)
-    scores_adv = detector2.extract_features(X_adv[:30])
-    print(scores_adv)

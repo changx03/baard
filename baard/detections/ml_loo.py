@@ -1,3 +1,4 @@
+"""Implementing the paper "ML-LOO: Detecting Adversarial Examples with Feature Attribution". -- Yang et. al. (2020)"""
 import os
 import pickle
 import warnings
@@ -325,79 +326,3 @@ class MLLooDetector:
 
         X_loo = X_loo_mask * X_repeated
         return X_loo
-
-
-if __name__ == '__main__':
-    # Testing
-    import pytorch_lightning as pl
-    from baard.classifiers.mnist_cnn import MNIST_CNN
-    from baard.utils.torch_utils import dataset2tensor
-    from sklearn.model_selection import train_test_split
-
-    SEED_DEV = 0
-    pl.seed_everything(SEED_DEV)
-
-    PATH_ROOT = Path(os.getcwd()).absolute()
-    PATH_DATA = os.path.join(PATH_ROOT, 'data')
-    PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
-    print('PATH_CHECKPOINT:', PATH_CHECKPOINT)
-
-    model = MNIST_CNN.load_from_checkpoint(PATH_CHECKPOINT)
-
-    BATCH_SIZE = model.train_dataloader().batch_size
-    DEVICE = model.device
-    NUM_WORKERS = model.train_dataloader().num_workers
-    INPUT_SHAPE = (BATCH_SIZE, 1, 28, 28)
-    DATASET = DATASETS[0]
-    print('DATASET:', DATASET)
-
-    PATH_DATA_CLEAN = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'AdvClean.n_100.pt')
-    PATH_DATA_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'APGD.Linf.n_100.e_0.22.pt')
-
-    # Clean examples
-    dataset_clean = torch.load(PATH_DATA_CLEAN)
-    X_clean, y_clean = dataset2tensor(dataset_clean)
-
-    # Corresponding adversarial examples
-    dataset_adv = torch.load(PATH_DATA_ADV)
-    X_adv, y_adv_true = dataset2tensor(dataset_adv)
-
-    assert torch.all(y_clean == y_adv_true), 'True labels should be the same!'
-
-    SIZE_DEV = 40  # For quick development
-    indices_train, _, indices_eval, _ = train_test_split(
-        np.arange(X_clean.size(0)),
-        y_clean,
-        train_size=SIZE_DEV,
-        random_state=SEED_DEV,
-    )  # Get a stratified set
-
-    # Tiny train set
-    X_train_clean = X_clean[indices_train]
-    X_train_adv = X_adv[indices_train]
-    y_train_true = y_clean[indices_train]
-
-    # Tiny test set
-    X_eval_clean = X_clean[indices_eval][:10]
-    X_eval_adv = X_adv[indices_eval][:10]
-    y_eval_true = y_clean[indices_eval][:10]
-
-    detector = MLLooDetector(model, DATASET)
-    detector.train(X_train_clean, y_train_true, X_train_adv)
-
-    PATH_MLLOO_DEV = os.path.join('temp', 'dev_mlloo_detector.mlloo')
-
-    # Save results
-    print('Pre-trained ML-LOO path:', PATH_MLLOO_DEV)
-    detector.save(PATH_MLLOO_DEV)
-
-    # Load detector
-    detector2 = MLLooDetector(model, DATASET)
-    detector2.load(PATH_MLLOO_DEV)
-
-    # Making prediction
-    score_clean = detector2.predict_proba(X_eval_clean)
-    print(score_clean)
-
-    score_adv = detector2.predict_proba(X_eval_adv)
-    print(score_adv)

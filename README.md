@@ -94,5 +94,9 @@ Windows OS cannot pass single quote as string wrapper, e.g., `'{"norm":"inf", }'
 ### Attack Example
 
 ```bash
-python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":"inf", "clip_min":0, "clip_max":1}' --eps="[0.06]"
+python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":"inf", "clip_min":0, "clip_max":1}' --eps="[0.06]" --n_att=100 --n_val=1000
 ```
+
+## Code demo
+
+Code demo can be found under `./examples/`.
