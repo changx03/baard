@@ -11,8 +11,8 @@ To train the classifier, run:
 python ./baard/classifiers/mnist_cnn.py --seed 1234
 
 To generate adversarial examples for this demo:
-python ./experiments/train_adv_examples.py -d=MNIST --attack=APGD  \
-    --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.22]" --n_val=1000
+python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM  \
+    --params='{"norm":"inf"}' --eps="[0.28]" --n_val=1000
 
 """
 import os
@@ -34,7 +34,7 @@ PATH_ROOT = Path(os.getcwd()).absolute()
 PATH_DATA = os.path.join(PATH_ROOT, 'data')
 PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
 PATH_DATA_CLEAN = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'AdvClean.n_100.pt')
-PATH_DATA_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'APGD.Linf.n_100.e_0.22.pt')
+PATH_DATA_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'FGSM.Linf.n_100.e_0.28.pt')
 
 if __name__ == '__main__':
     pl.seed_everything(SEED_DEV)
@@ -49,8 +49,8 @@ if __name__ == '__main__':
     ############################################################################
     # Uncomment the block below to train the detector:
 
-    # detector = PNDetector(model, DATASET, path_model=PATH_CHECKPOINT, max_epochs=MAX_EPOCHS_DEV, seed=SEED_DEV)
-    # detector.train()
+    detector = PNDetector(model, DATASET, path_model=PATH_CHECKPOINT, max_epochs=MAX_EPOCHS_DEV, seed=SEED_DEV)
+    detector.train()
     ############################################################################
 
     # Clean examples
@@ -66,21 +66,21 @@ if __name__ == '__main__':
     X_eval_adv = X_adv[:20]
     y_eval_true = y_clean[:20]
 
-    # scores_clean = detector.extract_features(X_eval_clean)
-    # print(scores_clean)
+    scores_clean = detector.extract_features(X_eval_clean)
+    print(scores_clean)
 
-    # scores_adv = detector.extract_features(X_eval_adv)
-    # print(scores_adv)
+    scores_adv = detector.extract_features(X_eval_adv)
+    print(scores_adv)
 
     # Load results
     ############################################################################
-    PATH_PN_CLASSIFIER_DEV = os.path.join(PATH_ROOT, 'logs', 'PNClassifier_MNIST', 'version_0', 'checkpoints', 'epoch=29-step=7050.ckpt')
-    detector2 = PNDetector(model, DATASET, path_model=PATH_CHECKPOINT)
-    detector2.load(PATH_PN_CLASSIFIER_DEV)
+    # PATH_PN_CLASSIFIER_DEV = os.path.join(PATH_ROOT, 'logs', 'PNClassifier_MNIST', 'version_0', 'checkpoints', 'epoch=29-step=7050.ckpt')
+    # detector2 = PNDetector(model, DATASET, path_model=PATH_CHECKPOINT)
+    # detector2.load(PATH_PN_CLASSIFIER_DEV)
 
-    scores_clean = detector2.extract_features(X_eval_clean)
-    print(scores_clean)
+    # scores_clean = detector2.extract_features(X_eval_clean)
+    # print(scores_clean)
 
-    scores_adv = detector2.extract_features(X_eval_adv)
-    print(scores_adv)
+    # scores_adv = detector2.extract_features(X_eval_adv)
+    # print(scores_adv)
     ############################################################################
