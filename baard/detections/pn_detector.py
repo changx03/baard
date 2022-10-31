@@ -3,13 +3,13 @@
 import numpy as np
 import pytorch_lightning as pl
 import torch
+import torch.nn.functional as F
 from pytorch_lightning import LightningModule
 from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.loggers import TensorBoardLogger
 from sklearn.model_selection import train_test_split
 from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
-import torch.nn.functional as F
 
 from baard.classifiers import DATASETS
 from baard.classifiers.cifar10_resnet18 import CIFAR10_ResNet18
@@ -34,6 +34,7 @@ class PNDetector:
                  model: LightningModule,
                  data_name: str,
                  path_model: str,
+                 dist: str = 'cosine',
                  max_epochs: int = 50,
                  path_log: str = 'logs',
                  seed: int = None,
@@ -41,6 +42,7 @@ class PNDetector:
         self.model = model
         self.data_name = data_name
         self.path_model = path_model
+        self.dist = dist
         self.max_epochs = max_epochs
         self.path_log = path_log
         self.seed = seed
@@ -51,6 +53,13 @@ class PNDetector:
 
         # Clone the base model
         self.pn_classifier: LightningModule = get_lightning_module(data_name).load_from_checkpoint(path_model)
+
+        if dist == 'cosine':
+            self.dist_fn = torch.nn.CosineSimilarity(dim=1)
+        elif dist == 'pair':
+            self.dist_fn = torch.nn.PairwiseDistance(p=2)
+        else:
+            raise NotImplementedError()
 
     def train(self, X=None, y=None):
         """Train detector."""
@@ -91,18 +100,23 @@ class PNDetector:
         trainer.fit(self.pn_classifier, train_dataloaders=dataloader)
 
         # Check results
-        dataset = TensorDataset(X_neg, y_neg)
-        dataloader = DataLoader(dataset,
-                                batch_size=self.batch_size,
-                                num_workers=self.num_workers,
-                                shuffle=False)  # Need to check the predictions
-        preds = predict(self.pn_classifier, dataloader)
-        corrects = preds == y_neg
-        acc_neg = corrects.float().mean()
+        loader_val = self.model.val_dataloader()
+        X_val, y_val = dataloader2tensor(loader_val)
+        X_val_neg = 1 - X_val
+        dataloader_val_neg = DataLoader(TensorDataset(X_val_neg),
+                                        batch_size=self.batch_size,
+                                        num_workers=self.num_workers,
+                                        shuffle=False)  # Need to check the predictions
+        preds_val_neg = predict(self.pn_classifier, dataloader_val_neg)
+        corrects_neg = preds_val_neg == y_val
+        acc_neg = corrects_neg.float().mean()
 
-        preds = predict(self.pn_classifier, self.model.val_dataloader())
-        _, y = dataloader2tensor(self.model.val_dataloader())
-        corrects = preds == y
+        dataloader_val_pos = DataLoader(TensorDataset(X_val),
+                                        batch_size=self.batch_size,
+                                        num_workers=self.num_workers,
+                                        shuffle=False)
+        preds = predict(self.pn_classifier, dataloader_val_pos)
+        corrects = preds == y_val
         acc_pos = corrects.float().mean()
 
         print(f'Accuracy on X+: {acc_pos}, on X-: {acc_neg}.')
@@ -111,12 +125,7 @@ class PNDetector:
         """Extract Positive Negative similarity."""
         self.check_range(X)
         X_pos = X
-        X_neg = 1 - X
         loader_pos = DataLoader(TensorDataset(X_pos),
-                                batch_size=self.batch_size,
-                                num_workers=self.num_workers,
-                                shuffle=False)
-        loader_neg = DataLoader(TensorDataset(X_neg),
                                 batch_size=self.batch_size,
                                 num_workers=self.num_workers,
                                 shuffle=False)
@@ -128,11 +137,15 @@ class PNDetector:
         # Use probability
         probs_pos = F.softmax(outputs_pos, dim=1)
 
+        X_neg = 1 - X
+        loader_neg = DataLoader(TensorDataset(X_neg),
+                                batch_size=self.batch_size,
+                                num_workers=self.num_workers,
+                                shuffle=False)
         outputs_neg = torch.vstack(trainer.predict(self.pn_classifier, loader_neg))
         probs_neg = F.softmax(outputs_neg, dim=1)
 
-        cos = torch.nn.CosineSimilarity(dim=1)
-        similarity = cos(probs_pos, probs_neg)
+        similarity = self.dist_fn(probs_pos, probs_neg)
         similarity = similarity.detach().numpy()
         return similarity
 
