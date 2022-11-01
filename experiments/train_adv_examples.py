@@ -136,7 +136,10 @@ def generate_adv_examples(
 
     # Step 3: Generate adversarial examples
     # Same trainer, the model has no change.
-    trainer = pl.Trainer(accelerator='auto', logger=False)
+    trainer = pl.Trainer(accelerator='auto',
+                         logger=False,
+                         enable_model_summary=False,
+                         enable_progress_bar=False)
     attack, adv_params = get_attack(attack_name, adv_params)
 
     # NOTE: C&W is only on L2 for now.

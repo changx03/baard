@@ -1,10 +1,13 @@
 """Implementing the paper "Detecting adversarial examples by positive and
 negative representations" -- Luo et. al. (2022)
 """
+from typing import Any
+
 import numpy as np
 import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
+from numpy.typing import ArrayLike
 from pytorch_lightning import LightningModule
 from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.loggers import TensorBoardLogger
@@ -50,17 +53,16 @@ class PNDetector:
         else:
             raise NotImplementedError()
 
-    def train(self, X=None, y=None):
-        """Train detector."""
-        if X is None or y is None:
-            dataloader_train = self.model.train_dataloader()
-            X, y = dataloader2tensor(dataloader_train)
-            n_train_samples = len(dataloader_train.dataset)
+    def train(self, X: Any = None, y: Any = None):
+        """Train detector. X and y are dummy variables."""
+        dataloader_train = self.model.train_dataloader()
+        X, y = dataloader2tensor(dataloader_train)
+        n_train_samples = len(dataloader_train.dataset)
 
-            # NOTE: Keeping the same training size to avoid learning rate scheduler out of index error.
-            X, _, y, _ = train_test_split(X, y, test_size=0.5, random_state=self.seed)
-            X = X[:n_train_samples]
-            y = y[:n_train_samples]
+        # NOTE: Keeping the same training size to avoid learning rate scheduler out of index error.
+        X, _, y, _ = train_test_split(X, y, test_size=0.5, random_state=self.seed)
+        X = X[:n_train_samples]
+        y = y[:n_train_samples]
 
         self.check_range(X)
 
@@ -110,7 +112,7 @@ class PNDetector:
 
         print(f'Accuracy on X+: {acc_pos}, on X-: {acc_neg}.')
 
-    def extract_features(self, X: Tensor) -> Tensor:
+    def extract_features(self, X: Tensor) -> ArrayLike:
         """Extract Positive Negative similarity."""
         self.check_range(X)
         X_pos = X
@@ -119,7 +121,10 @@ class PNDetector:
                                 num_workers=self.num_workers,
                                 shuffle=False)
 
-        trainer = pl.Trainer(accelerator='auto', logger=False, enable_model_summary=False)
+        trainer = pl.Trainer(accelerator='auto',
+                             logger=False,
+                             enable_model_summary=False,
+                             enable_progress_bar=False)
 
         # PyTorch Lightening trainer saves outputs as a list of mini-batches.
         outputs_pos = torch.vstack(trainer.predict(self.pn_classifier, loader_pos))
@@ -140,7 +145,7 @@ class PNDetector:
 
     def save(self, path_output=None) -> None:
         """Dummy function. Do nothing. Model automatically saves checkpoints during training."""
-        raise NotImplementedError('Checkpoint is automatically saved under `path_log`.')
+        return
 
     def load(self, path_checkpoint: str) -> None:
         """Load PyTorch Lightening checkpoint file."""

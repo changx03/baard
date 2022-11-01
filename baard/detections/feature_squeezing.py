@@ -2,7 +2,7 @@
 Deep Neural Networks" -- Xu et. al. (2018)
 """
 from abc import ABC, abstractmethod
-from typing import Dict
+from typing import Any, Dict
 
 import numpy as np
 import pytorch_lightning as pl
@@ -24,13 +24,13 @@ SQUEEZER = ('depth', 'median', 'nl_mean')
 class Squeezer(ABC):
     """Base class for squeezers."""
 
-    def __init__(self, name, x_min, x_max):
+    def __init__(self, name: str, x_min: float, x_max: float):
         self.name = name
         self.x_min = x_min
         self.x_max = x_max
 
     @abstractmethod
-    def transform(self, X):
+    def transform(self, X: ArrayLike) -> ArrayLike:
         raise NotImplementedError
 
 
@@ -120,9 +120,8 @@ class FeatureSqueezingDetector:
         self.squeezed_models = {key: get_lightning_module(data_name).load_from_checkpoint(path_model)
                                 for key in self.squeezers}
 
-    def train(self, X: Tensor = None, y: Tensor = None):
-        """Train detector"""
-
+    def train(self, X: Any = None, y: Any = None) -> None:
+        """Train detector. X and y are dummy variables."""
         for squeezer_name, squeezer in self.squeezers.items():
             print(f'Training {squeezer_name} classifier...')
 
@@ -169,7 +168,10 @@ class FeatureSqueezingDetector:
 
     def extract_features(self, X: Tensor) -> ArrayLike:
         """Extract Max L1 distance between squeezed models' outputs."""
-        trainer = pl.Trainer(accelerator='auto', logger=False, enable_model_summary=False)
+        trainer = pl.Trainer(accelerator='auto',
+                             logger=False,
+                             enable_model_summary=False,
+                             enable_progress_bar=False)
         dist_fn = torch.nn.PairwiseDistance(p=1)
         probability_outputs = []
 
@@ -219,7 +221,7 @@ class FeatureSqueezingDetector:
         for fs_key, path_checkpoint in path_checkpoint_list.items():
             self.squeezed_models[fs_key] = get_lightning_module(self.data_name).load_from_checkpoint(path_checkpoint)
 
-    def get_squeezers(self):
+    def get_squeezers(self) -> Dict:
         """Return a dictionary of pre-defined squeezers (filters)."""
         squeezers = {}
         if self.data_name == DATASETS[0]:  # MNIST

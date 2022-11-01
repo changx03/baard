@@ -10,6 +10,7 @@ from typing import Dict, List
 
 import numpy as np
 import torch
+from numpy.typing import ArrayLike
 from pytorch_lightning import LightningModule
 from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
@@ -103,7 +104,7 @@ class OddsAreOddDetector:
         weights_stats = self.__collect_weights_stats(X, preds=y)
         self.weights_stats = weights_stats
 
-    def extract_features(self, X: Tensor) -> Tensor:
+    def extract_features(self, X: Tensor) -> ArrayLike:
         """Extract features from examples."""
         if self.weights_stats is None:
             raise Exception('Weights statistics have not initialized yet. Call `train` or `load_weights_stats` first!')
@@ -123,7 +124,7 @@ class OddsAreOddDetector:
             scores[i] = z_max
         return scores
 
-    def detect_single_example(self, x: Tensor, pred: int):
+    def detect_single_example(self, x: Tensor, pred: int) -> ArrayLike:
         """Detect single example. Return the absolute maximum Z-score."""
         if isinstance(pred, Tensor):
             pred = int(pred.item())
@@ -152,7 +153,7 @@ class OddsAreOddDetector:
 
         pickle.dump(self.weights_stats, open(path_output, 'wb'))
 
-    def load(self, path_pretrained_results: str) -> object:
+    def load(self, path_pretrained_results: str) -> None:
         """Load pre-trained statistics. The default extension is `.odds`."""
         if os.path.isfile(path_pretrained_results):
             self.weights_stats = pickle.load(open(path_pretrained_results, 'rb'))

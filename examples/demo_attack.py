@@ -28,7 +28,10 @@ def generate_attack():
     # model = CIFAR10_ResNet18.load_from_checkpoint(os.path.join(PATH_CHECKPOINT, 'cifar10_resnet18.ckpt'))
     model = MNIST_CNN.load_from_checkpoint(os.path.join(PATH_CHECKPOINT, 'mnist_cnn.ckpt'))
 
-    trainer = pl.Trainer(accelerator='auto', logger=False)
+    trainer = pl.Trainer(accelerator='auto',
+                         logger=False,
+                         enable_model_summary=False,
+                         enable_progress_bar=False)
     trainer.test(model, model.val_dataloader())
 
     train_dataloader = model.train_dataloader()
@@ -52,7 +55,10 @@ def generate_attack():
     dataset = TensorDataset(x[:5])
     loader = DataLoader(dataset, batch_size=val_dataloader.batch_size, num_workers=val_dataloader.num_workers, shuffle=False)
 
-    trainer = pl.Trainer(accelerator='auto', logger=False)
+    trainer = pl.Trainer(accelerator='auto',
+                         logger=False,
+                         enable_model_summary=False,
+                         enable_progress_bar=False)
     predictions = torch.vstack(trainer.predict(model, loader))
 
     preds = torch.argmax(predictions, dim=1)

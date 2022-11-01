@@ -5,7 +5,7 @@ from typing import Tuple, Union
 
 import pytorch_lightning as pl
 import torch
-from pytorch_lightning import LightningModule
+from pytorch_lightning import LightningModule, Trainer
 from torch import Tensor
 from torch.nn import Module
 from torch.utils.data import (DataLoader, IterableDataset, SequentialSampler,
@@ -155,9 +155,14 @@ def create_noisy_examples(x: Tensor, n_samples: int = 30, noise_eps: str = 'u0.1
     return x_noisy
 
 
-def predict(model: LightningModule, dataloader: DataLoader) -> Tensor:
+def predict(model: LightningModule, dataloader: DataLoader, trainer: Trainer = None
+            ) -> Tensor:
     """Predict the labels."""
-    trainer = pl.Trainer(accelerator='auto', logger=False)
+    if trainer is None:
+        trainer = pl.Trainer(accelerator='auto',
+                             logger=False,
+                             enable_model_summary=False,
+                             enable_progress_bar=False)
     # PyTorch Lightening trainer saves outputs as a list of mini-batches.
     outputs = torch.vstack(trainer.predict(model, dataloader))
     preds = torch.argmax(outputs, dim=1)
