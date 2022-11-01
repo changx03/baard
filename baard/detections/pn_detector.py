@@ -24,7 +24,7 @@ class PNDetector:
                  data_name: str,
                  path_model: str,
                  dist: str = 'cosine',
-                 max_epochs: int = 50,
+                 max_epochs: int = 30,
                  path_checkpoint: str = 'logs',
                  seed: int = None,
                  ):
