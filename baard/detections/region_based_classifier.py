@@ -1,0 +1,122 @@
+"""Implementing the paper "Mitigating Evasion Attacks to Deep Neural Networks
+via Region-based Classification" -- Cao and Gong (2017)
+"""
+import logging
+from typing import Any, Tuple
+
+import pytorch_lightning as pl
+import torch
+import torch.nn.functional as F
+from numpy.typing import ArrayLike
+from torch import Tensor
+from torch.utils.data import DataLoader, TensorDataset
+from tqdm import tqdm
+
+from baard.utils.torch_utils import create_noisy_examples, predict
+
+
+class RegionBasedClassifier:
+    """Implement Region-based Classifier in PyTorch"""
+
+    def __init__(self,
+                 model: pl.LightningModule,
+                 data_name: str,
+                 n_classes: int = 10,
+                 radius: float = 0.2,
+                 n_noise_samples: int = 1000,
+                 noise_clip_range: Tuple = (0., 1.)
+                 ):
+        self.model = model
+        self.data_name = data_name
+        self.n_classes = n_classes
+        self.radius = radius
+        self.n_noise_samples = n_noise_samples
+        self.noise_clip_range = noise_clip_range
+
+        # Parameters from LightningModule:
+        self.batch_size = self.model.train_dataloader().batch_size
+        self.num_workers = self.model.train_dataloader().num_workers
+
+    def train(self, X: Any = None, y: Any = None):
+        """Train detector. X and y are dummy variables."""
+        print('Region-based classifier does not require training.')
+
+    def extract_features(self, X: Tensor) -> ArrayLike:
+        """Extract probability estimates based on neighbors' outputs."""
+        logging.getLogger("pytorch_lightning").setLevel(logging.WARNING)
+
+        n_samples = X.size(0)
+        trainer = pl.Trainer(accelerator='auto',
+                             logger=False,
+                             enable_model_summary=False,
+                             enable_progress_bar=False)
+        # Get original predictions
+        dataloader = DataLoader(TensorDataset(X),
+                                batch_size=self.batch_size,
+                                num_workers=self.num_workers,
+                                shuffle=False)
+        preds_origin = predict(self.model, dataloader, trainer)
+
+        results = []
+        pbar = tqdm(range(n_samples), total=n_samples)
+        pbar.set_description('Region-based prediction', refresh=False)
+        for i in pbar:
+            x = X[i]
+            noise_eps = f'u{self.radius}'  # Uniform noise
+            x_noisy = create_noisy_examples(x,
+                                            n_samples=self.n_noise_samples,
+                                            noise_eps=noise_eps,
+                                            clip_range=self.noise_clip_range)
+            dataloader = DataLoader(TensorDataset(x_noisy),
+                                    batch_size=self.batch_size,
+                                    num_workers=self.num_workers,
+                                    shuffle=False)
+            preds = predict(self.model, dataloader, trainer)
+            preds_oh = F.one_hot(preds, num_classes=self.n_classes)
+            preds_mean = preds_oh.float().mean(dim=0)
+            results.append(preds_mean)
+        results = torch.vstack(results)
+
+        # Get neighbor probability for each example.
+        indices = preds_origin.long().unsqueeze(dim=1)
+        results = results.gather(dim=1, index=indices).squeeze()
+        return results.detach().numpy()
+
+    def predict(self, X: Tensor) -> Tensor:
+        """Making prediction using Region-based classifier."""
+        logging.getLogger("pytorch_lightning").setLevel(logging.WARNING)
+
+        n_samples = X.size(0)
+        trainer = pl.Trainer(accelerator='auto',
+                             logger=False,
+                             enable_model_summary=False,
+                             enable_progress_bar=False)
+        results = []
+        pbar = tqdm(range(n_samples), total=n_samples)
+        pbar.set_description('Region-based prediction', refresh=False)
+        for i in pbar:
+            x = X[i]
+            noise_eps = f'u{self.radius}'  # Uniform noise
+            x_noisy = create_noisy_examples(x,
+                                            n_samples=self.n_noise_samples,
+                                            noise_eps=noise_eps,
+                                            clip_range=self.noise_clip_range)
+            dataloader = DataLoader(TensorDataset(x_noisy),
+                                    batch_size=self.batch_size,
+                                    num_workers=self.num_workers,
+                                    shuffle=False)
+            preds = predict(self.model, dataloader, trainer)
+            mode = preds.mode()[0]  # (values, indices)
+            results.append(mode)
+        results = torch.tensor(results)
+        return results
+
+    def save(self, path_output=None) -> None:
+        """Dummy function. Do nothing."""
+        return
+
+    def load(self, path: str) -> None:
+        """Dummy function. Do nothing. The detector inferences using the original
+        classifier.
+        """
+        return
