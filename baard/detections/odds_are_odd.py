@@ -1,4 +1,6 @@
-"""Implementing the paper "The Odds are Odd: A Statistical Test for Detecting Adversarial Examples" -- Roth et. al. (2019)"""
+"""Implementing the paper "The Odds are Odd: A Statistical Test for Detecting
+Adversarial Examples" -- Roth et. al. (2019)
+"""
 import os
 import pickle
 import warnings

@@ -1,4 +1,5 @@
-"""Implementing the paper "Detecting adversarial examples by positive and negative representations" -- Luo et. al. (2022)
+"""Implementing the paper "Detecting adversarial examples by positive and
+negative representations" -- Luo et. al. (2022)
 """
 import numpy as np
 import pytorch_lightning as pl
@@ -11,20 +12,8 @@ from sklearn.model_selection import train_test_split
 from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
 
-from baard.classifiers import DATASETS
-from baard.classifiers.cifar10_resnet18 import CIFAR10_ResNet18
-from baard.classifiers.mnist_cnn import MNIST_CNN
+from baard.classifiers import get_lightning_module
 from baard.utils.torch_utils import dataloader2tensor, predict
-
-
-def get_lightning_module(data_name: str) -> LightningModule:
-    """Get PyTorch Lightning Module based on the dataset."""
-    if data_name == DATASETS[0]:  # MNIST
-        return MNIST_CNN
-    elif data_name == DATASETS[1]:  # CIFAR10
-        return CIFAR10_ResNet18
-    else:
-        raise NotImplementedError()
 
 
 class PNDetector:
@@ -36,7 +25,7 @@ class PNDetector:
                  path_model: str,
                  dist: str = 'cosine',
                  max_epochs: int = 50,
-                 path_log: str = 'logs',
+                 path_checkpoint: str = 'logs',
                  seed: int = None,
                  ):
         self.model = model
@@ -44,7 +33,7 @@ class PNDetector:
         self.path_model = path_model
         self.dist = dist
         self.max_epochs = max_epochs
-        self.path_log = path_log
+        self.path_checkpoint = path_checkpoint
         self.seed = seed
 
         # Parameters from LightningModule:
@@ -91,7 +80,7 @@ class PNDetector:
             precision=16,
             max_epochs=self.max_epochs,
             num_sanity_val_steps=0,
-            logger=TensorBoardLogger(save_dir=self.path_log, name=f'PNClassifier_{self.data_name}'),
+            logger=TensorBoardLogger(save_dir=self.path_checkpoint, name=f'PNClassifier_{self.data_name}'),
             callbacks=[
                 LearningRateMonitor(logging_interval='step'),
             ],
@@ -149,16 +138,13 @@ class PNDetector:
         similarity = similarity.detach().numpy()
         return similarity
 
-    def save(self, path_output: str) -> None:
-        """Save PNClassifier as binary. The ideal extension is `.pnd`. """
-        # torch.save(self.pn_classifier.state_dict(), path_output)
+    def save(self, path_output=None) -> None:
+        """Dummy function. Do nothing. Model automatically saves checkpoints during training."""
         raise NotImplementedError('Checkpoint is automatically saved under `path_log`.')
 
-    def load(self, path_detector: str) -> None:
-        """Load pre-trained PNClassifier. The default extension is `.pnd`."""
-        # self.pn_classifier.load_state_dict(torch.load(path_detector))
-        # self.pn_classifier.eval()
-        self.pn_classifier = get_lightning_module(self.data_name).load_from_checkpoint(path_detector)
+    def load(self, path_checkpoint: str) -> None:
+        """Load PyTorch Lightening checkpoint file."""
+        self.pn_classifier = get_lightning_module(self.data_name).load_from_checkpoint(path_checkpoint)
 
     @classmethod
     def check_range(cls, X):

@@ -1,4 +1,6 @@
-"""Implementing the paper "ML-LOO: Detecting Adversarial Examples with Feature Attribution". -- Yang et. al. (2020)"""
+"""Implementing the paper "ML-LOO: Detecting Adversarial Examples with Feature
+Attribution". -- Yang et. al. (2020)
+"""
 import os
 import pickle
 import warnings

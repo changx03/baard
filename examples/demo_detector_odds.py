@@ -28,21 +28,20 @@ from baard.classifiers.mnist_cnn import MNIST_CNN
 from baard.detections.odds_are_odd import OddsAreOddDetector
 from baard.utils.torch_utils import dataset2tensor
 
-# Parameters for development:
-SEED_DEV = 0
-PATH_ROOT = Path(os.getcwd()).absolute()
-PATH_DATA = os.path.join(PATH_ROOT, 'data')
-PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
-PATH_VAL_DATA = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'ValClean.n_1000.pt')
-PATH_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'APGD.Linf.n_100.e_0.22.pt')
-PATH_WEIGHTS_DEV = os.path.join('temp', 'dev_odds_detector.odds')
-NOIST_LIST_DEV = ['n0.01', 'u0.01']
-N_NOISE_DEV = 30
-SIZE_DEV = 100
-DATASET = DATASETS[0]
 
-
-if __name__ == '__main__':
+def run_demo():
+    """Test OddsAreOdd Detector"""
+    # Parameters for development:
+    SEED_DEV = 0
+    PATH_ROOT = Path(os.getcwd()).absolute()
+    PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
+    PATH_VAL_DATA = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'ValClean.n_1000.pt')
+    PATH_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'APGD.Linf.n_100.e_0.22.pt')
+    PATH_WEIGHTS_DEV = os.path.join('temp', 'dev_odds_detector.odds')
+    NOIST_LIST_DEV = ['n0.01', 'u0.01']
+    N_NOISE_DEV = 30
+    SIZE_DEV = 100
+    DATASET = DATASETS[0]
     pl.seed_everything(SEED_DEV)
 
     print('PATH ROOT:', PATH_ROOT)
@@ -65,8 +64,8 @@ if __name__ == '__main__':
     ############################################################################
     # Uncomment the block below to train the detector:
 
-    detector.train(X_dev, y_dev)
-    detector.save(PATH_WEIGHTS_DEV)
+    # detector.train(X_dev, y_dev)
+    # detector.save(PATH_WEIGHTS_DEV)
     ############################################################################
 
     # Evaluate detector
@@ -84,3 +83,7 @@ if __name__ == '__main__':
     X_adv, y_adv_true = dataset2tensor(adv_dataset)
     scores_adv = detector2.extract_features(X_adv[:30])
     print(scores_adv)
+
+
+if __name__ == '__main__':
+    run_demo()

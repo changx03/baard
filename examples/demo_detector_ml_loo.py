@@ -28,19 +28,19 @@ from baard.classifiers.mnist_cnn import MNIST_CNN
 from baard.detections.ml_loo import MLLooDetector
 from baard.utils.torch_utils import dataset2tensor
 
-# Parameters for development:
-SEED_DEV = 0
-PATH_ROOT = Path(os.getcwd()).absolute()
-PATH_DATA = os.path.join(PATH_ROOT, 'data')
-PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
-PATH_DATA_CLEAN = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'AdvClean.n_100.pt')
-PATH_DATA_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'APGD.Linf.n_100.e_0.22.pt')
-PATH_MLLOO_DEV = os.path.join('temp', 'dev_mlloo_detector.mlloo')
-DATASET = DATASETS[0]
-SIZE_DEV = 40  # For quick development
 
+def run_demo():
+    """Test ML-LOO Detector."""
+    # Parameters for development:
+    SEED_DEV = 0
+    PATH_ROOT = Path(os.getcwd()).absolute()
+    PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
+    PATH_DATA_CLEAN = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'AdvClean.n_100.pt')
+    PATH_DATA_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'APGD.Linf.n_100.e_0.22.pt')
+    PATH_MLLOO_DEV = os.path.join('temp', 'dev_mlloo_detector.mlloo')
+    DATASET = DATASETS[0]
+    SIZE_DEV = 40  # For quick development
 
-if __name__ == '__main__':
     pl.seed_everything(SEED_DEV)
 
     print('PATH ROOT:', PATH_ROOT)
@@ -50,9 +50,9 @@ if __name__ == '__main__':
     model = MNIST_CNN.load_from_checkpoint(PATH_CHECKPOINT)
 
     BATCH_SIZE = model.train_dataloader().batch_size
-    DEVICE = model.device
-    NUM_WORKERS = model.train_dataloader().num_workers
-    INPUT_SHAPE = (BATCH_SIZE, 1, 28, 28)
+    # DEVICE = model.device
+    # NUM_WORKERS = model.train_dataloader().num_workers
+    # INPUT_SHAPE = (BATCH_SIZE, 1, 28, 28)
 
     # Clean examples
     dataset_clean = torch.load(PATH_DATA_CLEAN)
@@ -79,7 +79,7 @@ if __name__ == '__main__':
     # Tiny test set
     X_eval_clean = X_clean[indices_eval][:10]
     X_eval_adv = X_adv[indices_eval][:10]
-    y_eval_true = y_clean[indices_eval][:10]
+    # y_eval_true = y_clean[indices_eval][:10]
 
     print('Pre-trained ML-LOO path:', PATH_MLLOO_DEV)
 
@@ -102,3 +102,7 @@ if __name__ == '__main__':
 
     score_adv = detector2.predict_proba(X_eval_adv)
     print(score_adv)
+
+
+if __name__ == '__main__':
+    run_demo()

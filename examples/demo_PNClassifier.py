@@ -27,17 +27,18 @@ from baard.classifiers.mnist_cnn import MNIST_CNN
 from baard.detections.pn_detector import PNDetector
 from baard.utils.torch_utils import dataset2tensor, predict
 
-# Parameters for development:
-SEED_DEV = 0
-DATASET = DATASETS[0]
-MAX_EPOCHS_DEV = 30
-PATH_ROOT = Path(os.getcwd()).absolute()
-PATH_DATA = os.path.join(PATH_ROOT, 'data')
-PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
-PATH_DATA_CLEAN = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'AdvClean.n_100.pt')
-PATH_DATA_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'FGSM.Linf.n_100.e_0.28.pt')
 
-if __name__ == '__main__':
+def run_demo():
+    """Test Positive Negative Detector."""
+    # Parameters for development:
+    SEED_DEV = 0
+    DATASET = DATASETS[0]
+    MAX_EPOCHS_DEV = 30
+    PATH_ROOT = Path(os.getcwd()).absolute()
+    PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
+    PATH_DATA_CLEAN = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'AdvClean.n_100.pt')
+    PATH_DATA_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'FGSM.Linf.n_100.e_0.28.pt')
+
     pl.seed_everything(SEED_DEV)
 
     print('PATH ROOT:', PATH_ROOT)
@@ -80,7 +81,13 @@ if __name__ == '__main__':
     PATH_PN_CLASSIFIER_DEV = os.path.join(PATH_ROOT, 'logs', 'PNClassifier_MNIST', 'version_0', 'checkpoints', 'epoch=29-step=7050.ckpt')
 
     # Try L2 pairwise-distance
-    detector2 = PNDetector(model, DATASET, path_model=PATH_CHECKPOINT, dist='pair')
+    detector2 = PNDetector(model,
+                           DATASET,
+                           path_model=PATH_CHECKPOINT,
+                           max_epochs=MAX_EPOCHS_DEV,
+                           dist='cosine',
+                           seed=SEED_DEV,
+                           )
     detector2.load(PATH_PN_CLASSIFIER_DEV)
 
     scores_adv = detector2.extract_features(X_eval_adv)
@@ -109,7 +116,7 @@ if __name__ == '__main__':
 
     print('Evaluate on PNClassifier:')
     pn_classifier = detector2.pn_classifier
-    preds_pn_adv = predict(model, dataloader_eval_adv)
+    preds_pn_adv = predict(pn_classifier, dataloader_eval_adv)
     print('Adversarial example [Pos]:', preds_pn_adv)
 
     X_adv_neg = 1 - X_eval_adv
@@ -117,5 +124,9 @@ if __name__ == '__main__':
                                     batch_size=batch_size,
                                     num_workers=num_workers,
                                     shuffle=False)
-    preds_adv_neg = predict(model, dataloader_adv_neg)
+    preds_adv_neg = predict(pn_classifier, dataloader_adv_neg)
     print('Adversarial example [Neg]:', preds_adv_neg)
+
+
+if __name__ == '__main__':
+    run_demo()
