@@ -24,6 +24,14 @@ pip install --upgrade .
 python ./examples/check_gpu.py
 ```
 
+### Notes
+
+- If an alternative version of `PyTorch` is installed, remove all `PyTorch` related packages from `requirements.txt` file,
+  and install them manually, including: `pytorch-lightning`, `torch`, `torch-tb-profiler`, `torchinfo`, `torchmetrics`,
+  and `torchvision`.
+- `OpenCV` is required for `Feature Squeezing` detector. The script from `requirements.txt` will try to install
+  a pre-build **CPU-only** version. Check [here](https://pypi.org/project/opencv-python/) for more details.
+
 ## Train clasifiers
 
 The Python script for training the classifier takes command line arguments and passes them to `PyTorch-Lightning`'s `Trainer` class.
