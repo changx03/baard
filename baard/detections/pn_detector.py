@@ -17,9 +17,10 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from baard.classifiers import get_lightning_module
 from baard.utils.torch_utils import dataloader2tensor, predict
+from ..detections import Detector
 
 
-class PNDetector:
+class PNDetector(Detector):
     """Implement Positive and Negative Representations Detector in PyTorch."""
 
     def __init__(self,
@@ -31,17 +32,13 @@ class PNDetector:
                  path_checkpoint: str = 'logs',
                  seed: int = None,
                  ):
-        self.model = model
-        self.data_name = data_name
+        super().__init__(model, data_name)
+
         self.path_model = path_model
         self.dist = dist
         self.max_epochs = max_epochs
         self.path_checkpoint = path_checkpoint
         self.seed = seed
-
-        # Parameters from LightningModule:
-        self.batch_size = self.model.train_dataloader().batch_size
-        self.num_workers = self.model.train_dataloader().num_workers
 
         # Clone the base model
         self.pn_classifier: LightningModule = get_lightning_module(data_name).load_from_checkpoint(path_model)
@@ -143,13 +140,9 @@ class PNDetector:
         similarity = similarity.detach().numpy()
         return similarity
 
-    def save(self, path_output=None) -> None:
-        """Dummy function. Do nothing. Model automatically saves checkpoints during training."""
-        return
-
-    def load(self, path_checkpoint: str) -> None:
+    def load(self, path: str = None) -> None:
         """Load PyTorch Lightening checkpoint file."""
-        self.pn_classifier = get_lightning_module(self.data_name).load_from_checkpoint(path_checkpoint)
+        self.pn_classifier = get_lightning_module(self.data_name).load_from_checkpoint(path)
 
     @classmethod
     def check_range(cls, X):

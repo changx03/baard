@@ -13,9 +13,10 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
 from baard.utils.torch_utils import create_noisy_examples, predict
+from ..detections import Detector
 
 
-class RegionBasedClassifier:
+class RegionBasedClassifier(Detector):
     """Implement Region-based Classifier in PyTorch"""
 
     def __init__(self,
@@ -26,16 +27,12 @@ class RegionBasedClassifier:
                  n_noise_samples: int = 1000,
                  noise_clip_range: Tuple = (0., 1.)
                  ):
-        self.model = model
-        self.data_name = data_name
+        super().__init__(model, data_name)
+
         self.n_classes = n_classes
         self.radius = radius
         self.n_noise_samples = n_noise_samples
         self.noise_clip_range = noise_clip_range
-
-        # Parameters from LightningModule:
-        self.batch_size = self.model.train_dataloader().batch_size
-        self.num_workers = self.model.train_dataloader().num_workers
 
     def train(self, X: Any = None, y: Any = None) -> None:
         """Train detector. X and y are dummy variables."""
@@ -110,13 +107,3 @@ class RegionBasedClassifier:
             results.append(mode)
         results = torch.tensor(results)
         return results
-
-    def save(self, path_output=None) -> None:
-        """Dummy function. Do nothing."""
-        return
-
-    def load(self, path: str) -> None:
-        """Dummy function. Do nothing. The detector inferences using the original
-        classifier.
-        """
-        return

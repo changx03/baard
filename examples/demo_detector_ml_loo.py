@@ -41,6 +41,7 @@ def run_demo():
     SEED_DEV = 0
     DATASET = DATASETS[0]
     SIZE_DEV = 40  # For quick development
+    TINY_TEST_SIZE = 10
 
     pl.seed_everything(SEED_DEV)
 
@@ -78,9 +79,9 @@ def run_demo():
     y_train_true = y_clean[indices_train]
 
     # Tiny test set
-    X_eval_clean = X_clean[indices_eval][:10]
-    X_eval_adv = X_adv[indices_eval][:10]
-    # y_eval_true = y_clean[indices_eval][:10]
+    X_eval_clean = X_clean[indices_eval][:TINY_TEST_SIZE]
+    X_eval_adv = X_adv[indices_eval][:TINY_TEST_SIZE]
+    # y_eval_true = y_clean[indices_eval][:TINY_TEST_SIZE]
 
     print('Pre-trained ML-LOO path:', PATH_MLLOO_DEV)
 

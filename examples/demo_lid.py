@@ -42,8 +42,8 @@ def run_demo():
     PATH_DETECTOR_DEV = os.path.join('temp', 'dev_lid_detector.lid')
 
     # Parameters for development:
-    N_TRAIN = 100
-    N_TEST = 10
+    TINY_TRAIN_SIZE = 100
+    TINY_TEST_SIZE = 10
     SEED_DEV = 0
 
     pl.seed_everything(SEED_DEV)
@@ -68,7 +68,7 @@ def run_demo():
 
     # Use a tiny training set
     X_train, _, y_train, _ = train_test_split(
-        X_train, y_train, train_size=N_TRAIN, random_state=SEED_DEV)
+        X_train, y_train, train_size=TINY_TRAIN_SIZE, random_state=SEED_DEV)
 
     # Save results
     ############################################################################
@@ -89,14 +89,14 @@ def run_demo():
     X_adv, _ = dataset2tensor(dataset_adv)
 
     # Tiny test set
-    X_eval_clean = X_clean[:N_TEST]
-    X_eval_adv = X_adv[:N_TEST]
+    X_eval_clean = X_clean[:TINY_TEST_SIZE]
+    X_eval_adv = X_adv[:TINY_TEST_SIZE]
 
     features_clean = detector.extract_features(X_eval_clean)
     features_adv = detector.extract_features(X_eval_adv)
 
     print('      [Clean] LID features:')
-    print(np.round(features_clean, 3))u
+    print(np.round(features_clean, 3))
     print('[Adversarial] LID features:')
     print(np.round(features_adv, 3))
 
@@ -108,7 +108,7 @@ def run_demo():
         np.zeros(len(detector.lid_neg)),
         np.ones(len(detector.lid_pos)),
     ]).astype(int)
-    assert len(lid_train_X) == N_TRAIN * 3, f'Training set != clean + noisy + adversarial examples. Expect {N_TRAIN * 3} got {len(lid_train_X)}.'
+    assert len(lid_train_X) == TINY_TRAIN_SIZE * 3, f'Training set != clean + noisy + adversarial examples. Expect {TINY_TRAIN_SIZE * 3} got {len(lid_train_X)}.'
     regressor.fit(lid_train_X, lid_train_y)
 
     results_clean = regressor.predict_proba(features_clean)[:, 1]  # Only choose 2nd column (positive)

@@ -21,9 +21,10 @@ from baard.classifiers import DATASETS
 from baard.utils.torch_utils import (batch_forward, create_noisy_examples,
                                      dataloader2tensor, get_correct_examples,
                                      get_dataloader_shape, predict)
+from ..detections import Detector
 
 
-class OddsAreOddDetector:
+class OddsAreOddDetector(Detector):
     """Implement Odds are odd detector in PyTorch."""
 
     def __init__(self,
@@ -33,8 +34,8 @@ class OddsAreOddDetector:
                  n_noise_samples: int = 100,
                  device: str = 'cuda',
                  ):
-        self.model = model
-        self.data_name = data_name
+        super().__init__(model, data_name)
+
         self.noise_list = noise_list
         self.n_noise_samples = n_noise_samples
 
@@ -42,10 +43,6 @@ class OddsAreOddDetector:
             warnings.warn('GPU is not available. Using CPU...')
             device = 'cpu'
         self.device = device
-
-        # Parameters from LightningModule:
-        self.batch_size = self.model.train_dataloader().batch_size
-        self.num_workers = self.model.train_dataloader().num_workers
 
         # Parameters based on data:
         latent_net, weight, n_classes, clip_range = self.get_odds_params_from_data(data_name, model)
@@ -117,21 +114,21 @@ class OddsAreOddDetector:
 
         return np.max(max_Z_scores)
 
-    def save(self, path_output: str) -> None:
+    def save(self, path: str = None) -> None:
         """Save weight statistics as binary. The ideal extension is `.odds`. """
-        path_output_dir = Path(path_output).resolve().parent
+        path_output_dir = Path(path).resolve().parent
         if not os.path.exists(path_output_dir):
             print(f'Output directory is not found. Create: {path_output_dir}')
             os.makedirs(path_output_dir)
 
-        pickle.dump(self.weights_stats, open(path_output, 'wb'))
+        pickle.dump(self.weights_stats, open(path, 'wb'))
 
-    def load(self, path_pretrained_results: str) -> None:
+    def load(self, path: str = None) -> None:
         """Load pre-trained statistics. The default extension is `.odds`."""
-        if os.path.isfile(path_pretrained_results):
-            self.weights_stats = pickle.load(open(path_pretrained_results, 'rb'))
+        if os.path.isfile(path):
+            self.weights_stats = pickle.load(open(path, 'rb'))
         else:
-            raise FileExistsError(f'{path_pretrained_results} does not exist!')
+            raise FileExistsError(f'{path} does not exist!')
 
     @classmethod
     def get_negative_labels(cls, y, n_classes=10) -> ArrayLike:

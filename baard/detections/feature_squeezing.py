@@ -10,6 +10,7 @@ import scipy
 import torch
 import torch.nn.functional as F
 from numpy.typing import ArrayLike
+from pytorch_lightning import LightningModule
 from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.loggers import TensorBoardLogger
 from torch import Tensor
@@ -17,6 +18,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from baard.classifiers import DATASETS, get_lightning_module
 from baard.utils.torch_utils import dataloader2tensor
+from ..detections import Detector
 
 SQUEEZER = ('depth', 'median', 'nl_mean')
 
@@ -92,11 +94,11 @@ class NLMeansColourSqueezer(Squeezer):
         return np.clip(outputs, self.x_min, self.x_max)
 
 
-class FeatureSqueezingDetector:
+class FeatureSqueezingDetector(Detector):
     """Implement Feature Squeezing Detector in PyTorch."""
 
     def __init__(self,
-                 model: pl.LightningModule,
+                 model: LightningModule,
                  data_name: str,
                  path_model: str,
                  max_epochs: int = 30,
@@ -104,17 +106,13 @@ class FeatureSqueezingDetector:
                  seed: int = None,
                  verbose: bool = True
                  ):
-        self.model = model
-        self.data_name = data_name
+        super().__init__(model, data_name)
+
         self.path_model = path_model
         self.max_epochs = max_epochs
         self.path_checkpoint = path_checkpoint
         self.seed = seed
         self.verbose = verbose
-
-        # Parameters from LightningModule:
-        self.batch_size = self.model.train_dataloader().batch_size
-        self.num_workers = self.model.train_dataloader().num_workers
 
         # Number of classifiers = Number of squeezers
         self.squeezers = self.get_squeezers()
@@ -211,15 +209,11 @@ class FeatureSqueezingDetector:
         max_dist = torch.vstack(scores).max(dim=0)[0].detach().numpy()
         return max_dist
 
-    def save(self, path_output=None) -> None:
-        """Dummy function. Do nothing. Model automatically saves checkpoints during training."""
-        raise NotImplementedError('Checkpoint is automatically saved under `path_log`.')
-
-    def load(self, path_checkpoint_list: Dict) -> None:
+    def load(self, path_list: Dict) -> None:
         """Load a dictionary of PyTorch Lightening checkpoint files, e.g.,
         [{<SQUEEZER_NAME>: <PATH_CHECKPOINT>}].
         """
-        for fs_key, path_checkpoint in path_checkpoint_list.items():
+        for fs_key, path_checkpoint in path_list.items():
             self.squeezed_models[fs_key] = get_lightning_module(self.data_name).load_from_checkpoint(path_checkpoint)
 
     def get_squeezers(self) -> Dict:

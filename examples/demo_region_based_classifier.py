@@ -18,6 +18,7 @@ python ./experiments/train_adv_examples.py -d=MNIST --attack=APGD \
 import os
 from pathlib import Path
 
+import numpy as np
 import pytorch_lightning as pl
 import torch
 from torch.utils.data import DataLoader, TensorDataset
@@ -37,6 +38,7 @@ def run_demo():
     # Parameters for development:
     SEED_DEV = 0
     DATASET = DATASETS[0]
+    TINY_TEST_SIZE = 10
 
     pl.seed_everything(SEED_DEV)
 
@@ -62,15 +64,17 @@ def run_demo():
     X_adv, y_adv_true = dataset2tensor(dataset_adv)
 
     # Tiny test set
-    X_eval_clean = X_clean[:20]
-    X_eval_adv = X_adv[:20]
-    y_eval_true = y_clean[:20]
+    X_eval_clean = X_clean[:TINY_TEST_SIZE]
+    X_eval_adv = X_adv[:TINY_TEST_SIZE]
+    y_eval_true = y_clean[:TINY_TEST_SIZE]
 
     features_clean = detector.extract_features(X_eval_clean)
-    print(features_clean)
+    print('Clean:')
+    print(np.round(features_clean, 2))
 
     features_adv = detector.extract_features(X_eval_adv)
-    print(features_adv)
+    print('Adversarial examples:')
+    print(np.round(features_adv, 2))
 
     preds_clean = detector.predict(X_eval_clean)
     preds_adv = detector.predict(X_eval_adv)

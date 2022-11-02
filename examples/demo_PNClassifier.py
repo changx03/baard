@@ -18,9 +18,10 @@ python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM  \
 import os
 from pathlib import Path
 
+import numpy as np
 import pytorch_lightning as pl
 import torch
-from torch.utils.data import TensorDataset, DataLoader
+from torch.utils.data import DataLoader, TensorDataset
 
 from baard.classifiers import DATASETS
 from baard.classifiers.mnist_cnn import MNIST_CNN
@@ -39,6 +40,7 @@ def run_demo():
     SEED_DEV = 0
     DATASET = DATASETS[0]
     MAX_EPOCHS_DEV = 30
+    TINY_TEST_SIZE = 10
 
     pl.seed_everything(SEED_DEV)
 
@@ -67,9 +69,9 @@ def run_demo():
     X_adv, y_adv_true = dataset2tensor(dataset_adv)
 
     # Tiny test set
-    X_eval_clean = X_clean[:20]
-    X_eval_adv = X_adv[:20]
-    y_eval_true = y_clean[:20]
+    X_eval_clean = X_clean[:TINY_TEST_SIZE]
+    X_eval_adv = X_adv[:TINY_TEST_SIZE]
+    y_eval_true = y_clean[:TINY_TEST_SIZE]
 
     # scores_clean = detector.extract_features(X_eval_clean)
     # print(scores_clean)
@@ -92,10 +94,10 @@ def run_demo():
     detector2.load(PATH_PN_CLASSIFIER_DEV)
 
     scores_adv = detector2.extract_features(X_eval_adv)
-    print('Adv:\n', scores_adv)
+    print('Adv:\n', np.round(scores_adv, 3))
 
     scores_clean = detector2.extract_features(X_eval_clean)
-    print('Clean:\n', scores_clean)
+    print('Clean:\n', np.round(scores_clean, 3))
     ############################################################################
 
     print('Evaluate on original classifier:')

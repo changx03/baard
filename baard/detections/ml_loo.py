@@ -25,11 +25,12 @@ from baard.utils.torch_utils import (batch_forward, dataloader2tensor,
                                      get_correct_examples,
                                      get_dataloader_shape,
                                      get_incorrect_examples)
+from ..detections import Detector
 
 AVAILABLE_STATS_LIST = ('std', 'variance', 'con', 'mad', 'kurtosis', 'skewness', 'quantile')
 
 
-class MLLooDetector:
+class MLLooDetector(Detector):
     """Implement ML-Loo detector in PyTorch."""
 
     def __init__(self,
@@ -38,18 +39,14 @@ class MLLooDetector:
                  device: str = 'cuda',
                  stats_list: Tuple = AVAILABLE_STATS_LIST,
                  ):
-        self.model = model
-        self.data_name = data_name
+        super().__init__(model, data_name)
+
         self.stats_list = stats_list
 
         if not torch.cuda.is_available() and device == 'cuda':
             warnings.warn('GPU is not available. Using CPU...')
             device = 'cpu'
         self.device = device
-
-        # Parameters from LightningModule:
-        self.batch_size = self.model.train_dataloader().batch_size
-        self.num_workers = self.model.train_dataloader().num_workers
 
         # Get latent nets based on dataset
         latent_nets, n_classes = self.get_latent_models_and_n_classes(model, data_name)
@@ -138,9 +135,9 @@ class MLLooDetector:
         probs = self.logistic_regressor.predict_proba(X_mlloo)
         return probs[:, 1]  # Only return the 2nd column
 
-    def save(self, path_output: str) -> None:
+    def save(self, path: str = None) -> None:
         """Save trained statistics as binary. The ideal extension is `.mlloo`. """
-        path_output_dir = Path(path_output).resolve().parent
+        path_output_dir = Path(path).resolve().parent
         if not os.path.exists(path_output_dir):
             print(f'Output directory is not found. Create: {path_output_dir}')
             os.makedirs(path_output_dir)
@@ -151,18 +148,18 @@ class MLLooDetector:
             'scaler': self.scaler,
             'logistic_regressor': self.logistic_regressor,
         }
-        pickle.dump(save_obj, open(path_output, 'wb'))
+        pickle.dump(save_obj, open(path, 'wb'))
 
-    def load(self, path_pretrained_results: str) -> None:
+    def load(self, path: str = None) -> None:
         """Load pre-trained statistics. The default extension is `.mlloo`."""
-        if os.path.isfile(path_pretrained_results):
-            save_obj = pickle.load(open(path_pretrained_results, 'rb'))
+        if os.path.isfile(path):
+            save_obj = pickle.load(open(path, 'rb'))
             self.train_mlloss_stats = save_obj['train_mlloss_stats']
             self.adv_mlloss_stats = save_obj['adv_mlloss_stats']
             self.scaler = save_obj['scaler']
             self.logistic_regressor = save_obj['logistic_regressor']
         else:
-            raise FileExistsError(f'{path_pretrained_results} does not exist!')
+            raise FileExistsError(f'{path} does not exist!')
 
     @classmethod
     def get_latent_models_and_n_classes(cls, model: Module, data_name) -> tuple[List, int]:

@@ -38,6 +38,7 @@ def run_demo():
     SEED_DEV = 0
     DATASET = DATASETS[0]
     MAX_EPOCHS_DEV = 5
+    TINY_TEST_SIZE = 10
 
     pl.seed_everything(SEED_DEV)
 
@@ -57,6 +58,7 @@ def run_demo():
     ############################################################################
     # Uncomment the block below to train the model
     # detector.train()
+    # detector.save()  # Dummy function.
     ############################################################################
 
     # Load pre-trained models
@@ -69,16 +71,15 @@ def run_demo():
 
     # Clean examples
     dataset_clean = torch.load(PATH_DATA_CLEAN)
-    X_clean, y_clean = dataset2tensor(dataset_clean)
+    X_clean, _ = dataset2tensor(dataset_clean)
 
     # Corresponding adversarial examples
     dataset_adv = torch.load(PATH_DATA_ADV)
-    X_adv, y_adv_true = dataset2tensor(dataset_adv)
+    X_adv, _ = dataset2tensor(dataset_adv)
 
     # Tiny test set
-    X_eval_clean = X_clean[:20]
-    X_eval_adv = X_adv[:20]
-    y_eval_true = y_clean[:20]
+    X_eval_clean = X_clean[:TINY_TEST_SIZE]
+    X_eval_adv = X_adv[:TINY_TEST_SIZE]
 
     features_clean = detector.extract_features(X_eval_clean)
     print(features_clean)

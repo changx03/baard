@@ -18,9 +18,10 @@ from tqdm import tqdm
 
 from baard.attacks.apgd import auto_projected_gradient_descent
 from baard.utils.torch_utils import dataloader2tensor
+from ..detections import Detector
 
 
-class LIDDetector:
+class LIDDetector(Detector):
     """Implement Local Intrinsic Dimensionality Detector in PyTorch."""
 
     def __init__(self,
@@ -35,8 +36,8 @@ class LIDDetector:
                  batch_size: int = 100,
                  device: str = 'cuda',
                  ):
-        self.model = model
-        self.data_name = data_name
+        super().__init__(model, data_name)
+
         self.n_classes = n_classes
         self.clip_range = clip_range
         self.attack_eps = attack_eps
@@ -50,9 +51,6 @@ class LIDDetector:
             device = 'cpu'
         self.device = device
 
-        # Parameters from LightningModule:
-        self.num_workers = self.model.train_dataloader().num_workers
-
         # Get all hidden layers
         self.latent_nets = self.get_hidden_layers(self.model, self.device)
 
@@ -60,7 +58,7 @@ class LIDDetector:
         self.lid_neg = None
         self.lid_pos = None
 
-    def train(self, X: Any = None, y: Any = None) -> None:
+    def train(self, X: Tensor = None, y: Tensor = None) -> None:
         """Train detector. Train is not required to compute LID. It is only used
         for creating a training set for the logistic regression model.
         """
@@ -188,7 +186,7 @@ class LIDDetector:
         multi_layer_lid = nn.functional.normalize(multi_layer_lid, p=2, dim=1)
         return multi_layer_lid.numpy()
 
-    def save(self, path) -> None:
+    def save(self, path: str = None) -> None:
         """Save extracted features for the training set. The ideal extension is `.lid`."""
         if self.lid_neg is None or self.lid_pos is None:
             raise Exception('No trained weights. Nothing to save.')
@@ -199,7 +197,7 @@ class LIDDetector:
         }
         pickle.dump(save_obj, open(path, 'wb'))
 
-    def load(self, path) -> None:
+    def load(self, path: str = None) -> None:
         """Load extracted features for the training set. The default extension is `.lid`."""
         if os.path.isfile(path):
             save_obj = pickle.load(open(path, 'rb'))

@@ -38,11 +38,12 @@ def run_demo():
     PATH_WEIGHTS_DEV = os.path.join('temp', 'dev_odds_detector.odds')
 
     # Parameters for development:
+    DATASET = DATASETS[0]
     SEED_DEV = 0
     NOIST_LIST_DEV = ['n0.01', 'u0.01']
     N_NOISE_DEV = 30
     SIZE_DEV = 100
-    DATASET = DATASETS[0]
+    TINY_TEST_SIZE = 10
 
     pl.seed_everything(SEED_DEV)
 
@@ -51,11 +52,6 @@ def run_demo():
     print('PATH_CHECKPOINT:', PATH_CHECKPOINT)
 
     model = MNIST_CNN.load_from_checkpoint(PATH_CHECKPOINT)
-
-    detector = OddsAreOddDetector(model,
-                                  DATASETS[0],
-                                  noise_list=NOIST_LIST_DEV,
-                                  n_noise_samples=N_NOISE_DEV)
 
     val_dataset = torch.load(PATH_VAL_DATA)
     X_val, y_val = dataset2tensor(val_dataset)
@@ -66,24 +62,28 @@ def run_demo():
     ############################################################################
     # Uncomment the block below to train the detector:
 
+    # detector = OddsAreOddDetector(model,
+    #                               DATASET,
+    #                               noise_list=NOIST_LIST_DEV,
+    #                               n_noise_samples=N_NOISE_DEV)
     # detector.train(X_dev, y_dev)
     # detector.save(PATH_WEIGHTS_DEV)
     ############################################################################
 
     # Evaluate detector
     detector2 = OddsAreOddDetector(model,
-                                   DATASETS[0],
+                                   DATASET,
                                    noise_list=NOIST_LIST_DEV,
                                    n_noise_samples=N_NOISE_DEV)
     detector2.load(PATH_WEIGHTS_DEV)
 
-    scores = detector2.extract_features(X_dev[:30])
+    scores = detector2.extract_features(X_dev[:TINY_TEST_SIZE])
     print(scores)
 
     # Load adversarial examples
     adv_dataset = torch.load(PATH_ADV)
-    X_adv, y_adv_true = dataset2tensor(adv_dataset)
-    scores_adv = detector2.extract_features(X_adv[:30])
+    X_adv, _ = dataset2tensor(adv_dataset)
+    scores_adv = detector2.extract_features(X_adv[:TINY_TEST_SIZE])
     print(scores_adv)
 
 
