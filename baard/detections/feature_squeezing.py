@@ -17,8 +17,8 @@ from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
 
 from baard.classifiers import DATASETS, get_lightning_module
+from baard.detections import Detector
 from baard.utils.torch_utils import dataloader2tensor
-from ..detections import Detector
 
 SQUEEZER = ('depth', 'median', 'nl_mean')
 
@@ -119,7 +119,7 @@ class FeatureSqueezingDetector(Detector):
         self.squeezed_models = {key: get_lightning_module(data_name).load_from_checkpoint(path_model)
                                 for key in self.squeezers}
 
-    def train(self, X: Any = None, y: Any = None) -> None:
+    def train(self, X: Tensor = None, y: Tensor = None) -> None:
         """Train detector. X and y are dummy variables."""
         for squeezer_name, squeezer in self.squeezers.items():
             print(f'Training {squeezer_name} classifier...')

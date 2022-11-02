@@ -21,11 +21,11 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
 from baard.classifiers import DATASETS
+from baard.detections import Detector
 from baard.utils.torch_utils import (batch_forward, dataloader2tensor,
                                      get_correct_examples,
                                      get_dataloader_shape,
                                      get_incorrect_examples)
-from ..detections import Detector
 
 AVAILABLE_STATS_LIST = ('std', 'variance', 'con', 'mad', 'kurtosis', 'skewness', 'quantile')
 
@@ -60,7 +60,8 @@ class MLLooDetector(Detector):
         self.logistic_regressor = None
 
     def train(self, X: Tensor, y: Tensor, X_adv: Tensor = None) -> None:
-        """Train detector."""
+        """Train detector. Train is not required for extracting features.
+        """
         # Check predictions and true labels
         loader_clean = DataLoader(TensorDataset(X, y),
                                   batch_size=self.batch_size,

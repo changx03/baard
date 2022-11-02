@@ -17,8 +17,8 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
 from baard.attacks.apgd import auto_projected_gradient_descent
+from baard.detections import Detector
 from baard.utils.torch_utils import dataloader2tensor
-from ..detections import Detector
 
 
 class LIDDetector(Detector):
@@ -59,8 +59,8 @@ class LIDDetector(Detector):
         self.lid_pos = None
 
     def train(self, X: Tensor = None, y: Tensor = None) -> None:
-        """Train detector. Train is not required to compute LID. It is only used
-        for creating a training set for the logistic regression model.
+        """Train detector. Train is not required for extracting features. If X and y are None,
+        use the training set from the classifier.
         """
         if X is None or y is None:
             loader_train = self.model.train_dataloader()

@@ -16,8 +16,8 @@ from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
 
 from baard.classifiers import get_lightning_module
+from baard.detections import Detector
 from baard.utils.torch_utils import dataloader2tensor, predict
-from ..detections import Detector
 
 
 class PNDetector(Detector):
@@ -50,7 +50,7 @@ class PNDetector(Detector):
         else:
             raise NotImplementedError()
 
-    def train(self, X: Any = None, y: Any = None):
+    def train(self, X: Tensor = None, y: Tensor = None):
         """Train detector. X and y are dummy variables."""
         dataloader_train = self.model.train_dataloader()
         X, y = dataloader2tensor(dataloader_train)

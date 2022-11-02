@@ -12,8 +12,8 @@ from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
+from baard.detections import Detector
 from baard.utils.torch_utils import create_noisy_examples, predict
-from ..detections import Detector
 
 
 class RegionBasedClassifier(Detector):
@@ -34,7 +34,7 @@ class RegionBasedClassifier(Detector):
         self.n_noise_samples = n_noise_samples
         self.noise_clip_range = noise_clip_range
 
-    def train(self, X: Any = None, y: Any = None) -> None:
+    def train(self, X: Tensor = None, y: Tensor = None) -> None:
         """Train detector. X and y are dummy variables."""
         print('Region-based classifier does not require training.')
 

@@ -18,10 +18,10 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
 from baard.classifiers import DATASETS
+from baard.detections import Detector
 from baard.utils.torch_utils import (batch_forward, create_noisy_examples,
                                      dataloader2tensor, get_correct_examples,
                                      get_dataloader_shape, predict)
-from ..detections import Detector
 
 
 class OddsAreOddDetector(Detector):
@@ -56,7 +56,6 @@ class OddsAreOddDetector(Detector):
         self.weights_stats = None
 
     def train(self, X: Tensor, y: Tensor) -> None:
-        """Train detector."""
         # Check predictions and true labels
         dataloader = DataLoader(TensorDataset(X, y),
                                 batch_size=self.batch_size,
@@ -75,7 +74,6 @@ class OddsAreOddDetector(Detector):
         self.weights_stats = weights_stats
 
     def extract_features(self, X: Tensor) -> ArrayLike:
-        """Extract features from examples."""
         if self.weights_stats is None:
             raise Exception('Weights statistics have not initialized yet. Call `train` or `load_weights_stats` first!')
         n = X.size(0)
