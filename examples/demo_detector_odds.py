@@ -66,8 +66,8 @@ def run_demo():
     ############################################################################
     # Uncomment the block below to train the detector:
 
-    detector.train(X_dev, y_dev)
-    detector.save(PATH_WEIGHTS_DEV)
+    # detector.train(X_dev, y_dev)
+    # detector.save(PATH_WEIGHTS_DEV)
     ############################################################################
 
     # Evaluate detector

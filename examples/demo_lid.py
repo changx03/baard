@@ -74,8 +74,8 @@ def run_demo():
     ############################################################################
     # Uncomment the block below to train the detector:
 
-    detector.train(X_train, y_train)  # Don't need train to extract features.
-    detector.save(PATH_DETECTOR_DEV)
+    # detector.train(X_train, y_train)  # Don't need train to extract features.
+    # detector.save(PATH_DETECTOR_DEV)
     ############################################################################
 
     detector.load(PATH_DETECTOR_DEV)
@@ -93,9 +93,11 @@ def run_demo():
     X_eval_adv = X_adv[:N_TEST]
 
     features_clean = detector.extract_features(X_eval_clean)
-    print(np.round(features_clean, 3))
-
     features_adv = detector.extract_features(X_eval_adv)
+
+    print('      [Clean] LID features:')
+    print(np.round(features_clean, 3))u
+    print('[Adversarial] LID features:')
     print(np.round(features_adv, 3))
 
     # Train Logistic regression model
@@ -106,11 +108,12 @@ def run_demo():
         np.zeros(len(detector.lid_neg)),
         np.ones(len(detector.lid_pos)),
     ]).astype(int)
-    assert len(lid_train_X) == N_TRAIN * 3, 'Training set = clean + noisy + adversarial examples.'
+    assert len(lid_train_X) == N_TRAIN * 3, f'Training set != clean + noisy + adversarial examples. Expect {N_TRAIN * 3} got {len(lid_train_X)}.'
     regressor.fit(lid_train_X, lid_train_y)
 
     results_clean = regressor.predict_proba(features_clean)[:, 1]  # Only choose 2nd column (positive)
     results_adv = regressor.predict_proba(features_adv)[:, 1]
+
     print('Clean pred:', np.round(results_clean, 3))
     print('  Adv pred:', np.round(results_adv, 3))
 

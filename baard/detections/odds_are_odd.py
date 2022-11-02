@@ -6,13 +6,14 @@ import pickle
 import warnings
 from collections import OrderedDict
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import numpy as np
 import torch
 from numpy.typing import ArrayLike
 from pytorch_lightning import LightningModule
 from torch import Tensor
+from torch.nn import Module
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
@@ -20,34 +21,6 @@ from baard.classifiers import DATASETS
 from baard.utils.torch_utils import (batch_forward, create_noisy_examples,
                                      dataloader2tensor, get_correct_examples,
                                      get_dataloader_shape, predict)
-
-
-def get_negative_labels(y, n_classes=10):
-    """Get every label except the true label."""
-    labels = np.arange(n_classes)
-    return labels[labels != y]
-
-
-def get_odds_params_from_data(data_name: str, model: LightningModule):
-    """Get Odds are odd parameters based on dataset."""
-    if data_name == DATASETS[0]:  # MNIST
-        latent_net = torch.nn.Sequential(
-            model.conv1,
-            model.relu1,
-            model.conv2,
-            model.relu2,
-            model.pool1,
-            model.flatten,
-            model.fc1,
-        )
-        weight = list(model.children())[-1].weight
-        n_classes = 10
-        clip_range = (0, 1)
-        return latent_net, weight, n_classes, clip_range
-    elif data_name == DATASETS[1]:  # CIFAR10
-        raise NotImplementedError()
-    else:
-        raise NotImplementedError()
 
 
 class OddsAreOddDetector:
@@ -75,7 +48,7 @@ class OddsAreOddDetector:
         self.num_workers = self.model.train_dataloader().num_workers
 
         # Parameters based on data:
-        latent_net, weight, n_classes, clip_range = get_odds_params_from_data(data_name, model)
+        latent_net, weight, n_classes, clip_range = self.get_odds_params_from_data(data_name, model)
         self.latent_net = latent_net
         self.weight = weight
         self.n_classes = n_classes
@@ -160,6 +133,34 @@ class OddsAreOddDetector:
         else:
             raise FileExistsError(f'{path_pretrained_results} does not exist!')
 
+    @classmethod
+    def get_negative_labels(cls, y, n_classes=10) -> ArrayLike:
+        """Get every label except the true label."""
+        labels = np.arange(n_classes)
+        return labels[labels != y]
+
+    @classmethod
+    def get_odds_params_from_data(cls, data_name: str, model: LightningModule) -> Tuple[Module, Tensor, int, Tuple]:
+        """Get Odds are odd parameters based on dataset."""
+        if data_name == DATASETS[0]:  # MNIST
+            latent_net = torch.nn.Sequential(
+                model.conv1,
+                model.relu1,
+                model.conv2,
+                model.relu2,
+                model.pool1,
+                model.flatten,
+                model.fc1,
+            )
+            weight = list(model.children())[-1].weight
+            n_classes = 10
+            clip_range = (0, 1)
+            return latent_net, weight, n_classes, clip_range
+        elif data_name == DATASETS[1]:  # CIFAR10
+            raise NotImplementedError()
+        else:
+            raise NotImplementedError()
+
     def __compute_single_noise_alignment(self, hidden_out_x: Tensor, hidden_out_noise: Tensor,
                                          negative_labels, weight_relevant: Tensor
                                          ) -> Tensor:
@@ -178,7 +179,7 @@ class OddsAreOddDetector:
         hidden_out_x = batch_forward(self.latent_net, x.unsqueeze(0),
                                      num_workers=self.num_workers, device=self.device)
         weight_relevant = self.weight_diff[:, pred]
-        negative_labels = get_negative_labels(pred, self.n_classes)
+        negative_labels = self.get_negative_labels(pred, self.n_classes)
         alignments = OrderedDict()
         for noise_eps in self.noise_list:
             x_noisy = create_noisy_examples(x,
@@ -211,5 +212,4 @@ class OddsAreOddDetector:
             weights = torch.vstack(weights_stats[key])
             # Replace the weights with mean and std.
             weights_stats[key] = {'mean': weights.mean(0), 'std': weights.std(0)}
-
         return weights_stats

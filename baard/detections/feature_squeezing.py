@@ -31,6 +31,7 @@ class Squeezer(ABC):
 
     @abstractmethod
     def transform(self, X: ArrayLike) -> ArrayLike:
+        """Transform X."""
         raise NotImplementedError
 
 
