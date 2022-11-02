@@ -2,7 +2,7 @@
 via Region-based Classification" -- Cao and Gong (2017)
 """
 import logging
-from typing import Any, Tuple
+from typing import Tuple
 
 import pytorch_lightning as pl
 import torch

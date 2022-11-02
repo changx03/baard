@@ -4,7 +4,7 @@ Intrinsic Dimensionality -- Ma et. al. (2018)
 import os
 import pickle
 import warnings
-from typing import Any, List, Tuple, Union
+from typing import List, Tuple, Union
 
 import numpy as np
 import pytorch_lightning as pl

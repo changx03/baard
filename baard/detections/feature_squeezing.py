@@ -2,7 +2,7 @@
 Deep Neural Networks" -- Xu et. al. (2018)
 """
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Dict
 
 import numpy as np
 import pytorch_lightning as pl

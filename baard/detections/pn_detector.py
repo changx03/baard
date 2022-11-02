@@ -1,8 +1,6 @@
 """Implementing the paper "Detecting adversarial examples by positive and
 negative representations" -- Luo et. al. (2022)
 """
-from typing import Any
-
 import numpy as np
 import pytorch_lightning as pl
 import torch
