@@ -37,7 +37,7 @@ class RegionBasedClassifier:
         self.batch_size = self.model.train_dataloader().batch_size
         self.num_workers = self.model.train_dataloader().num_workers
 
-    def train(self, X: Any = None, y: Any = None):
+    def train(self, X: Any = None, y: Any = None) -> None:
         """Train detector. X and y are dummy variables."""
         print('Region-based classifier does not require training.')
 

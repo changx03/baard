@@ -64,11 +64,11 @@ class OddsAreOddDetector:
         self.data_name = data_name
         self.noise_list = noise_list
         self.n_noise_samples = n_noise_samples
-        self.device = device
 
         if not torch.cuda.is_available() and device == 'cuda':
             warnings.warn('GPU is not available. Using CPU...')
             device = 'cpu'
+        self.device = device
 
         # Parameters from LightningModule:
         self.batch_size = self.model.train_dataloader().batch_size
@@ -85,7 +85,7 @@ class OddsAreOddDetector:
         # Tunable parameters:
         self.weights_stats = None
 
-    def train(self, X: Tensor, y: Tensor):
+    def train(self, X: Tensor, y: Tensor) -> None:
         """Train detector."""
         # Check predictions and true labels
         dataloader = DataLoader(TensorDataset(X, y),

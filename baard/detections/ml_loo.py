@@ -151,8 +151,12 @@ class MLLooDetector:
                  ):
         self.model = model
         self.data_name = data_name
-        self.device = device
         self.stats_list = stats_list
+
+        if not torch.cuda.is_available() and device == 'cuda':
+            warnings.warn('GPU is not available. Using CPU...')
+            device = 'cpu'
+        self.device = device
 
         # Parameters from LightningModule:
         self.batch_size = self.model.train_dataloader().batch_size
@@ -169,7 +173,7 @@ class MLLooDetector:
         self.scaler = None
         self.logistic_regressor = None
 
-    def train(self, X: Tensor, y: Tensor, X_adv: Tensor = None):
+    def train(self, X: Tensor, y: Tensor, X_adv: Tensor = None) -> None:
         """Train detector."""
         # Check predictions and true labels
         loader_clean = DataLoader(TensorDataset(X, y),

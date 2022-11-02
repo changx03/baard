@@ -29,13 +29,14 @@ from baard.utils.torch_utils import dataset2tensor, predict
 
 def run_demo():
     """Test Feature Squeezing Detector."""
-    # Parameters for development:
-    SEED_DEV = 0
-    DATASET = DATASETS[0]
     PATH_ROOT = Path(os.getcwd()).absolute()
     PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
     PATH_DATA_CLEAN = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'AdvClean.n_100.pt')
     PATH_DATA_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'FGSM.Linf.n_100.e_0.28.pt')
+
+    # Parameters for development:
+    SEED_DEV = 0
+    DATASET = DATASETS[0]
 
     pl.seed_everything(SEED_DEV)
 
