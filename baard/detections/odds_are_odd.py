@@ -76,7 +76,8 @@ class OddsAreOddDetector(Detector):
 
     def extract_features(self, X: Tensor) -> ArrayLike:
         if self.weights_stats is None:
-            raise Exception('Weights statistics have not initialized yet. Call `train` or `load_weights_stats` first!')
+            raise Exception('The detector have not trained yet. Call `train` or `load` first!')
+
         n = X.size(0)
         dataloader = DataLoader(TensorDataset(X),
                                 batch_size=self.batch_size,
@@ -115,7 +116,10 @@ class OddsAreOddDetector(Detector):
 
     def save(self, path: str = None) -> None:
         """Save weight statistics as binary. The ideal extension is `.odds`. """
-        create_parent_dir(path, '.odds')
+        if self.weights_stats is None:
+            raise Exception('No trained parameters. Nothing to save.')
+
+        path = create_parent_dir(path, '.odds')
 
         pickle.dump(self.weights_stats, open(path, 'wb'))
 

@@ -192,7 +192,7 @@ class LIDDetector(Detector):
         if self.lid_neg is None or self.lid_pos is None:
             raise Exception('No trained weights. Nothing to save.')
 
-        create_parent_dir(path, file_ext='.lid')
+        path = create_parent_dir(path, file_ext='.lid')
 
         save_obj = {
             'lid_neg': self.lid_neg,

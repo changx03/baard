@@ -139,7 +139,10 @@ class MLLooDetector(Detector):
 
     def save(self, path: str = None) -> None:
         """Save trained statistics as binary. The ideal extension is `.mlloo`. """
-        create_parent_dir(path, '.mlloo')
+        if self.train_mlloss_stats is None:
+            raise Exception('No trained parameters. Nothing to save.')
+
+        path = create_parent_dir(path, '.mlloo')
 
         save_obj = {
             'train_mlloss_stats': self.train_mlloss_stats,
