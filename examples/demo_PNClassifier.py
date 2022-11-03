@@ -58,6 +58,7 @@ def run_demo():
 
     # detector = PNDetector(model, DATASET, path_model=PATH_CHECKPOINT, max_epochs=MAX_EPOCHS_DEV, seed=SEED_DEV)
     # detector.train()
+    # del detector
     ############################################################################
 
     # Clean examples

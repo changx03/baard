@@ -42,7 +42,10 @@ class PNDetector(Detector):
         self.pn_classifier: LightningModule = get_lightning_module(data_name).load_from_checkpoint(path_model)
 
         if dist == 'cosine':  # Cosine Similarity is much better in sparse space
-            self.dist_fn = torch.nn.CosineSimilarity(dim=1)
+            # NOTE: The implementation in author's repo uses Negative Cosine Similarity.
+            # Link: https://github.com/Daftstone/PNDetector/blob/f572946a7738060d9ca956a87cd0cdcc5a3007f9/util_tool/utils_tf.py#L207
+            # self.dist_fn = torch.nn.CosineSimilarity(dim=1)
+            self.dist_fn = self.neg_cosine_similarity
         elif dist == 'pair':
             self.dist_fn = torch.nn.PairwiseDistance(p=2)
         else:
@@ -148,3 +151,9 @@ class PNDetector(Detector):
         min = X.min().item()
         max = X.max().item()
         assert np.isclose(min, 0) and np.isclose(max, 1), f'Expected range is [0, 1]. Got [{min}, {max}].'
+
+    @classmethod
+    def neg_cosine_similarity(cls, a, b):
+        """Compute (1 - cosine_similarity)."""
+        dist_fn = torch.nn.CosineSimilarity(dim=1)
+        return 1 - dist_fn(a, b)
