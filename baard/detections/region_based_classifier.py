@@ -15,6 +15,8 @@ from tqdm import tqdm
 from baard.detections import Detector
 from baard.utils.torch_utils import create_noisy_examples, predict
 
+logger = logging.getLogger(__name__)
+
 
 class RegionBasedClassifier(Detector):
     """Implement Region-based Classifier in PyTorch"""
@@ -36,7 +38,7 @@ class RegionBasedClassifier(Detector):
 
     def train(self, X: Tensor = None, y: Tensor = None) -> None:
         """Train detector. X and y are dummy variables."""
-        print('Region-based classifier does not require training.')
+        logger.warning('Region-based classifier does not require training.')
 
     def extract_features(self, X: Tensor) -> ArrayLike:
         """Extract probability estimates based on neighbors' outputs."""

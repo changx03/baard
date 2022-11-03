@@ -1,6 +1,7 @@
 """Implementing the paper "Characterizing Adversarial Subspaces Using Local
 Intrinsic Dimensionality -- Ma et. al. (2018)
 """
+import logging
 import os
 import pickle
 import warnings
@@ -20,6 +21,8 @@ from baard.attacks.apgd import auto_projected_gradient_descent
 from baard.detections import Detector
 from baard.utils.miscellaneous import create_parent_dir
 from baard.utils.torch_utils import dataloader2tensor
+
+logger = logging.getLogger(__name__)
 
 
 class LIDDetector(Detector):
@@ -66,7 +69,7 @@ class LIDDetector(Detector):
         if X is None or y is None:
             loader_train = self.model.train_dataloader()
             X, y = dataloader2tensor(loader_train)
-            print(f'Using the entire training set. {X.size(0)} samples.')
+            logger.warning('No sample is passed for training. Using the entire training set. %i examples.', X.size(0))
 
         X_noise = self.add_gaussian_noise(X, self.noise_eps, self.clip_range)
         X_adv = auto_projected_gradient_descent(
@@ -226,7 +229,7 @@ class LIDDetector(Detector):
         for i in range(1, len(list(model.children()))):
             layer = nn.Sequential(*list(model.children())[:i]).to(device)
             hidden_layers.append(layer)
-        print(f'Found {len(hidden_layers)} hidden layers.')
+        logging.info(f'Found {len(hidden_layers)} hidden layers.')
         return hidden_layers
 
     @classmethod
