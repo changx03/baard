@@ -25,7 +25,7 @@ import numpy as np
 import pytorch_lightning as pl
 import torch
 
-from baard.classifiers import DATASETS, MNIST_CNN, CIFAR10_ResNet18
+from baard.classifiers import MNIST_CNN, CIFAR10_ResNet18
 from baard.detections.baard_detector import (BAARD, ApplicabilityStage,
                                              DecidabilityStage,
                                              ReliabilityStage)
@@ -124,16 +124,16 @@ if __name__ == '__main__':
     # For MNIST:
 
     # run_baard('MNIST', ApplicabilityStage, train=True)
-    # run_baard('MNIST', ReliabilityStage, train=True, params={'k_neighbors': 20, 'subsample_scale': 50})
+    # run_baard('MNIST', ReliabilityStage, train=True, params={'k_neighbors': 20, 'subsample_scale': 30})
     # run_baard('MNIST', DecidabilityStage, train=True, params={'k_neighbors': 20, 'subsample_scale': 50})
 
-    # params_baard = {
-    #     'k1_neighbors': 20,
-    #     'subsample_scale1': 10,
-    #     'k2_neighbors': 20,
-    #     'subsample_scale2': 10,
-    # }
-    # run_baard('MNIST', BAARD, train=True, params=params_baard)
+    params_baard = {
+        'k1_neighbors': 20,
+        'subsample_scale1': 10,
+        'k2_neighbors': 20,
+        'subsample_scale2': 10,
+    }
+    run_baard('MNIST', BAARD, train=True, params=params_baard)
 
     # ###########################################################################
     # # For CIFAR10:

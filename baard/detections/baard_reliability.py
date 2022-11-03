@@ -56,7 +56,7 @@ class ReliabilityStage(Detector):
 
         # Tunable parameters:
         self.n_training_samples = None
-        self.n_subsamples = None
+        self.n_subset = None
         self.features_train = None
         self.features_labels = None
 
@@ -80,7 +80,7 @@ class ReliabilityStage(Detector):
         self.features_labels = y_correct
         assert self.features_train.size(0) == self.features_labels.size(0)
         self.n_training_samples = self.features_train.size(0)
-        self.n_subsamples = min(math.floor(self.subsample_scale * self.k_neighbors), self.n_training_samples)
+        self.n_subset = min(math.floor(self.subsample_scale * self.k_neighbors), self.n_training_samples)
 
     def extract_features(self, X: Tensor) -> ArrayLike:
         if self.features_train is None:
@@ -107,9 +107,9 @@ class ReliabilityStage(Detector):
         for i in pbar:
             indices_train_as_sample = torch.where(self.features_labels == preds[i])[0]
             # The subset which is labelled as i is much smaller than the total training set.
-            n_subsamples = min(len(indices_train_as_sample), self.n_subsamples)
+            n_subset = min(len(indices_train_as_sample), self.n_subset)
             indices_subsample = np.random.choice(indices_train_as_sample,
-                                                 size=n_subsamples,
+                                                 size=n_subset,
                                                  replace=False)  # No replacement, no duplicates.
             # This subset should have the same label as X[i].
             feature_train_subset = self.features_train[indices_subsample]
@@ -137,7 +137,7 @@ class ReliabilityStage(Detector):
             'features_train': self.features_train,
             'features_labels': self.features_labels,
             'n_training_samples': self.n_training_samples,
-            'n_subsamples': self.n_subsamples,
+            'n_subset': self.n_subset,
         }
         pickle.dump(save_obj, open(path, 'wb'))
         return save_obj
@@ -149,6 +149,6 @@ class ReliabilityStage(Detector):
             self.features_train = obj['features_train']
             self.features_labels = obj['features_labels']
             self.n_training_samples = obj['n_training_samples']
-            self.n_subsamples = obj['n_subsamples']
+            self.n_subset = obj['n_subset']
         else:
             raise FileExistsError(f'{path} does not exist!')

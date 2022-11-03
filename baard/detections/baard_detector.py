@@ -130,13 +130,13 @@ class BAARD(Detector):
             self.reliability.features_train = obj_rel['features_train']
             self.reliability.features_labels = obj_rel['features_labels']
             self.reliability.n_training_samples = obj_rel['n_training_samples']
-            self.reliability.n_subsamples = obj_rel['n_subsamples']
+            self.reliability.n_subset = obj_rel['n_subset']
 
             # Load parameters for DecidabilityStage.
             self.decidability.features_train = obj_dec['features_train']
             self.decidability.features_labels = obj_dec['features_labels']
             self.decidability.n_training_samples = obj_dec['n_training_samples']
-            self.decidability.n_subsamples = obj_dec['n_subsamples']
+            self.decidability.n_subset = obj_dec['n_subset']
             self.decidability.probs_correct = obj_dec['probs_correct']
         else:
             raise FileExistsError(f'{path} does not exist!')

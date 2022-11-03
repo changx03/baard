@@ -15,6 +15,7 @@ import torch
 import torch.nn as nn
 from numpy.typing import ArrayLike
 from pytorch_lightning import LightningModule
+from sklearn.model_selection import train_test_split
 from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
@@ -56,7 +57,7 @@ class DecidabilityStage(Detector):
 
         # Tunable parameters:
         self.n_training_samples = None
-        self.n_subsamples = None
+        self.n_subset = None
         self.features_train = None
         self.features_labels = None
         self.probs_correct = None
@@ -83,10 +84,11 @@ class DecidabilityStage(Detector):
         self.features_labels = y_correct
         assert self.features_train.size(0) == self.features_labels.size(0)
         self.n_training_samples = self.features_train.size(0)
-        self.n_subsamples = min(
-            math.floor(self.subsample_scale * self.k_neighbors * self.n_classes),
+        self.n_subset = min(
+            math.floor(self.subsample_scale * self.k_neighbors),
             self.n_training_samples
         )
+        logger.info('Number of subset = %i', self.n_subset)
 
         # Also save the model's outputs.
         trainer = pl.Trainer(accelerator='auto',
@@ -125,6 +127,8 @@ class DecidabilityStage(Detector):
         probs = torch.vstack(trainer.predict(self.model, loader))
         probs = nn.functional.softmax(probs, dim=1)
 
+        indices_train = np.arange(self.n_training_samples)
+
         cosine_sim_fn = torch.nn.CosineSimilarity(dim=1)
         scores = torch.zeros(n_samples)
         pbar = tqdm(range(n_samples), total=n_samples)
@@ -133,11 +137,14 @@ class DecidabilityStage(Detector):
             class_highest = probs[i].argmax()
             highest_prob = probs[i, class_highest]
 
-            indices_subsample = np.random.choice(np.arange(self.n_training_samples),
-                                                 size=self.n_subsamples,
-                                                 replace=False)  # No replacement, no duplicates.
+            # Use train_test_split to achieve stratified sampling.
+            indices_subsample, _, y_subset, _ = train_test_split(
+                indices_train, self.features_labels,
+                train_size=self.n_subset, shuffle=False)  # Don't need shuffle.
+
             # The subset contains all classes.
             feature_train_subset = self.features_train[indices_subsample]
+            probs_train_subset = self.probs_correct[indices_subsample]
 
             # Compute cosine similarity.
             cos_similarity = cosine_sim_fn(feature_train_subset, hidden_features[i])
@@ -145,7 +152,9 @@ class DecidabilityStage(Detector):
             angular_dist = torch.arccos(cos_similarity) / torch.pi
             # Find K-nearest neighbors. Output shape: (dist, indices).
             _, indices_neighbor = torch.topk(angular_dist, k=self.k_neighbors, largest=False)
-            probs_neighbor = self.probs_correct[indices_neighbor]
+            probs_neighbor = probs_train_subset[indices_neighbor]
+            # assert torch.all(torch.argmax(probs_neighbor, 1) == y_subset[indices_neighbor])
+
             # Get probability estimates of the corresponding label.
             probs_neighbor = probs_neighbor[:, class_highest]
             neighbor_mean = probs_neighbor.mean()
@@ -167,7 +176,7 @@ class DecidabilityStage(Detector):
             'features_train': self.features_train,
             'features_labels': self.features_labels,
             'n_training_samples': self.n_training_samples,
-            'n_subsamples': self.n_subsamples,
+            'n_subset': self.n_subset,
             'probs_correct': self.probs_correct,
         }
         pickle.dump(save_obj, open(path, 'wb'))
@@ -180,7 +189,7 @@ class DecidabilityStage(Detector):
             self.features_train = obj['features_train']
             self.features_labels = obj['features_labels']
             self.n_training_samples = obj['n_training_samples']
-            self.n_subsamples = obj['n_subsamples']
+            self.n_subset = obj['n_subset']
             self.probs_correct = obj['probs_correct']
         else:
             raise FileExistsError(f'{path} does not exist!')
