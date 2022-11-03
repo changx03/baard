@@ -22,6 +22,7 @@ from tqdm import tqdm
 
 from baard.classifiers import DATASETS
 from baard.detections import Detector
+from baard.utils.miscellaneous import create_parent_dir
 from baard.utils.torch_utils import (batch_forward, dataloader2tensor,
                                      get_correct_examples,
                                      get_dataloader_shape,
@@ -138,10 +139,7 @@ class MLLooDetector(Detector):
 
     def save(self, path: str = None) -> None:
         """Save trained statistics as binary. The ideal extension is `.mlloo`. """
-        path_output_dir = Path(path).resolve().parent
-        if not os.path.exists(path_output_dir):
-            print(f'Output directory is not found. Create: {path_output_dir}')
-            os.makedirs(path_output_dir)
+        create_parent_dir(path, '.mlloo')
 
         save_obj = {
             'train_mlloss_stats': self.train_mlloss_stats,

@@ -19,6 +19,7 @@ from tqdm import tqdm
 
 from baard.classifiers import DATASETS
 from baard.detections import Detector
+from baard.utils.miscellaneous import create_parent_dir
 from baard.utils.torch_utils import (batch_forward, create_noisy_examples,
                                      dataloader2tensor, get_correct_examples,
                                      get_dataloader_shape, predict)
@@ -114,10 +115,7 @@ class OddsAreOddDetector(Detector):
 
     def save(self, path: str = None) -> None:
         """Save weight statistics as binary. The ideal extension is `.odds`. """
-        path_output_dir = Path(path).resolve().parent
-        if not os.path.exists(path_output_dir):
-            print(f'Output directory is not found. Create: {path_output_dir}')
-            os.makedirs(path_output_dir)
+        create_parent_dir(path, '.odds')
 
         pickle.dump(self.weights_stats, open(path, 'wb'))
 

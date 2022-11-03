@@ -41,7 +41,7 @@ class PNDetector(Detector):
         # Clone the base model
         self.pn_classifier: LightningModule = get_lightning_module(data_name).load_from_checkpoint(path_model)
 
-        if dist == 'cosine':
+        if dist == 'cosine':  # Cosine Similarity is much better in sparse space
             self.dist_fn = torch.nn.CosineSimilarity(dim=1)
         elif dist == 'pair':
             self.dist_fn = torch.nn.PairwiseDistance(p=2)

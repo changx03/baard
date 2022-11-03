@@ -18,6 +18,7 @@ from tqdm import tqdm
 
 from baard.attacks.apgd import auto_projected_gradient_descent
 from baard.detections import Detector
+from baard.utils.miscellaneous import create_parent_dir
 from baard.utils.torch_utils import dataloader2tensor
 
 
@@ -190,6 +191,8 @@ class LIDDetector(Detector):
         """Save extracted features for the training set. The ideal extension is `.lid`."""
         if self.lid_neg is None or self.lid_pos is None:
             raise Exception('No trained weights. Nothing to save.')
+
+        create_parent_dir(path, file_ext='.lid')
 
         save_obj = {
             'lid_neg': self.lid_neg,
