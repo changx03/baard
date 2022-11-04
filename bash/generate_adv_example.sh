@@ -2,6 +2,8 @@
 
 # This script generates adversaral examples.
 
+source ./venv/bin/activate
+
 SEEDS=(688283 692478 882347 366364 943597)
 SIZE=1000
 
