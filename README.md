@@ -108,3 +108,7 @@ python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"no
 ## Code demo
 
 Code demo can be found under `./examples/`.
+
+## Run experiments from terminal
+
+Under `./bash` folder, there are scripts for running the experiment.
