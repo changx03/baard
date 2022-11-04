@@ -76,8 +76,6 @@ tensorboard --logdir logs
 
 ### Basic usage
 
-Generating 100 adversarial examples on `MNIST` using FGSM on L2 norm with Epsilon=0.06
-
 ```bash
 # Usage
 python ./experiments/train_adv_examples.py [-s SEED] [-d DATASET_NAME] [--n_att NB_ADV_EXAMPLES] [--n_val NB_VAL_EXAMPLES] [-a ATTACK_NAME]  [--eps LIST_OF_EPSILON] [--params ATTACK_PARAMS]
@@ -85,7 +83,7 @@ python ./experiments/train_adv_examples.py [-s SEED] [-d DATASET_NAME] [--n_att 
 
 ### Available options
 
-- '-s', '--seed': Seed value. The result folder name is based on the seed value.
+- '-s', '--seed': Seed value. The **output folder name** is based on the seed value.
 - '-d', '--data': Dataset. Either `MNIST` or `CIFAR10`. (TODO: Add SVHN, and tabular datasets.)
 - '--n_att': Number of adversarial examples want to generate. Default is `100`. Use `1000` for the actual experiment.
 - '--n_val': Number of validation examples. The validation set comes from the correctly classified test set.
@@ -100,6 +98,8 @@ python ./experiments/train_adv_examples.py [-s SEED] [-d DATASET_NAME] [--n_att 
 Windows OS cannot pass single quote as string wrapper, e.g., `'{"norm":"inf", }'`. Use `\` to escape the double quote `"` symbol, e.g., `"{\"norm\":\"inf\", }"`.
 
 ### Attack Example
+
+Generating 100 adversarial examples on `MNIST` using FGSM on L2 norm with Epsilon=0.06
 
 ```bash
 python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":"inf", "clip_min":0, "clip_max":1}' --eps="[0.06]" --n_att=100 --n_val=1000
