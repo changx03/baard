@@ -90,7 +90,10 @@ def generate_adv_examples(
     # Step 1: Get correct labelled data
     model = get_model(data)
     val_loader = model.val_dataloader()
+    num_workers = os.cpu_count()
+    print('num_workers:', num_workers)
     path_correct_val_dataset = os.path.join(path_outputs, 'CorrectValDataset.pt')
+    
     if not os.path.isfile(path_correct_val_dataset):
         dataset = get_correct_examples(model, val_loader, return_loader=False)
         print(f'{len(dataset)} examples are correctly classified.')
@@ -99,7 +102,7 @@ def generate_adv_examples(
         dataset = torch.load(path_correct_val_dataset)
         print('Load existing `CorrectValDataset.pt`...')
     dataloader = DataLoader(dataset, batch_size=val_loader.batch_size,
-                            num_workers=val_loader.num_workers, shuffle=False)
+                            num_workers=num_workers, shuffle=False)
     _dataset = get_correct_examples(model, dataloader, return_loader=False)
     print(f'{len(_dataset) / len(dataset) * 100}% out of {len(dataset)} examples are correctly classified.')
     del _dataset
@@ -126,7 +129,7 @@ def generate_adv_examples(
         print(f'Load existing `ValClean.n_{n_val}.pt`...')
         dataset_adv_clean = torch.load(path_adv_clean)
         dataloader_adv_clean = DataLoader(dataset_adv_clean, batch_size=val_loader.batch_size,
-                                          num_workers=val_loader.num_workers, shuffle=False)
+                                          num_workers=num_workers, shuffle=False)
         X_adv_clean, y_adv_clean = dataloader2tensor(dataloader_adv_clean)
 
         path_val_clean = os.path.join(path_outputs, f'ValClean.n_{n_val}.pt')
@@ -158,7 +161,7 @@ def generate_adv_examples(
 
                 X_adv = torch.zeros_like(X_adv_clean)
                 dataloader = DataLoader(TensorDataset(X_adv_clean), batch_size=ADV_BATCH_SIZE,
-                                        num_workers=val_loader.num_workers, shuffle=False)
+                                        num_workers=num_workers, shuffle=False)
                 start = 0
                 pbar = tqdm(enumerate(dataloader), total=len(dataloader))
                 pbar.set_description(f'Running {attack_name} eps/c={e} attack')
@@ -174,7 +177,7 @@ def generate_adv_examples(
 
                 # Checking results
                 dataset_adv = TensorDataset(X_adv)
-                loader_adv = DataLoader(dataset_adv, batch_size=val_loader.batch_size, num_workers=val_loader.num_workers, shuffle=False)
+                loader_adv = DataLoader(dataset_adv, batch_size=val_loader.batch_size, num_workers=num_workers, shuffle=False)
                 outputs_adv = torch.vstack(trainer.predict(model, loader_adv))
                 preds_adv = torch.argmax(outputs_adv, dim=1)
                 success_rate = (preds_adv == y_adv_clean).float().mean() * 100
