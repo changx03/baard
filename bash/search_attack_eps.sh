@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# The script below are linear search for fining the minimal epsilon. The default number of adversarial examples is 100, which is too small for testing the detector.
+# This script runs linear search for fining the minimal epsilon. The default number of adversarial examples is 100, which is too small for testing the detector.
 
 source ./venv/bin/activate
 
