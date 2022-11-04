@@ -1,4 +1,5 @@
 """Base class and constants for detectors."""
+import os
 from abc import ABC, abstractmethod
 
 from numpy.typing import ArrayLike
@@ -13,9 +14,10 @@ class Detector(ABC):
         self.model = model
         self.data_name = data_name
 
+        self.num_workers = os.cpu_count()
+
         # Parameters from LightningModule:
         self.batch_size = self.model.train_dataloader().batch_size
-        self.num_workers = self.model.train_dataloader().num_workers
 
     @abstractmethod
     def train(self, X: Tensor = None, y: Tensor = None) -> None:

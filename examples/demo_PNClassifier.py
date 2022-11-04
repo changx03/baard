@@ -32,9 +32,12 @@ from baard.utils.torch_utils import dataset2tensor, predict
 def run_demo():
     """Test Positive Negative Detector."""
     PATH_ROOT = Path(os.getcwd()).absolute()
-    PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
-    PATH_DATA_CLEAN = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'AdvClean.n_100.pt')
-    PATH_DATA_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'FGSM.Linf.n_100.e_0.28.pt')
+    PATH_CHECKPOINT = os.path.join(
+        PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
+    PATH_DATA_CLEAN = os.path.join(
+        PATH_ROOT, 'results', 'exp1234', 'MNIST', 'AdvClean.n_100.pt')
+    PATH_DATA_ADV = os.path.join(
+        PATH_ROOT, 'results', 'exp1234', 'MNIST', 'FGSM.Linf.n_100.e_0.28.pt')
 
     # Parameters for development:
     SEED_DEV = 0
@@ -50,7 +53,7 @@ def run_demo():
 
     model = MNIST_CNN.load_from_checkpoint(PATH_CHECKPOINT)
     batch_size = model.train_dataloader().batch_size
-    num_workers = model.train_dataloader().num_workers
+    num_workers = os.cpu_count()
 
     # Train PN Classifier
     ############################################################################
@@ -82,7 +85,8 @@ def run_demo():
 
     # Load results
     ############################################################################
-    PATH_PN_CLASSIFIER_DEV = os.path.join(PATH_ROOT, 'logs', 'PNClassifier_MNIST', 'version_0', 'checkpoints', 'epoch=29-step=7050.ckpt')
+    PATH_PN_CLASSIFIER_DEV = os.path.join(
+        PATH_ROOT, 'logs', 'PNClassifier_MNIST', 'version_0', 'checkpoints', 'epoch=29-step=7050.ckpt')
 
     # Try L2 pairwise-distance
     detector2 = PNDetector(model,

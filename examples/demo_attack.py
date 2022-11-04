@@ -26,7 +26,8 @@ print('PATH_ROOT:', PATH_ROOT)
 def generate_attack():
     """Generating adversarial examples."""
     # model = CIFAR10_ResNet18.load_from_checkpoint(os.path.join(PATH_CHECKPOINT, 'cifar10_resnet18.ckpt'))
-    model = MNIST_CNN.load_from_checkpoint(os.path.join(PATH_CHECKPOINT, 'mnist_cnn.ckpt'))
+    model = MNIST_CNN.load_from_checkpoint(
+        os.path.join(PATH_CHECKPOINT, 'mnist_cnn.ckpt'))
 
     trainer = pl.Trainer(accelerator='auto',
                          logger=False,
@@ -53,7 +54,8 @@ def generate_attack():
     x, y = dataloader2tensor(dataloader)
 
     dataset = TensorDataset(x[:5])
-    loader = DataLoader(dataset, batch_size=val_dataloader.batch_size, num_workers=val_dataloader.num_workers, shuffle=False)
+    loader = DataLoader(dataset, batch_size=val_dataloader.batch_size,
+                        num_workers=os.cpu_count(), shuffle=False)
 
     trainer = pl.Trainer(accelerator='auto',
                          logger=False,
@@ -70,7 +72,8 @@ def generate_attack():
     # adv_x = carlini_wagner_l2(model, x[:5], 10)
 
     # Run FGSM attack
-    adv_x = fast_gradient_method(model, x[:5], eps=64 / 255, norm=np.inf, clip_min=0, clip_max=1)
+    adv_x = fast_gradient_method(
+        model, x[:5], eps=64 / 255, norm=np.inf, clip_min=0, clip_max=1)
 
     # Run PGD/BIM attack
     # eps = 64 / 255

@@ -85,7 +85,7 @@ def get_correct_examples(model: LightningModule,
     correct_dataset = TensorDataset(x[indices], y_true[indices])
     if return_loader:
         batch_size = dataloader.batch_size
-        num_workers = dataloader.num_workers
+        num_workers = os.cpu_count()
         return DataLoader(correct_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
     else:
         return correct_dataset
@@ -185,7 +185,9 @@ def batch_forward(model: Module, X: Tensor, batch_size: int = 256, device='cuda'
         outputs_shape = (len(X),) + tuple(outputs.size()[1:])
 
         outputs = X.new_zeros(outputs_shape)
-        loader = DataLoader(TensorDataset(X), num_workers=num_workers, shuffle=False, batch_size=batch_size)
+        loader = DataLoader(
+            TensorDataset(X), num_workers=num_workers, shuffle=False, batch_size=batch_size
+        )
         start = 0
         for batch in loader:
             _x = batch[0].to(device)

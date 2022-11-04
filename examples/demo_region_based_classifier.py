@@ -31,9 +31,12 @@ from baard.utils.torch_utils import dataset2tensor, predict
 def run_demo():
     """Test Feature Squeezing Detector."""
     PATH_ROOT = Path(os.getcwd()).absolute()
-    PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
-    PATH_DATA_CLEAN = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'AdvClean.n_100.pt')
-    PATH_DATA_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'FGSM.Linf.n_100.e_0.28.pt')
+    PATH_CHECKPOINT = os.path.join(
+        PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
+    PATH_DATA_CLEAN = os.path.join(
+        PATH_ROOT, 'results', 'exp1234', 'MNIST', 'AdvClean.n_100.pt')
+    PATH_DATA_ADV = os.path.join(
+        PATH_ROOT, 'results', 'exp1234', 'MNIST', 'FGSM.Linf.n_100.e_0.28.pt')
 
     # Parameters for development:
     SEED_DEV = 0
@@ -80,7 +83,7 @@ def run_demo():
     preds_adv = detector.predict(X_eval_adv)
     dataloader = DataLoader(TensorDataset(X_eval_adv),
                             batch_size=detector.batch_size,
-                            num_workers=detector.num_workers,
+                            num_workers=os.cpu_count(),
                             shuffle=False)
     preds_adv_origin = predict(my_model, dataloader)
     print(' True:', y_eval_true)
