@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 PATH_ROOT = Path(os.getcwd()).absolute()
 PATH_DATA = os.path.join(PATH_ROOT, 'data')
 PATH_DEFAULT_LOGS = os.path.join(PATH_ROOT, 'logs')
-NUM_WORKERS = os.cpu_count() - 2
+NUM_WORKERS = os.cpu_count()
 BATCH_SIZE = 256 if torch.cuda.is_available() else 32
 MAX_EPOCHS = 50 if torch.cuda.is_available() else 5
 
