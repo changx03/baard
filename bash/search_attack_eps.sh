@@ -3,6 +3,7 @@
 # This script runs linear search for fining the minimal epsilon. The default number of adversarial examples is 100, which is too small for testing the detector.
 
 source ./venv/bin/activate
+pip install --upgrade .
 
 # For quick develop only. Set `n_att` to a larger value when running the experiment!
 # Data:MNIST,Attack:FGSM
