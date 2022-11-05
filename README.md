@@ -24,6 +24,14 @@ pip install --upgrade .
 python ./examples/check_gpu.py
 ```
 
+### Shortcut for creating `venv`
+
+Or you can run bash `create_venv.sh` which contains the script above.
+
+```bash
+bash ./create_venv.sh
+```
+
 ### Notes
 
 - If an alternative version of `PyTorch` is installed, remove all `PyTorch` related packages from `requirements.txt` file,
