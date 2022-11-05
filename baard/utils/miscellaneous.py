@@ -36,18 +36,18 @@ def argsort_by_eps(eps_list: ArrayLike) -> List:
 
 def find_available_attacks(path_attack: str, attack_name: str, l_norm: str, eps_list: List) -> tuple[List, List]:
     """Find pre-trained adversarial examples from the directory."""
-    files = glob(os.path.join(path_attack, f'{attack_name}.L{l_norm}.n_*.pt'))
+    files = glob(os.path.join(path_attack, f'{attack_name}-{l_norm}-*.pt'))
     file_names = [os.path.basename(f) for f in files]
     sample_size_set = set()
     eps_file_list = []
     for name in file_names:
         # Read n_samples
-        sample_size = name.split('.')[2].split('_')[-1]
+        sample_size = name.split('-')[-2]
         sample_size_set.add(sample_size)
 
         # Read epsilon
         filename, _ = os.path.splitext(name)
-        eps = filename.split('_')[-1]
+        eps = filename.split('-')[-1]
         eps_file_list.append(eps)
 
     # There should be only 1 sample size.
@@ -60,7 +60,7 @@ def find_available_attacks(path_attack: str, attack_name: str, l_norm: str, eps_
     if eps_list is not None:
         files = []
         for eps in eps_list:
-            data_path = Path(os.path.join(path_attack, f'{attack_name}.L{l_norm}.n_{n_sample}.e_{eps}.pt'))
+            data_path = Path(os.path.join(path_attack, f'{attack_name}-L{l_norm}-{n_sample}-{eps}.pt'))
             if data_path.is_file():
                 files.append(data_path)
                 eps_list_confirmed.append(eps)
@@ -68,7 +68,7 @@ def find_available_attacks(path_attack: str, attack_name: str, l_norm: str, eps_
                 warnings.warn(f'Data does not exist. {data_path}')
     else:
         eps_list_confirmed = eps_list_confirmed + eps_file_list
-    files = [os.path.join(path_attack, f'AdvClean.n_{n_sample}.pt')] + files
+    files = [os.path.join(path_attack, f'AdvClean-{n_sample}.pt')] + files
     print(f'Found {len(files)} files for data including clean and adversarial examples.')
 
     # Sort list
@@ -81,10 +81,14 @@ def find_available_attacks(path_attack: str, attack_name: str, l_norm: str, eps_
 
 def plot_images(path_img, lnorm, eps_list, attack_name, n=100):
     """Plot top-5 images along with their adversarial examples."""
-    show_top5_imgs(os.path.join(path_img, f'AdvClean.n_{n}.pt'), cmap=None)
+    show_top5_imgs(os.path.join(path_img, f'AdvClean-{n}.pt'), cmap=None)
     print('Clean images')
 
+    # Handle `lnorm` without the initial `L` letter.
+    if lnorm == 'int' or isinstance(lnorm, int):
+        lnorm = f'L{lnorm}'
+
     for eps in eps_list:
-        path_img_adv = os.path.join(path_img, f'{attack_name}.{lnorm}.n_{n}.e_{eps}.pt')
+        path_img_adv = os.path.join(path_img, f'{attack_name}-{lnorm}-{n}-{eps}.pt')
         show_top5_imgs(path_img_adv, cmap=None)
         print(f'{attack_name} {lnorm} eps={eps}')

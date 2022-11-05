@@ -33,8 +33,8 @@ def run_demo():
     """Test ML-LOO Detector."""
     PATH_ROOT = Path(os.getcwd()).absolute()
     PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
-    PATH_DATA_CLEAN = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'AdvClean.n_100.pt')
-    PATH_DATA_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'APGD.Linf.n_100.e_0.22.pt')
+    PATH_DATA_CLEAN = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'AdvClean-100.pt')
+    PATH_DATA_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'APGD-Linf-100-0.22.pt')
     PATH_MLLOO_DEV = os.path.join('temp', 'dev_mlloo_detector.mlloo')
 
     # Parameters for development:

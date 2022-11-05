@@ -23,7 +23,6 @@ PATH_ROOT = os.getcwd()
 PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf')
 ADV_BATCH_SIZE = 32  # Training adversarial examples in small batches.
 
-# TODO: Simplify the naming: From `APGD.L2.n_1000.e_0.3.pt` to `APGD-L2-1000-0.3.pt`.
 # TODO: Check the output file. If it exits, do not generate adversarial example again!
 
 
@@ -115,7 +114,7 @@ def generate_adv_examples(
         raise ValueError('The total number of adversarial and validation examples are larger than the test set.')
 
     x, y = dataloader2tensor(dataloader)
-    path_adv_clean = os.path.join(path_outputs, f'AdvClean.n_{n_att}.pt')
+    path_adv_clean = os.path.join(path_outputs, f'AdvClean-{n_att}.pt')
     if not os.path.isfile(path_adv_clean):
         # `train_test_split` can work directly with PyTorch Tensor
         X_leftover, X_adv_clean, y_leftover, y_adv_clean = train_test_split(x, y, test_size=n_att, random_state=seed)
@@ -126,7 +125,7 @@ def generate_adv_examples(
         if n_val > 0:
             _, X_val, _, y_val = train_test_split(X_leftover, y_leftover, test_size=n_val, random_state=seed)
             assert len(X_val) == n_val
-            path_val_clean = os.path.join(path_outputs, f'ValClean.n_{n_val}.pt')
+            path_val_clean = os.path.join(path_outputs, f'ValClean-{n_val}.pt')
             torch.save(TensorDataset(X_val, y_val), path_val_clean)
     else:
         print(f'Load existing `ValClean.n_{n_val}.pt`...')
@@ -135,7 +134,7 @@ def generate_adv_examples(
                                           num_workers=num_workers, shuffle=False)
         X_adv_clean, y_adv_clean = dataloader2tensor(dataloader_adv_clean)
 
-        path_val_clean = os.path.join(path_outputs, f'ValClean.n_{n_val}.pt')
+        path_val_clean = os.path.join(path_outputs, f'ValClean-{n_val}.pt')
         if n_val > 0 and not os.path.isfile(path_val_clean):
             print(f'WARNING: Validation dataset is missing! Delete `AdvClean.n_{n_att}.pt` and run the code again!')
     del x, y, dataset, dataloader
@@ -150,7 +149,7 @@ def generate_adv_examples(
 
     # NOTE: C&W is only on L2 for now.
     attack_norm = 2 if attack_name == ATTACKS[2] else str(adv_params['norm'])
-    path_log_results = os.path.join(path_outputs, f'{attack_name}_L{attack_norm}_success_rate.csv')
+    path_log_results = os.path.join(path_outputs, f'{attack_name}-L{attack_norm}-SuccessRate.csv')
 
     with open(path_log_results, 'a') as file:
         file.write(','.join(['eps', 'success_rate']) + '\n')
@@ -175,7 +174,7 @@ def generate_adv_examples(
                     start = end
 
                 # Save adversarial examples
-                path_adv = os.path.join(path_outputs, f'{attack_name}.L{attack_norm}.n_{n_att}.e_{e}.pt')
+                path_adv = os.path.join(path_outputs, f'{attack_name}-L{attack_norm}-{n_att}-{e}.pt')
                 torch.save(TensorDataset(X_adv, y_adv_clean), path_adv)
 
                 # Checking results

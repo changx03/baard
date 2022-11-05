@@ -37,8 +37,8 @@ def run_demo():
 
     PATH_ROOT = Path(os.getcwd()).absolute()
     PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
-    PATH_DATA_CLEAN = os.path.join(PATH_ROOT, 'results', 'exp1234', DATASET, 'AdvClean.n_100.pt')
-    PATH_DATA_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', DATASET, f'APGD.Linf.n_100.e_{EPS}.pt')
+    PATH_DATA_CLEAN = os.path.join(PATH_ROOT, 'results', 'exp1234', DATASET, 'AdvClean-100.pt')
+    PATH_DATA_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', DATASET, f'APGD-Linf-100-{EPS}.pt')
     PATH_DETECTOR_DEV = os.path.join('temp', 'dev_lid_detector.lid')
 
     # Parameters for development:

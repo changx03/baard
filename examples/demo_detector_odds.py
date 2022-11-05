@@ -33,8 +33,8 @@ def run_demo():
     """Test OddsAreOdd Detector"""
     PATH_ROOT = Path(os.getcwd()).absolute()
     PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
-    PATH_VAL_DATA = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'ValClean.n_1000.pt')
-    PATH_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'APGD.Linf.n_100.e_0.22.pt')
+    PATH_VAL_DATA = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'ValClean-1000.pt')
+    PATH_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'APGD-Linf-100-0.22.pt')
     PATH_WEIGHTS_DEV = os.path.join('temp', 'dev_odds_detector.odds')
 
     # Parameters for development:

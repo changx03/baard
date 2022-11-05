@@ -58,8 +58,8 @@ def run_baard(data_name: str,
     else:
         raise NotImplementedError
 
-    path_data_clean = os.path.join(PATH_ROOT, 'results', 'exp1234', data_name, 'AdvClean.n_100.pt')
-    path_data_adv = os.path.join(PATH_ROOT, 'results', 'exp1234', data_name, f'APGD.Linf.n_100.e_{eps}.pt')
+    path_data_clean = os.path.join(PATH_ROOT, 'results', 'exp1234', data_name, 'AdvClean-100.pt')
+    path_data_adv = os.path.join(PATH_ROOT, 'results', 'exp1234', data_name, f'APGD.Linf-100-{eps}.pt')
 
     if detector_class == ApplicabilityStage:
         file_ext = '.baard1'
