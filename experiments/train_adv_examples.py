@@ -23,8 +23,8 @@ PATH_ROOT = os.getcwd()
 PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf')
 ADV_BATCH_SIZE = 32  # Training adversarial examples in small batches.
 
+# TODO: Simplify the naming: From `APGD.L2.n_1000.e_0.3.pt` to `APGD-L2-1000-0.3.pt`.
 # TODO: Check the output file. If it exits, do not generate adversarial example again!
-# TODO: Save results in dashed format `APGD-L2-n_1000-e_0.3.pt`, instead of `APGD.L2.n_1000.e_0.3.pt`.
 
 
 def check_file_exist(path_file):
@@ -191,39 +191,40 @@ def generate_adv_examples(
                 print(f'WARNING: Catch an exception: {err}')
 
 
-if __name__ == '__main__':
-    # Examples:
-    # For quick develop only. Set `n_att` to a larger value when running the experiment!
-    # Data: MNIST, Attack: FGSM
-    # python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":"inf"}' --eps="[0.03,0.12,0.31]" --n_val=1000
-    # python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":2}' --eps="[1, 2, 4]" --n_val=1000
+def main():
+    """
+    Examples:
+    For quick develop only. Set `n_att` to a larger value when running the experiment!
+    Data: MNIST, Attack: FGSM
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":"inf"}' --eps="[0.03,0.12,0.31]" --n_val=1000
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":2}' --eps="[1, 2, 4]" --n_val=1000
 
-    # Data: MNIST, Attack: PGD
-    # python ./experiments/train_adv_examples.py -d=MNIST --attack=PGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.31]" --n_val=1000
-    # python ./experiments/train_adv_examples.py -d=MNIST --attack=PGD --params='{"norm":2, "eps_iter":0.1}' --eps="[1, 4]" --n_val=1000
+    Data: MNIST, Attack: PGD
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=PGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.31]" --n_val=1000
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=PGD --params='{"norm":2, "eps_iter":0.1}' --eps="[1, 4]" --n_val=1000
 
-    # Data: MNIST, Attack: APGD
-    # python ./experiments/train_adv_examples.py -d=MNIST --attack=APGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.31]" --n_val=1000
-    # python ./experiments/train_adv_examples.py -d=MNIST --attack=APGD --params='{"norm":2, "eps_iter":0.1}' --eps="[1, 4]" --n_val=1000
+    Data: MNIST, Attack: APGD
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=APGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.31]" --n_val=1000
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=APGD --params='{"norm":2, "eps_iter":0.1}' --eps="[1, 4]" --n_val=1000
 
-    # Data: MNIST, Attack: CW2
-    # python ./experiments/train_adv_examples.py -d=MNIST --attack=CW2 --params='{"max_iterations": 200}' --eps="[0]" --n_val=1000
+    Data: MNIST, Attack: CW2
+    python ./experiments/train_adv_examples.py -d=MNIST --attack=CW2 --params='{"max_iterations": 200}' --eps="[0]" --n_val=1000
 
-    # Data: CIFAR10, Attack: FGSM
-    # python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=FGSM --params='{"norm":"inf"}' --eps="[0.03,0.09,0.16]" --n_val=1000
-    # python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=FGSM --params='{"norm":2}' --eps="[0.3,2]" --n_val=1000
+    Data: CIFAR10, Attack: FGSM
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=FGSM --params='{"norm":"inf"}' --eps="[0.03,0.09,0.16]" --n_val=1000
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=FGSM --params='{"norm":2}' --eps="[0.3,2]" --n_val=1000
 
-    # Data: CIFAR10, Attack: PGD
-    # python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=PGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.16]" --n_val=1000
-    # python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=PGD --params='{"norm":2, "eps_iter":0.1}' --eps="[0.3,2]" --n_val=1000
+    Data: CIFAR10, Attack: PGD
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=PGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.16]" --n_val=1000
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=PGD --params='{"norm":2, "eps_iter":0.1}' --eps="[0.3,2]" --n_val=1000
 
-    # Data: CIFAR10, Attack: APGD
-    # python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=APGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.16]" --n_val=1000
-    # python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=APGD --params='{"norm":2, "eps_iter":0.1}' --eps="[0.3,2]" --n_val=1000
+    Data: CIFAR10, Attack: APGD
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=APGD --params='{"norm":"inf", "eps_iter":0.03}' --eps="[0.03,0.16]" --n_val=1000
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=APGD --params='{"norm":2, "eps_iter":0.1}' --eps="[0.3,2]" --n_val=1000
 
-    # Data: CIFAR10, Attack: CW2
-    # python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=CW2 --params='{"max_iterations": 200}' --eps="[0]" --n_val=1000
-
+    Data: CIFAR10, Attack: CW2
+    python ./experiments/train_adv_examples.py -d=CIFAR10 --attack=CW2 --params='{"max_iterations": 200}' --eps="[0]" --n_val=1000
+    """
     parser = ArgumentParser()
     parser.add_argument('-s', '--seed', type=int, default=1234)
     parser.add_argument('-d', '--data', default=DATASETS[0], choices=DATASETS)
@@ -265,3 +266,7 @@ if __name__ == '__main__':
     pl.seed_everything(seed)
 
     generate_adv_examples(data, attack_name, eps, adv_params, path_outputs, n_att, n_val, seed)
+
+
+if __name__ == '__main__':
+    main()

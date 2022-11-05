@@ -3,8 +3,10 @@ import os
 import warnings
 from typing import Tuple, Union
 
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
+import torchvision as tv
 from pytorch_lightning import LightningModule, Trainer
 from torch import Tensor
 from torch.nn import Module
@@ -195,3 +197,20 @@ def batch_forward(model: Module, X: Tensor, batch_size: int = 256, device='cuda'
             outputs[start: end] = model(_x).cpu()
             start = end
     return outputs
+
+
+def show_top5_imgs(path_dataset, figsize=(8, 3), cmap='gray'):
+    """Show top 5 images in a PyTorch dataset."""
+    dataset = torch.load(path_dataset)
+    images = [x for x, y in dataset]
+    labels = [y for x, y in dataset]
+    grid = tv.utils.make_grid(images[:5], nrow=5, padding=4, pad_value=1)
+    grid = grid.permute(1, 2, 0)
+
+    plt.figure(figsize=figsize)
+    plt.imshow(grid.numpy(), cmap=cmap)
+    plt.axis('off')
+    plt.show()
+
+    lbl_str = ', '.join([str(l.item()) for l in labels[:5]])
+    print(f'Labels: {lbl_str}')

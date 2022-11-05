@@ -1,13 +1,15 @@
 """Miscellaneous utility functions. Anything hard to category."""
-from pathlib import Path
-import os
 import logging
-from glob import glob
+import os
 import warnings
+from glob import glob
+from pathlib import Path
 from typing import List
 
 import numpy as np
 from numpy.typing import ArrayLike
+
+from .torch_utils import show_top5_imgs
 
 
 def create_parent_dir(path: str, file_ext: str = '.np') -> str:
@@ -75,3 +77,14 @@ def find_available_attacks(path_attack: str, attack_name: str, l_norm: str, eps_
     eps_list_confirmed = np.array(eps_list_confirmed)[indices_sorted]
     assert len(files) == len(eps_list_confirmed)
     return list(files), list(eps_list_confirmed)
+
+
+def plot_images(path_img, lnorm, eps_list, attack_name, n=100):
+    """Plot top-5 images along with their adversarial examples."""
+    show_top5_imgs(os.path.join(path_img, f'AdvClean.n_{n}.pt'), cmap=None)
+    print('Clean images')
+
+    for eps in eps_list:
+        path_img_adv = os.path.join(path_img, f'{attack_name}.{lnorm}.n_{n}.e_{eps}.pt')
+        show_top5_imgs(path_img_adv, cmap=None)
+        print(f'{attack_name} {lnorm} eps={eps}')

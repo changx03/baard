@@ -6,8 +6,8 @@ All scripts are tested on Python `3.9.15` with PyTorch `1.12.1+cu116` on Ubuntu 
 
 ```bash
 # Only tested on Linux
-python3.9 -m venv venv  # Create virtual environment
-source ./venv/bin/activate  # Activate venv
+python3.9 -m venv .venv  # Create virtual environment
+source ./.venv/bin/activate  # Activate venv
 
 pip install --upgrade pip
 
