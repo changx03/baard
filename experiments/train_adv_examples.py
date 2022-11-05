@@ -23,6 +23,9 @@ PATH_ROOT = os.getcwd()
 PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf')
 ADV_BATCH_SIZE = 32  # Training adversarial examples in small batches.
 
+# TODO: Check the output file. If it exits, do not generate adversarial example again!
+# TODO: Save results in dashed format `APGD-L2-n_1000-e_0.3.pt`, instead of `APGD.L2.n_1000.e_0.3.pt`.
+
 
 def check_file_exist(path_file):
     """Shortcut for check a file is exist."""
@@ -93,7 +96,7 @@ def generate_adv_examples(
     num_workers = os.cpu_count()
     print('num_workers:', num_workers)
     path_correct_val_dataset = os.path.join(path_outputs, 'CorrectValDataset.pt')
-    
+
     if not os.path.isfile(path_correct_val_dataset):
         dataset = get_correct_examples(model, val_loader, return_loader=False)
         print(f'{len(dataset)} examples are correctly classified.')

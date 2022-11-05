@@ -17,6 +17,8 @@ from .odds_are_odd import OddsAreOddDetector
 from .pn_detector import PNDetector
 from .region_based_classifier import RegionBasedClassifier
 
+DETECTORS = ['FS', 'LID', 'ML-LOO', 'Odds', 'PN', 'RC', 'BAARD-S1', 'BAARD-S2', 'BAARD-S3', 'BAARD']
+
 
 class Detector(ABC):
     """Base class for a detector."""
