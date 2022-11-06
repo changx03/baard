@@ -17,14 +17,12 @@ from baard.attacks.cw2 import carlini_wagner_l2
 from baard.attacks.fast_gradient_method import fast_gradient_method
 from baard.attacks.projected_gradient_descent import projected_gradient_descent
 from baard.classifiers import DATASETS
+from baard.utils.miscellaneous import filter_exist_eps, norm_parser
 from baard.utils.torch_utils import dataloader2tensor, get_correct_examples
-from baard.utils.miscellaneous import filter_exist_eps
 
 PATH_ROOT = os.getcwd()
 PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf')
 ADV_BATCH_SIZE = 32  # Training adversarial examples in small batches.
-
-# TODO: Check the output file. If it exits, do not generate adversarial example again!
 
 
 def check_file_exist(path_file):
@@ -129,7 +127,7 @@ def generate_adv_examples(
             path_val_clean = os.path.join(path_outputs, f'ValClean-{n_val}.pt')
             torch.save(TensorDataset(X_val, y_val), path_val_clean)
     else:
-        print(f'Load existing `ValClean.n_{n_val}.pt`...')
+        print(f'Load existing `ValClean-{n_val}.pt`...')
         dataset_adv_clean = torch.load(path_adv_clean)
         dataloader_adv_clean = DataLoader(dataset_adv_clean, batch_size=val_loader.batch_size,
                                           num_workers=num_workers, shuffle=False)
@@ -137,7 +135,7 @@ def generate_adv_examples(
 
         path_val_clean = os.path.join(path_outputs, f'ValClean-{n_val}.pt')
         if n_val > 0 and not os.path.isfile(path_val_clean):
-            print(f'WARNING: Validation dataset is missing! Delete `AdvClean.n_{n_att}.pt` and run the code again!')
+            print(f'WARNING: Validation dataset is missing! Delete `AdvClean-{n_att}.pt` and run the code again!')
     del x, y, dataset, dataloader
 
     # Step 3: Generate adversarial examples
@@ -153,7 +151,14 @@ def generate_adv_examples(
     path_log_results = os.path.join(path_outputs, f'{attack_name}-L{attack_norm}-SuccessRate.csv')
 
     # Get epsilon which hasn't rained.
-    eps = filter_exist_eps()
+    eps = filter_exist_eps(eps,
+                           path_outputs,
+                           attack_name,
+                           lnorm=norm_parser(adv_params['norm']),
+                           n=X_adv_clean.size(0))
+    if len(eps) == 0:
+        print('No epsilon need to train. Exit.')
+        return
 
     with open(path_log_results, 'a') as file:
         file.write(','.join(['eps', 'success_rate']) + '\n')

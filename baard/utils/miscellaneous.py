@@ -98,16 +98,13 @@ def find_available_attacks(path_attack: str, attack_name: str, l_norm: str, eps_
 
 def norm_parser(lnorm: Union[str, int]) -> str:
     """Parse L-norm string."""
-
+    lnorm = str(lnorm).lower()
     # Handle `lnorm` without the initial `L` letter.
-    if lnorm == 'inf' or isinstance(lnorm, int):
+    if lnorm[0] != 'l':
         lnorm = f'L{lnorm}'
-
     # Handle where `L` is in lower case.
     lnorm = lnorm[0].upper() + lnorm[1:].lower()
-
-    valid_norm_list = ['L0', 'L1', 'L2', 'Linf']
-    if not lnorm in valid_norm_list:
+    if lnorm not in ['L0', 'L1', 'L2', 'Linf']:
         raise ValueError(f'{lnorm} is not support L-norm!')
     return lnorm
 
