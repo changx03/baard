@@ -3,12 +3,13 @@ import json
 import os
 from argparse import ArgumentParser
 from pathlib import Path
+from typing import Any, List
 
-from numpy.typing import ArrayLike
+import torch
 
 from baard.attacks import ATTACKS, L_NORM
 from baard.classifiers import DATASETS, MNIST_CNN, CIFAR10_ResNet18
-from baard.detections import DETECTORS, Detector, DETECTOR_EXTENSIONS
+from baard.detections import DETECTOR_EXTENSIONS, DETECTORS, Detector
 from baard.detections.baard_detector import (BAARD, ApplicabilityStage,
                                              DecidabilityStage,
                                              ReliabilityStage)
@@ -18,7 +19,9 @@ from baard.detections.ml_loo import MLLooDetector
 from baard.detections.odds_are_odd import OddsAreOddDetector
 from baard.detections.pn_detector import PNDetector
 from baard.detections.region_based_classifier import RegionBasedClassifier
-from baard.utils.miscellaneous import find_available_attacks, create_parent_dir
+from baard.utils.miscellaneous import (create_parent_dir,
+                                       find_available_attacks, norm_parser)
+from baard.utils.torch_utils import dataset2tensor
 
 # For Feature Squeezing
 FS_MAX_EPOCHS = 30  # Max. number of epochs used by the detectors.
@@ -82,11 +85,11 @@ def init_detector(detector_name: str, data_name: str, path_checkpoint: str, seed
         detector = PNDetector(model, data_name, path_checkpoint, max_epochs=PN_MAX_EPOCHS, seed=seed)
     elif detector_name == DETECTORS[5]:  # RC
         detector = RegionBasedClassifier(model, data_name, radius=RC_RADIUS, n_noise_samples=RC_N_SAMPLE)
-    elif detector_name == DETECTORS[6]:  # BAARD S1 - Applicability
+    elif detector_name == DETECTORS[6]:  # BAARD-S1 - Applicability
         detector = ApplicabilityStage(model, data_name)
-    elif detector_name == DETECTORS[7]:  # BAARD S2 - Reliability
+    elif detector_name == DETECTORS[7]:  # BAARD-S2 - Reliability
         detector = ReliabilityStage(model, data_name, k_neighbors=B2_K_NEIGHBORS, subsample_scale=B2_SAMPLE_SCALE)
-    elif detector_name == DETECTORS[8]:  # BAARD S3 - Decidability
+    elif detector_name == DETECTORS[8]:  # BAARD-S3 - Decidability
         detector = DecidabilityStage(model, data_name, k_neighbors=B3_K_NEIGHBORS, subsample_scale=B3_SAMPLE_SCALE)
     elif detector_name == DETECTORS[9]:  # BAARD Full
         detector = BAARD(model, data_name,
@@ -98,14 +101,28 @@ def init_detector(detector_name: str, data_name: str, path_checkpoint: str, seed
     return detector, detector_ext
 
 
-def extract_features():
+def extract_features(detector: Detector, attack_name: str, data_name: str, l_norm: Any, adv_files: List,
+                     att_eps_list: List, path_output: str):
     """Extract features from a dataset."""
-    return []
+    detector_name = detector.__class__.__name__
+    l_norm = norm_parser(l_norm)
+    path_record = os.path.join(path_output, detector_name, f'{detector_name}-{data_name}-{attack_name}-{l_norm}.csv')
+    with open(path_record, 'a', encoding='UTF-8') as file:
+        file.write(','.join(['attack', 'path']) + '\n')
+        for eps, path_data in zip(att_eps_list, adv_files):
+            file.write(','.join([str(eps), path_data]) + '\n')
 
+            print(f'Running {detector_name} on {data_name} with eps={eps}')
+            dataset = torch.load(path_data)
+            X, _ = dataset2tensor(dataset)
+            features = detector.extract_features(X)
 
-def save_features(features: ArrayLike, name: str, path: str):
-    """Save features."""
-    detector = None
+            path_features = os.path.join(path_output, detector_name, f'{attack_name}-{l_norm}', f'{detector_name}-{data_name}-{attack_name}-{l_norm}-{eps}.pt')
+            path_features = create_parent_dir(path_features, file_ext='.pt')
+            print(f'Save features to: {path_features}')
+            torch.save(features, path_features)
+
+            print('#' * 80)
 
 
 def main_pipeline():
@@ -119,40 +136,39 @@ def main_pipeline():
     print('DETECTOR:', detector_name)
     print('DETECTOR EXTENSION:', detector_ext)
 
-    # Save parameters
     detector_name = detector.__class__.__name__
-    path_json = create_parent_dir(os.path.join(path_output, detector_name, f'{detector_name}-{data_name}.json'))
+    path_json = create_parent_dir(os.path.join(path_output, detector_name, f'{detector_name}-{data_name}.json'), file_ext='.json')
     path_detector = os.path.join(path_output, detector_name, f'{detector_name}-{data_name}.{detector_ext}')
-    if not os.path.exists(path_json):
+
+    no_json_params = not os.path.exists(path_json)
+    detector_cant_save = detector_name in ['FeatureSqueezingDetector', 'PNDetector', 'RegionBasedClassifier']
+    if no_json_params or detector_cant_save:
+        # Save parameters
         detector.save_params(path_json)
         # Train
         detector.train()
         if detector_ext is not None:
             # FeatureSqueezingDetector, PNDetector, and RegionBasedClassifier can not save.
             detector.save(path_detector)
-
     else:
-        # Load detector
-        print(f'Found pre-trained {detector_name}. Load model...')
-        if detector_name == 'FeatureSqueezingDetector':
-            pass
-        elif detector_name == 'PNDetector':
-            pass
-        elif detector_name == 'RegionBasedClassifier':
-            pass
-        else:
-            detector.load(path_detector)
+        print(f'Found pre-trained {detector_name}. Load from {path_detector}')
+        detector.load(path_detector)
+
+    extract_features(detector, attack_name, data_name, l_norm, adv_files, att_eps_list, path_output)
 
 
 def parse_arguments():
-    """Parse command line arguments."""
+    """Parse command line arguments.
+    Example:
+    python ./experiments/detectors_extract_features.py --s 1234 --data MNIST --attack APGD -l 2 --detector "BAARD-S2"
+    """
     parser = ArgumentParser()
-    # TODO: seed, data, attack, and detector should NOT have default value! Debug only.
-    parser.add_argument('-s', '--seed', type=int, default=1234)
-    parser.add_argument('-d', '--data', choices=DATASETS, default='MNIST')
+    # NOTE: seed, data, and detector should NOT have default value! Debug only.
+    parser.add_argument('-s', '--seed', type=int, required=True)
+    parser.add_argument('--data', choices=DATASETS, required=True)
+    parser.add_argument('--detector', type=str, choices=DETECTORS, required=True)
     parser.add_argument('-a', '--attack', choices=ATTACKS, default='APGD')
-    parser.add_argument('-l', '--lnorm', choices=L_NORM, default=2)
-    parser.add_argument('--detector', type=str, default='FS', choices=DETECTORS)
+    parser.add_argument('-l', '--lnorm', type=str, choices=L_NORM, default='2')
     parser.add_argument('-p', '--path', type=str, default='results',
                         help='The path for loading pre-trained adversarial examples, and saving results.')
     parser.add_argument('--eps', type=json.loads, default=None,
@@ -179,6 +195,4 @@ def parse_arguments():
 
 
 if __name__ == '__main__':
-    # Example:
-    # python ./experiments/detectors_extract_features.py --seed 1234 --data MNIST --attack APGD
     main_pipeline()

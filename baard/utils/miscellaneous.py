@@ -14,7 +14,7 @@ from numpy.typing import ArrayLike
 logger = logging.getLogger(__name__)
 
 
-def create_parent_dir(path: str, file_ext: str = '.np') -> str:
+def create_parent_dir(path: str, file_ext: str) -> str:
     """Check file extension and parent directory. If it's not exist, create one."""
     path = Path(path).resolve()
     filename, _file_extension = os.path.splitext(path)
@@ -53,7 +53,7 @@ def filter_exist_eps(eps_list: ArrayLike,
     return eps_list_not_trained
 
 
-def find_available_attacks(path_attack: str, attack_name: str, l_norm: str, eps_list: List) -> tuple[List, List]:
+def find_available_attacks(path_attack: str, attack_name: str, l_norm: str, eps_list: List) -> tuple[List, List, int]:
     """Find pre-trained adversarial examples from the directory."""
     l_norm = norm_parser(l_norm)
 
