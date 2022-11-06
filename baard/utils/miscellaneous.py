@@ -4,7 +4,7 @@ import os
 import warnings
 from glob import glob
 from pathlib import Path
-from typing import List
+from typing import List, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -27,7 +27,7 @@ def create_parent_dir(path: str, file_ext: str = '.np') -> str:
 
 
 def argsort_by_eps(eps_list: ArrayLike) -> List:
-    """Sort a list of epsilon in string. Expect the 1st item is `clean`."""
+    """Sort a list of epsilon in string. Expect the 1st item is `clean`, e.g., ['clean', 1, 2]"""
     indices = np.argsort([float(i) for i in eps_list[1:]])
     indices = indices + 1
     indices = [0] + list(indices)  # Add `clean` back
@@ -36,13 +36,15 @@ def argsort_by_eps(eps_list: ArrayLike) -> List:
 
 def find_available_attacks(path_attack: str, attack_name: str, l_norm: str, eps_list: List) -> tuple[List, List]:
     """Find pre-trained adversarial examples from the directory."""
+    l_norm = norm_parser(l_norm)
+
     files = glob(os.path.join(path_attack, f'{attack_name}-{l_norm}-*.pt'))
     file_names = [os.path.basename(f) for f in files]
     sample_size_set = set()
     eps_file_list = []
     for name in file_names:
         # Read n_samples
-        sample_size = name.split('-')[-2]
+        sample_size = int(name.split('-')[-2])
         sample_size_set.add(sample_size)
 
         # Read epsilon
@@ -79,16 +81,35 @@ def find_available_attacks(path_attack: str, attack_name: str, l_norm: str, eps_
     return list(files), list(eps_list_confirmed)
 
 
-def plot_images(path_img, lnorm, eps_list, attack_name, n=100):
+def plot_images(path_img: str,
+                lnorm: Union[str, int],
+                eps_list: List,
+                attack_name: str,
+                n: int = 100,
+                ):
     """Plot top-5 images along with their adversarial examples."""
+    lnorm = norm_parser(lnorm)
+
     show_top5_imgs(os.path.join(path_img, f'AdvClean-{n}.pt'), cmap=None)
     print('Clean images')
-
-    # Handle `lnorm` without the initial `L` letter.
-    if lnorm == 'int' or isinstance(lnorm, int):
-        lnorm = f'L{lnorm}'
 
     for eps in eps_list:
         path_img_adv = os.path.join(path_img, f'{attack_name}-{lnorm}-{n}-{eps}.pt')
         show_top5_imgs(path_img_adv, cmap=None)
         print(f'{attack_name} {lnorm} eps={eps}')
+
+
+def norm_parser(lnorm: Union[str, int]) -> str:
+    """Parse L-norm string."""
+
+    # Handle `lnorm` without the initial `L` letter.
+    if lnorm == 'int' or isinstance(lnorm, int):
+        lnorm = f'L{lnorm}'
+
+    # Handle where `L` is in lower case.
+    lnorm = lnorm[0].upper() + lnorm[1:].lower()
+
+    valid_norm_list = ['L0', 'L1', 'L2', 'Linf']
+    if not lnorm in valid_norm_list:
+        raise ValueError(f'{lnorm} is not support L-norm!')
+    return lnorm
