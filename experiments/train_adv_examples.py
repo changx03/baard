@@ -18,6 +18,7 @@ from baard.attacks.fast_gradient_method import fast_gradient_method
 from baard.attacks.projected_gradient_descent import projected_gradient_descent
 from baard.classifiers import DATASETS
 from baard.utils.torch_utils import dataloader2tensor, get_correct_examples
+from baard.utils.miscellaneous import filter_exist_eps
 
 PATH_ROOT = os.getcwd()
 PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf')
@@ -150,6 +151,9 @@ def generate_adv_examples(
     # NOTE: C&W is only on L2 for now.
     attack_norm = 2 if attack_name == ATTACKS[2] else str(adv_params['norm'])
     path_log_results = os.path.join(path_outputs, f'{attack_name}-L{attack_norm}-SuccessRate.csv')
+
+    # Get epsilon which hasn't rained.
+    eps = filter_exist_eps()
 
     with open(path_log_results, 'a') as file:
         file.write(','.join(['eps', 'success_rate']) + '\n')

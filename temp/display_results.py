@@ -2,7 +2,7 @@
 import os
 from pathlib import Path
 
-from baard.utils.miscellaneous import plot_images
+from baard.utils.torch_utils import plot_images
 
 PATH_ROOT = Path(os.getcwd()).absolute().parent
 print(PATH_ROOT)

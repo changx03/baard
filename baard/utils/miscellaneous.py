@@ -9,8 +9,6 @@ from typing import List, Union
 import numpy as np
 from numpy.typing import ArrayLike
 
-from .torch_utils import show_top5_imgs
-
 
 def create_parent_dir(path: str, file_ext: str = '.np') -> str:
     """Check file extension and parent directory. If it's not exist, create one."""
@@ -32,6 +30,23 @@ def argsort_by_eps(eps_list: ArrayLike) -> List:
     indices = indices + 1
     indices = [0] + list(indices)  # Add `clean` back
     return indices
+
+
+def filter_exist_eps(eps_list: ArrayLike,
+                     path: str,
+                     attack_name: str,
+                     lnorm: Union[str, int],
+                     n: int
+                     ) -> List:
+    """Remove epsilon if it is already exist."""
+    lnorm = norm_parser(lnorm)
+    eps_list_not_trained = []
+    path_files = [os.path.join(path, f'{attack_name}-{lnorm}-{n}-{e}.pt') for e in eps_list]
+    for e, file in zip(eps_list, path_files):
+        if not os.path.exists(file):
+            eps_list_not_trained.append(e)
+    eps_list_not_trained = np.round(eps_list_not_trained, 2)
+    return eps_list_not_trained
 
 
 def find_available_attacks(path_attack: str, attack_name: str, l_norm: str, eps_list: List) -> tuple[List, List]:
@@ -81,29 +96,11 @@ def find_available_attacks(path_attack: str, attack_name: str, l_norm: str, eps_
     return list(files), list(eps_list_confirmed)
 
 
-def plot_images(path_img: str,
-                lnorm: Union[str, int],
-                eps_list: List,
-                attack_name: str,
-                n: int = 100,
-                ):
-    """Plot top-5 images along with their adversarial examples."""
-    lnorm = norm_parser(lnorm)
-
-    show_top5_imgs(os.path.join(path_img, f'AdvClean-{n}.pt'), cmap=None)
-    print('Clean images')
-
-    for eps in eps_list:
-        path_img_adv = os.path.join(path_img, f'{attack_name}-{lnorm}-{n}-{eps}.pt')
-        show_top5_imgs(path_img_adv, cmap=None)
-        print(f'{attack_name} {lnorm} eps={eps}')
-
-
 def norm_parser(lnorm: Union[str, int]) -> str:
     """Parse L-norm string."""
 
     # Handle `lnorm` without the initial `L` letter.
-    if lnorm == 'int' or isinstance(lnorm, int):
+    if lnorm == 'inf' or isinstance(lnorm, int):
         lnorm = f'L{lnorm}'
 
     # Handle where `L` is in lower case.
@@ -113,3 +110,17 @@ def norm_parser(lnorm: Union[str, int]) -> str:
     if not lnorm in valid_norm_list:
         raise ValueError(f'{lnorm} is not support L-norm!')
     return lnorm
+
+
+# def test_filter_exist_eps():
+#     results = filter_exist_eps(np.arange(0, 0.1, 0.01),
+#                                os.path.join('results', 'exp1234', 'CIFAR10'),
+#                                'APGD',
+#                                lnorm='inf',
+#                                n=100,
+#                                )
+#     print(results)
+
+
+# if __name__ == '__main__':
+#     test_filter_exist_eps()

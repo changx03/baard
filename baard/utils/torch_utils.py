@@ -1,7 +1,7 @@
 """Utility functions for PyTorch."""
 import os
 import warnings
-from typing import Tuple, Union
+from typing import List, Tuple, Union
 
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
@@ -12,6 +12,8 @@ from torch import Tensor
 from torch.nn import Module
 from torch.utils.data import (DataLoader, IterableDataset, SequentialSampler,
                               TensorDataset)
+
+from baard.utils.miscellaneous import norm_parser
 
 
 def get_num_items_per_example(dataloader: DataLoader) -> int:
@@ -214,3 +216,21 @@ def show_top5_imgs(path_dataset, figsize=(8, 3), cmap='gray'):
 
     lbl_str = ', '.join([str(l.item()) for l in labels[:5]])
     print(f'Labels: {lbl_str}')
+
+
+def plot_images(path_img: str,
+                lnorm: Union[str, int],
+                eps_list: List,
+                attack_name: str,
+                n: int = 100,
+                ):
+    """Plot top-5 images along with their adversarial examples."""
+    lnorm = norm_parser(lnorm)
+
+    show_top5_imgs(os.path.join(path_img, f'AdvClean-{n}.pt'), cmap=None)
+    print('Clean images')
+
+    for eps in eps_list:
+        path_img_adv = os.path.join(path_img, f'{attack_name}-{lnorm}-{n}-{eps}.pt')
+        show_top5_imgs(path_img_adv, cmap=None)
+        print(f'{attack_name} {lnorm} eps={eps}')
