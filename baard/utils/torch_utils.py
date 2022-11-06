@@ -1,6 +1,8 @@
 """Utility functions for PyTorch."""
+import logging
 import os
 import warnings
+from glob import glob
 from typing import List, Tuple, Union
 
 import matplotlib.pyplot as plt
@@ -14,6 +16,8 @@ from torch.utils.data import (DataLoader, IterableDataset, SequentialSampler,
                               TensorDataset)
 
 from baard.utils.miscellaneous import norm_parser
+
+logger = logging.getLogger(__name__)
 
 
 def get_num_items_per_example(dataloader: DataLoader) -> int:
@@ -234,3 +238,33 @@ def plot_images(path_img: str,
         path_img_adv = os.path.join(path_img, f'{attack_name}-{lnorm}-{n}-{eps}.pt')
         show_top5_imgs(path_img_adv, cmap=None)
         print(f'{attack_name} {lnorm} eps={eps}')
+
+
+def find_last_checkpoint(model_name: str, data_name: str, kernel_name: str = None, path: str = 'logs') -> str:
+    """Find the path of latest PyTorch Lightening checkpoint."""
+    version_name = 'version_'
+    i = 0
+    kernel_name = f'_{kernel_name}' if kernel_name is not None else ''
+    path_last_version = os.path.join(path, f'{model_name}_{data_name}{kernel_name}', version_name)
+    while os.path.exists(path_last_version + str(i)):
+        i += 1
+    i -= 1  # Get the last valid one.
+    path_last_version = path_last_version + str(i)
+    path_last_version = os.path.join(path_last_version, 'checkpoints')
+    if i < 0 or not os.path.exists(path_last_version):
+        return None  # checkpoint is not found.
+    logger.info('Found last checkpoint: %s', path_last_version)
+    files = sorted(glob(os.path.join(path_last_version, '*.ckpt')))
+    path_last_checkpoint = files[-1]
+    return path_last_checkpoint
+
+
+# def test_find_last_checkpoint():
+#     """Test find_last_checkpoint"""
+#     path_last_checkpoint = find_last_checkpoint('FeatureSqueezer', 'MNIST', kernel_name='depth', path='logs')
+#     print(path_last_checkpoint)
+
+
+# if __name__ == '__main__':
+#     logging.basicConfig(level=logging.INFO)
+#     test_find_last_checkpoint()
