@@ -36,7 +36,6 @@ ODDS_N_SAMPLE = 1000
 # For PNClassification
 PN_MAX_EPOCHS = 30
 # For Region-based classification
-RC_RADIUS = 0.2  # TODO: This need tuning!
 RC_N_SAMPLE = 1000
 # For BAARD S2 - Reliability  # TODO: This need tuning!
 B2_K_NEIGHBORS = 20
@@ -84,6 +83,12 @@ def init_detector(detector_name: str, data_name: str, path_checkpoint: str, seed
     elif detector_name == DETECTORS[4]:  # PN
         detector = PNDetector(model, data_name, path_checkpoint, max_epochs=PN_MAX_EPOCHS, seed=seed)
     elif detector_name == DETECTORS[5]:  # RC
+        if data_name == 'MNIST':
+            RC_RADIUS = 0.3  # from original paper
+        elif data_name == 'CIFAR10':
+            RC_RADIUS = 0.02  # from original paper
+        else:
+            raise NotImplementedError
         detector = RegionBasedClassifier(model, data_name, radius=RC_RADIUS, n_noise_samples=RC_N_SAMPLE)
     elif detector_name == DETECTORS[6]:  # BAARD-S1 - Applicability
         detector = ApplicabilityStage(model, data_name)
