@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
 from baard.utils.torch_utils import create_noisy_examples, predict
-from . import Detector
+from .base_detector import Detector
 
 logger = logging.getLogger(__name__)
 

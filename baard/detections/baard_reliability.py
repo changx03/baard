@@ -22,7 +22,7 @@ from tqdm import tqdm
 from baard.detections.baard_applicability import ApplicabilityStage
 from baard.utils.miscellaneous import create_parent_dir
 from baard.utils.torch_utils import batch_forward, dataloader2tensor, predict
-from . import Detector
+from .base_detector import Detector
 
 logger = logging.getLogger(__name__)
 

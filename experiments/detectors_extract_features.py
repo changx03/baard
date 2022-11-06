@@ -8,7 +8,7 @@ from numpy.typing import ArrayLike
 
 from baard.attacks import ATTACKS, L_NORM
 from baard.classifiers import DATASETS, MNIST_CNN, CIFAR10_ResNet18
-from baard.detections import DETECTORS, Detector
+from baard.detections import DETECTORS, Detector, DETECTOR_EXTENSIONS
 from baard.detections.baard_detector import (BAARD, ApplicabilityStage,
                                              DecidabilityStage,
                                              ReliabilityStage)
@@ -18,7 +18,7 @@ from baard.detections.ml_loo import MLLooDetector
 from baard.detections.odds_are_odd import OddsAreOddDetector
 from baard.detections.pn_detector import PNDetector
 from baard.detections.region_based_classifier import RegionBasedClassifier
-from baard.utils.miscellaneous import find_available_attacks
+from baard.utils.miscellaneous import find_available_attacks, create_parent_dir
 
 # For Feature Squeezing
 FS_MAX_EPOCHS = 30  # Max. number of epochs used by the detectors.
@@ -43,44 +43,59 @@ B3_K_NEIGHBORS = 20
 B3_SAMPLE_SCALE = 50
 
 
-def init_detector(detector_name: str, dname: str, path_checkpoint, seed: int) -> Detector:
+def get_pretrained_model_path(data_name: str) -> str:
+    """Return the path of the pre-trained model based on the name of the dataset."""
+    path = None
+    if data_name == DATASETS[0]:  # MNIST
+        path = os.path.join('pretrained_clf', 'mnist_cnn.ckpt')
+    elif data_name == DATASETS[1]:  # CIFAR10
+        path = os.path.join('pretrained_clf', 'cifar10_resnet18.ckpt')
+    else:
+        raise NotImplementedError
+    return path
+
+
+def init_detector(detector_name: str, data_name: str, path_checkpoint: str, seed: int) -> tuple[Detector, str]:
     """Initialize a detector."""
-    if dname == DATASETS[0]:  # MNIST
+    if data_name == DATASETS[0]:  # MNIST
         model = MNIST_CNN.load_from_checkpoint(path_checkpoint)
         eps = 0.66  # For APGD on L-inf
-    elif dname == DATASETS[1]:  # CIFAR10
+    elif data_name == DATASETS[1]:  # CIFAR10
         model = CIFAR10_ResNet18.load_from_checkpoint(path_checkpoint)
         eps = 0.1  # APGD on L-inf
     else:
         raise NotImplementedError
 
+    detector = None
+    detector_ext = None
     if detector_name == DETECTORS[0]:  # FS
-        detector = FeatureSqueezingDetector(model, dname, path_checkpoint, max_epochs=FS_MAX_EPOCHS, seed=seed)
+        detector = FeatureSqueezingDetector(model, data_name, path_checkpoint, max_epochs=FS_MAX_EPOCHS, seed=seed)
     elif detector_name == DETECTORS[1]:  # LID
         # Default attack is APGD on L-inf
-        detector = LIDDetector(model, dname, attack_eps=eps, noise_eps=eps, batch_size=LID_BATCH_SIZE,
+        detector = LIDDetector(model, data_name, attack_eps=eps, noise_eps=eps, batch_size=LID_BATCH_SIZE,
                                k_neighbors=LID_K_NEIGHBORS)
     elif detector_name == DETECTORS[2]:  # ML-LOO
-        detector = MLLooDetector(model, dname)
+        detector = MLLooDetector(model, data_name)
     elif detector_name == DETECTORS[3]:  # Odds
-        detector = OddsAreOddDetector(model, dname, noise_list=ODDS_NOISE_LIST, n_noise_samples=ODDS_N_SAMPLE)
+        detector = OddsAreOddDetector(model, data_name, noise_list=ODDS_NOISE_LIST, n_noise_samples=ODDS_N_SAMPLE)
     elif detector_name == DETECTORS[4]:  # PN
-        detector = PNDetector(model, dname, path_checkpoint, max_epochs=PN_MAX_EPOCHS, seed=seed)
+        detector = PNDetector(model, data_name, path_checkpoint, max_epochs=PN_MAX_EPOCHS, seed=seed)
     elif detector_name == DETECTORS[5]:  # RC
-        detector = RegionBasedClassifier(model, dname, radius=RC_RADIUS, n_noise_samples=RC_N_SAMPLE)
+        detector = RegionBasedClassifier(model, data_name, radius=RC_RADIUS, n_noise_samples=RC_N_SAMPLE)
     elif detector_name == DETECTORS[6]:  # BAARD S1 - Applicability
-        detector = ApplicabilityStage(model, dname)
+        detector = ApplicabilityStage(model, data_name)
     elif detector_name == DETECTORS[7]:  # BAARD S2 - Reliability
-        detector = ReliabilityStage(model, dname, k_neighbors=B2_K_NEIGHBORS, subsample_scale=B2_SAMPLE_SCALE)
+        detector = ReliabilityStage(model, data_name, k_neighbors=B2_K_NEIGHBORS, subsample_scale=B2_SAMPLE_SCALE)
     elif detector_name == DETECTORS[8]:  # BAARD S3 - Decidability
-        detector = DecidabilityStage(model, dname, k_neighbors=B3_K_NEIGHBORS, subsample_scale=B3_SAMPLE_SCALE)
+        detector = DecidabilityStage(model, data_name, k_neighbors=B3_K_NEIGHBORS, subsample_scale=B3_SAMPLE_SCALE)
     elif detector_name == DETECTORS[9]:  # BAARD Full
-        detector = BAARD(model, dname,
+        detector = BAARD(model, data_name,
                          k1_neighbors=B2_K_NEIGHBORS, subsample_scale1=B2_SAMPLE_SCALE,
                          k2_neighbors=B3_K_NEIGHBORS, subsample_scale2=B3_SAMPLE_SCALE)
     else:
         raise NotImplementedError
-    return detector
+    detector_ext = DETECTOR_EXTENSIONS[detector.__class__.__name__]
+    return detector, detector_ext
 
 
 def extract_features():
@@ -96,6 +111,37 @@ def save_features(features: ArrayLike, name: str, path: str):
 def main_pipeline():
     """Full pipeline for running a detector."""
     path_output, seed, data_name, attack_name, l_norm, adv_files, att_eps_list, detector_name = parse_arguments()
+
+    # Initialize detector
+    path_clf_checkpoint = get_pretrained_model_path(data_name)
+    detector, detector_ext = init_detector(detector_name=detector_name, data_name=data_name,
+                                           path_checkpoint=path_clf_checkpoint, seed=seed)
+    print('DETECTOR:', detector_name)
+    print('DETECTOR EXTENSION:', detector_ext)
+
+    # Save parameters
+    detector_name = detector.__class__.__name__
+    path_json = create_parent_dir(os.path.join(path_output, detector_name, f'{detector_name}-{data_name}.json'))
+    path_detector = os.path.join(path_output, detector_name, f'{detector_name}-{data_name}.{detector_ext}')
+    if not os.path.exists(path_json):
+        detector.save_params(path_json)
+        # Train
+        detector.train()
+        if detector_ext is not None:
+            # FeatureSqueezingDetector, PNDetector, and RegionBasedClassifier can not save.
+            detector.save(path_detector)
+
+    else:
+        # Load detector
+        print(f'Found pre-trained {detector_name}. Load model...')
+        if detector_name == 'FeatureSqueezingDetector':
+            pass
+        elif detector_name == 'PNDetector':
+            pass
+        elif detector_name == 'RegionBasedClassifier':
+            pass
+        else:
+            detector.load(path_detector)
 
 
 def parse_arguments():

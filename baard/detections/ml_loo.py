@@ -26,7 +26,7 @@ from baard.utils.torch_utils import (batch_forward, dataloader2tensor,
                                      get_correct_examples,
                                      get_dataloader_shape,
                                      get_incorrect_examples)
-from . import Detector
+from .base_detector import Detector
 
 AVAILABLE_STATS_LIST = ('std', 'variance', 'con', 'mad', 'kurtosis', 'skewness', 'quantile')
 

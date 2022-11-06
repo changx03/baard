@@ -21,7 +21,7 @@ from baard.utils.miscellaneous import create_parent_dir
 from baard.utils.torch_utils import (batch_forward, create_noisy_examples,
                                      dataloader2tensor, get_correct_examples,
                                      get_dataloader_shape, predict)
-from . import Detector
+from .base_detector import Detector
 
 
 class OddsAreOddDetector(Detector):

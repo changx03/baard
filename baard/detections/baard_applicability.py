@@ -25,7 +25,7 @@ from baard.classifiers import DATASETS
 from baard.utils.miscellaneous import create_parent_dir
 from baard.utils.torch_utils import (batch_forward, dataloader2tensor,
                                      get_correct_examples, predict)
-from . import Detector
+from .base_detector import Detector
 
 logger = logging.getLogger(__name__)
 

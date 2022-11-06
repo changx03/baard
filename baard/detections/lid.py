@@ -20,7 +20,7 @@ from tqdm import tqdm
 from baard.attacks.apgd import auto_projected_gradient_descent
 from baard.utils.miscellaneous import create_parent_dir
 from baard.utils.torch_utils import dataloader2tensor
-from . import Detector
+from .base_detector import Detector
 
 logger = logging.getLogger(__name__)
 

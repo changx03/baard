@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from baard.classifiers import get_lightning_module
 from baard.utils.torch_utils import dataloader2tensor, predict
-from . import Detector
+from .base_detector import Detector
 
 
 class PNDetector(Detector):

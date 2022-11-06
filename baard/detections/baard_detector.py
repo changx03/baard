@@ -22,7 +22,7 @@ from baard.detections.baard_applicability import ApplicabilityStage
 from baard.detections.baard_decidability import DecidabilityStage
 from baard.detections.baard_reliability import ReliabilityStage
 from baard.utils.miscellaneous import create_parent_dir
-from . import Detector
+from .base_detector import Detector
 
 logger = logging.getLogger(__name__)
 
