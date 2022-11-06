@@ -22,10 +22,10 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
 from baard.classifiers import DATASETS
-from baard.detections import Detector
 from baard.utils.miscellaneous import create_parent_dir
 from baard.utils.torch_utils import (batch_forward, dataloader2tensor,
                                      get_correct_examples, predict)
+from . import Detector
 
 logger = logging.getLogger(__name__)
 

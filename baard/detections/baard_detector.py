@@ -18,11 +18,11 @@ from numpy.typing import ArrayLike
 from pytorch_lightning import LightningModule
 from torch import Tensor
 
-from baard.detections import Detector
 from baard.detections.baard_applicability import ApplicabilityStage
 from baard.detections.baard_decidability import DecidabilityStage
 from baard.detections.baard_reliability import ReliabilityStage
 from baard.utils.miscellaneous import create_parent_dir
+from . import Detector
 
 logger = logging.getLogger(__name__)
 

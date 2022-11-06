@@ -21,12 +21,12 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
 from baard.classifiers import DATASETS
-from baard.detections import Detector
 from baard.utils.miscellaneous import create_parent_dir
 from baard.utils.torch_utils import (batch_forward, dataloader2tensor,
                                      get_correct_examples,
                                      get_dataloader_shape,
                                      get_incorrect_examples)
+from . import Detector
 
 AVAILABLE_STATS_LIST = ('std', 'variance', 'con', 'mad', 'kurtosis', 'skewness', 'quantile')
 

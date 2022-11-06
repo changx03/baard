@@ -59,7 +59,7 @@ def run_baard(data_name: str,
         raise NotImplementedError
 
     path_data_clean = os.path.join(PATH_ROOT, 'results', 'exp1234', data_name, 'AdvClean-100.pt')
-    path_data_adv = os.path.join(PATH_ROOT, 'results', 'exp1234', data_name, f'APGD.Linf-100-{eps}.pt')
+    path_data_adv = os.path.join(PATH_ROOT, 'results', 'exp1234', data_name, f'APGD-Linf-100-{eps}.pt')
 
     if detector_class == ApplicabilityStage:
         file_ext = '.baard1'
@@ -148,4 +148,4 @@ if __name__ == '__main__':
         'k2_neighbors': 20,
         'subsample_scale2': 10,
     }
-    run_baard('CIFAR10', BAARD, train=True, params=params_baard)
+    run_baard('CIFAR10', BAARD, train=False, params=params_baard)

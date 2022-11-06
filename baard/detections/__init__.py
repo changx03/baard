@@ -6,17 +6,6 @@ from numpy.typing import ArrayLike
 from pytorch_lightning import LightningModule
 from torch import Tensor
 
-from .baard_applicability import ApplicabilityStage
-from .baard_decidability import DecidabilityStage
-from .baard_detector import BAARD
-from .baard_reliability import ReliabilityStage
-from .feature_squeezing import FeatureSqueezingDetector
-from .lid import LIDDetector
-from .ml_loo import MLLooDetector
-from .odds_are_odd import OddsAreOddDetector
-from .pn_detector import PNDetector
-from .region_based_classifier import RegionBasedClassifier
-
 DETECTORS = ['FS', 'LID', 'ML-LOO', 'Odds', 'PN', 'RC', 'BAARD-S1', 'BAARD-S2', 'BAARD-S3', 'BAARD']
 
 

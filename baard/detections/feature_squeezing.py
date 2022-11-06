@@ -17,8 +17,8 @@ from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
 
 from baard.classifiers import DATASETS, get_lightning_module
-from baard.detections import Detector
 from baard.utils.torch_utils import dataloader2tensor
+from . import Detector
 
 SQUEEZER = ('depth', 'median', 'nl_mean')
 
