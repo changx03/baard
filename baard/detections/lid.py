@@ -24,6 +24,8 @@ from .base_detector import Detector
 
 logger = logging.getLogger(__name__)
 
+ADV_BATCH_SIZE = 32
+
 
 class LIDDetector(Detector):
     """Implement Local Intrinsic Dimensionality Detector in PyTorch."""
@@ -82,16 +84,28 @@ class LIDDetector(Detector):
             logger.warning('No sample is passed for training. Using the entire training set. %i examples.', X.size(0))
 
         X_noise = self.add_gaussian_noise(X, self.noise_eps, self.clip_range)
-        X_adv = auto_projected_gradient_descent(
-            self.model,
-            X,
-            norm=self.attack_norm,
-            n_classes=self.n_classes,
-            eps=self.attack_eps,
-            nb_iter=100,
-            clip_min=self.clip_range[0],
-            clip_max=self.clip_range[1],
-        )
+
+        X_adv = torch.zeros_like(X)
+        dataloader = DataLoader(TensorDataset(X), batch_size=ADV_BATCH_SIZE,
+                                num_workers=os.cpu_count(), shuffle=False)
+        start = 0
+        pbar = tqdm(enumerate(dataloader), total=len(dataloader))
+        pbar.set_description('Running APGD mini-batch for LID', refresh=False)
+        for i, batch in pbar:
+            x = batch[0]
+            end = start + len(x)
+            X_adv[start:end] = auto_projected_gradient_descent(
+                self.model,
+                X,
+                norm=self.attack_norm,
+                n_classes=self.n_classes,
+                eps=self.attack_eps,
+                nb_iter=100,
+                clip_min=self.clip_range[0],
+                clip_max=self.clip_range[1],
+            )
+            start = end
+
         n_samples = X.size(0)
         n_sequences = len(self.latent_nets)
 
