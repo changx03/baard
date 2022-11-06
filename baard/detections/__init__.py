@@ -6,6 +6,8 @@ from numpy.typing import ArrayLike
 from pytorch_lightning import LightningModule
 from torch import Tensor
 
+from baard.utils.miscellaneous import create_parent_dir, to_json
+
 DETECTORS = ['FS', 'LID', 'ML-LOO', 'Odds', 'PN', 'RC', 'BAARD-S1', 'BAARD-S2', 'BAARD-S3', 'BAARD']
 
 
@@ -20,6 +22,13 @@ class Detector(ABC):
 
         # Parameters from LightningModule:
         self.batch_size = self.model.train_dataloader().batch_size
+
+        # These parameters can be saved as a JSON file.
+        self.params = {
+            'data_name': self.data_name,
+            'num_workers': self.num_workers,
+            'batch_size': self.batch_size,
+        }
 
     @abstractmethod
     def train(self, X: Tensor = None, y: Tensor = None) -> None:
@@ -38,3 +47,8 @@ class Detector(ABC):
     def load(self, path: str = None) -> None:
         """Load pre-trained parameters."""
         print('This detector does not provide load feature.')
+
+    def save_params(self, path: str = None) -> None:
+        """Save internal parameters as a JSON file."""
+        path = create_parent_dir(path, '.json')
+        to_json(self.params, path)

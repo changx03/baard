@@ -36,6 +36,12 @@ class RegionBasedClassifier(Detector):
         self.n_noise_samples = n_noise_samples
         self.noise_clip_range = noise_clip_range
 
+        # Register params
+        self.params['n_classes'] = self.n_classes
+        self.params['radius'] = self.radius
+        self.params['n_noise_samples'] = self.n_noise_samples
+        self.params['noise_clip_range'] = self.noise_clip_range
+
     def train(self, X: Tensor = None, y: Tensor = None) -> None:
         """Train detector. X and y are dummy variables."""
         logger.warning('Region-based classifier does not require training.')

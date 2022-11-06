@@ -32,18 +32,16 @@ from baard.utils.torch_utils import dataset2tensor, predict
 def run_demo():
     """Test Positive Negative Detector."""
     PATH_ROOT = Path(os.getcwd()).absolute()
-    PATH_CHECKPOINT = os.path.join(
-        PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
-    PATH_DATA_CLEAN = os.path.join(
-        PATH_ROOT, 'results', 'exp1234', 'MNIST', 'AdvClean-100.pt')
-    PATH_DATA_ADV = os.path.join(
-        PATH_ROOT, 'results', 'exp1234', 'MNIST', 'FGSM-Linf-100-0.28.pt')
+    PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
+    PATH_DATA_CLEAN = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'AdvClean-100.pt')
+    PATH_DATA_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'FGSM-Linf-100-0.28.pt')
 
     # Parameters for development:
     SEED_DEV = 0
     DATASET = DATASETS[0]
     MAX_EPOCHS_DEV = 30
     TINY_TEST_SIZE = 10
+    PATH_DETECTOR_PARAMS = os.path.join(PATH_ROOT, 'temp', f'dev_PNDetector-{DATASET}.json')
 
     pl.seed_everything(SEED_DEV)
 
@@ -61,6 +59,7 @@ def run_demo():
 
     # detector = PNDetector(model, DATASET, path_model=PATH_CHECKPOINT, max_epochs=MAX_EPOCHS_DEV, seed=SEED_DEV)
     # detector.train()
+    # detector.save_params(PATH_DETECTOR_PARAMS)
     # del detector
     ############################################################################
 

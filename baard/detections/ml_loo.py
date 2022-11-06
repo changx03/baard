@@ -54,6 +54,11 @@ class MLLooDetector(Detector):
         self.multi_nets = latent_nets
         self.n_classes = n_classes
 
+        # Register params
+        self.params['device'] = self.device
+        self.params['stats_list'] = self.stats_list
+        self.params['n_classes'] = self.n_classes
+
         # Tunable parameters:
         self.train_mlloss_stats = None
         self.adv_mlloss_stats = None

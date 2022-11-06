@@ -58,6 +58,16 @@ class LIDDetector(Detector):
         # Get all hidden layers
         self.latent_nets = self.get_hidden_layers(self.model, self.device)
 
+        # Register params
+        self.params['n_classes'] = self.n_classes
+        self.params['clip_range'] = self.clip_range
+        self.params['attack_eps'] = self.attack_eps
+        self.params['attack_norm'] = self.attack_norm
+        self.params['noise_eps'] = self.noise_eps
+        self.params['k_neighbors'] = self.k_neighbors
+        self.params['batch_size'] = self.batch_size
+        self.params['device'] = self.device
+
         # Tunable parameters
         self.lid_neg = None
         self.lid_pos = None
@@ -229,7 +239,7 @@ class LIDDetector(Detector):
         for i in range(1, len(list(model.children()))):
             layer = nn.Sequential(*list(model.children())[:i]).to(device)
             hidden_layers.append(layer)
-        logging.info(f'Found {len(hidden_layers)} hidden layers.')
+        logging.info('Found %d hidden layers.', len(hidden_layers))
         return hidden_layers
 
     @classmethod

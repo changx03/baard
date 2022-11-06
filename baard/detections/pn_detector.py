@@ -51,6 +51,13 @@ class PNDetector(Detector):
         else:
             raise NotImplementedError()
 
+        # Register params
+        self.params['path_model'] = self.path_model
+        self.params['dist'] = self.dist
+        self.params['max_epochs'] = self.max_epochs
+        self.params['path_checkpoint'] = self.path_checkpoint
+        self.params['seed'] = self.seed
+
     def train(self, X: Tensor = None, y: Tensor = None):
         """Train detector. X and y are dummy variables."""
         dataloader_train = self.model.train_dataloader()

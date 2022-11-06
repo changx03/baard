@@ -119,6 +119,12 @@ class FeatureSqueezingDetector(Detector):
         self.squeezed_models = {key: get_lightning_module(data_name).load_from_checkpoint(path_model)
                                 for key in self.squeezers}
 
+        # Register params
+        self.params['path_model'] = self.path_model
+        self.params['path_checkpoint'] = self.path_checkpoint
+        self.params['seed'] = self.seed
+        self.params['verbose'] = self.verbose
+
     def train(self, X: Tensor = None, y: Tensor = None) -> None:
         """Train detector. X and y are dummy variables."""
         for squeezer_name, squeezer in self.squeezers.items():

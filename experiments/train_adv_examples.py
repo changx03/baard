@@ -160,7 +160,7 @@ def generate_adv_examples(
         print('No epsilon need to train. Exit.')
         return
 
-    with open(path_log_results, 'a') as file:
+    with open(path_log_results, 'a', encoding='UTF-8') as file:
         file.write(','.join(['eps', 'success_rate']) + '\n')
         for e in eps:
             try:

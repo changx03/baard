@@ -59,6 +59,14 @@ class BAARD(Detector):
             device = 'cpu'
         self.device = device
 
+        # Register params
+        self.params['n_classes'] = self.n_classes
+        self.params['k1_neighbors'] = self.k1_neighbors
+        self.params['subsample_scale1'] = self.subsample_scale1
+        self.params['k2_neighbors'] = self.k2_neighbors
+        self.params['subsample_scale2'] = self.subsample_scale2
+        self.params['device'] = self.device
+
         # Initialize all 3 stages:
         self.applicability = ApplicabilityStage(
             model,

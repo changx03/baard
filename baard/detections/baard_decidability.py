@@ -55,6 +55,12 @@ class DecidabilityStage(Detector):
             device = 'cpu'
         self.device = device
 
+        # Register params
+        self.params['n_classes'] = self.n_classes
+        self.params['k_neighbors'] = self.k_neighbors
+        self.params['subsample_scale'] = self.subsample_scale
+        self.params['device'] = self.device
+
         # Tunable parameters:
         self.n_training_samples = None
         self.n_subset = None

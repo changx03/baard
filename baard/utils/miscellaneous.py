@@ -1,4 +1,6 @@
 """Miscellaneous utility functions. Anything hard to category."""
+import datetime
+import json
 import logging
 import os
 import warnings
@@ -9,6 +11,8 @@ from typing import List, Union
 import numpy as np
 from numpy.typing import ArrayLike
 
+logger = logging.getLogger(__name__)
+
 
 def create_parent_dir(path: str, file_ext: str = '.np') -> str:
     """Check file extension and parent directory. If it's not exist, create one."""
@@ -16,10 +20,10 @@ def create_parent_dir(path: str, file_ext: str = '.np') -> str:
     filename, _file_extension = os.path.splitext(path)
     if _file_extension != file_ext:
         path = Path(filename + file_ext)
-        logging.warning('Change output path to: %s', path)
+        logger.warning('Change output path to: %s', path)
     path_output_dir = path.parent
     if not os.path.exists(path_output_dir):
-        logging.info('Output directory is not found. Create: %s', path_output_dir)
+        logger.info('Output directory is not found. Create: %s', path_output_dir)
         os.makedirs(path_output_dir)
     return path
 
@@ -86,7 +90,7 @@ def find_available_attacks(path_attack: str, attack_name: str, l_norm: str, eps_
     else:
         eps_list_confirmed = eps_list_confirmed + eps_file_list
     files = [os.path.join(path_attack, f'AdvClean-{n_sample}.pt')] + files
-    print(f'Found {len(files)} files for data including clean and adversarial examples.')
+    logger.info('Found %d files for data including clean and adversarial examples.', len(files))
 
     # Sort list
     indices_sorted = argsort_by_eps(eps_list_confirmed)
@@ -109,15 +113,18 @@ def norm_parser(lnorm: Union[str, int]) -> str:
     return lnorm
 
 
-# def test_filter_exist_eps():
-#     results = filter_exist_eps(np.arange(0, 0.1, 0.01),
-#                                os.path.join('results', 'exp1234', 'CIFAR10'),
-#                                'APGD',
-#                                lnorm='inf',
-#                                n=100,
-#                                )
-#     print(results)
+def to_json(data_dict: object, path: str):
+    """Save dictionary as JSON."""
+    def converter(obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, datetime.datetime):
+            return str(obj)
 
-
-# if __name__ == '__main__':
-#     test_filter_exist_eps()
+    with open(path, 'w', encoding='UTF-8') as file:
+        logger.info('Save to: %s', path)
+        json.dump(data_dict, file, default=converter)

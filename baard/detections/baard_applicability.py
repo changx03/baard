@@ -51,6 +51,10 @@ class ApplicabilityStage(Detector):
             device = 'cpu'
         self.device = device
 
+        # Register params
+        self.params['n_classes'] = self.n_classes
+        self.params['device'] = self.device
+
         # Tunable parameters
         self.zstats_dict = None
 

@@ -5,7 +5,6 @@ import os
 import pickle
 import warnings
 from collections import OrderedDict
-from pathlib import Path
 from typing import Dict, List, Tuple
 
 import numpy as np
@@ -52,6 +51,12 @@ class OddsAreOddDetector(Detector):
         self.n_classes = n_classes
         self.noise_clip_range = clip_range
         self.weight_diff = self.weight.unsqueeze(0) - self.weight.unsqueeze(1)
+
+        # Register params
+        self.params['noise_list'] = self.noise_list
+        self.params['device'] = self.device
+        self.params['n_classes'] = self.n_classes
+        self.params['noise_clip_range'] = self.noise_clip_range
 
         # Tunable parameters:
         self.weights_stats = None
