@@ -4,6 +4,9 @@
 
 All scripts are tested on Python `3.9.15` with PyTorch `1.12.1+cu116` on Ubuntu `20.04.5 LTS`.
 
+**NOTE** All bash script and terminal commands are prepared for Linux only. Changing the script according when running
+on a Windows machine.
+
 ```bash
 # Only tested on Linux
 python3.9 -m venv .venv  # Create virtual environment
