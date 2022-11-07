@@ -5,8 +5,11 @@
 source ./.venv/bin/activate
 pip install --upgrade .
 
-# TODO: 
-# 1. More espilon on both L2 and Linf
+# A seed starts with 6 to indicate this is for ablation study. 
+# 1-5 are reserved for repeated experiment for grey-box evaluation.
+SEED=643896
+SIZE=1000
+
 # 2. Reliability: Tuning K on entire set.
 # 3. Reliability: Tuning scale on optimal k.
 # 4. Decidability: Tuning K on entire set.
