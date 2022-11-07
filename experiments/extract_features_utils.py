@@ -151,13 +151,13 @@ def train_or_load_FS(detector: FeatureSqueezingDetector, data_name: str,
         path_squeezer_checkpoint = find_last_checkpoint(
             'FeatureSqueezer', data_name, kernel_name=squeezer, path=path_checkpoints)
         if path_squeezer_checkpoint is None:
-            warnings.warn('[FS] Checkpoint does not number of squeezer! Cannot find {squeezer}.')
+            warnings.warn(f'[FS] Checkpoint does not number of squeezer! Cannot find {squeezer}.')
             break
         path_squeezer_dict[squeezer] = path_squeezer_checkpoint
     if len(path_squeezer_dict) != len(squeezers):  # Train
         detector.train()
     else:
-        print('Found pre-trained FeatureSqueezingDetector. Load from {path_checkpoints}')
+        print(f'Found pre-trained FeatureSqueezingDetector. Load from {path_checkpoints}')
         detector.load(path_squeezer_dict)
     return detector
 
