@@ -8,16 +8,16 @@ echo "Creating venv using Python3.9"
 python3.9 -m venv .venv  # Create virtual environment
 source ./.venv/bin/activate  # Activate venv
 
-pip install --upgrade pip
+python -m pip install --upgrade pip
 
 # Install PyTorch
-pip install torch==1.12.1 torchvision==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu116
+python -m pip install torch==1.12.1 torchvision==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu116
 
 # Install other requirements
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 
 # Install local package
-pip install --upgrade .
+python -m pip install --upgrade .
 
 # To check if PyTorch is correctly installed and GPU is working.
 python ./examples/check_gpu.py

@@ -3,7 +3,7 @@
 # This script generates adversaral examples.
 
 source ./.venv/bin/activate
-pip install --upgrade .
+python -m pip install --upgrade .
 
 # SEEDS=(188283 292478 382347 466364 543597)
 SEEDS=(188283) # TODO: Run 1 repeatation first

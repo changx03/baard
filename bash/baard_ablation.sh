@@ -5,7 +5,7 @@
 # NOTE: The adversarial examples MUST be pre-trained!
 
 source ./.venv/bin/activate
-pip install --upgrade .
+python -m pip install --upgrade .
 
 SEED=643896
 ATTACK="APGD"
