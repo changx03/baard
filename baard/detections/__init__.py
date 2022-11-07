@@ -16,14 +16,26 @@ DETECTORS = ['FS', 'LID', 'ML-LOO', 'Odds', 'PN', 'RC', 'BAARD-S1', 'BAARD-S2', 
 # PNDetector uses `.ckpt` (PyTorch Lightening checkpoint).
 # RegionBasedClassifier does NOT require training.
 DETECTOR_EXTENSIONS = {
-    'ApplicabilityStage': '.baard1',
-    'BAARD': '.baard',
-    'DecidabilityStage': '.baard3',
     'FeatureSqueezingDetector': None,
     'LIDDetector': '.lid',
     'MLLooDetector': '.mlloo',
     'OddsAreOddDetector': '.odds',
     'PNDetector': '.ckpt',
     'RegionBasedClassifier': None,
+    'ApplicabilityStage': '.baard1',
     'ReliabilityStage': '.baard2',
+    'DecidabilityStage': '.baard3',
+    'BAARD': '.baard',
+}
+DETECTOR_CLASS_NAMES = {
+    'FS': 'FeatureSqueezingDetector',
+    'LID': 'LIDDetector',
+    'ML-LOO': 'MLLooDetector',
+    'Odds': 'OddsAreOddDetector',
+    'PN': 'PNDetector',
+    'RC': 'RegionBasedClassifier',
+    'BAARD-S1': 'ApplicabilityStage',
+    'BAARD-S2': 'ReliabilityStage',
+    'BAARD-S3': 'DecidabilityStage',
+    'BAARD': 'BAARD',
 }
