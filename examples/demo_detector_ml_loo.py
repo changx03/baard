@@ -51,11 +51,6 @@ def run_demo():
 
     model = MNIST_CNN.load_from_checkpoint(PATH_CHECKPOINT)
 
-    BATCH_SIZE = model.train_dataloader().batch_size
-    # DEVICE = model.device
-    # NUM_WORKERS = model.train_dataloader().num_workers
-    # INPUT_SHAPE = (BATCH_SIZE, 1, 28, 28)
-
     # Clean examples
     dataset_clean = torch.load(PATH_DATA_CLEAN)
     X_clean, y_clean = dataset2tensor(dataset_clean)
@@ -90,7 +85,7 @@ def run_demo():
     # Uncomment the block below to train the detector:
 
     # detector = MLLooDetector(model, DATASET)
-    # detector.train(X_train_clean, y_train_true, X_train_adv)
+    # detector.train(X_train_clean, y_train_true)
     # detector.save(PATH_MLLOO_DEV)
     ############################################################################
 

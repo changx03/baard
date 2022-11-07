@@ -174,12 +174,12 @@ def generate_adv_examples(
                 dataloader = DataLoader(TensorDataset(X_adv_clean), batch_size=ADV_BATCH_SIZE,
                                         num_workers=num_workers, shuffle=False)
                 start = 0
-                pbar = tqdm(enumerate(dataloader), total=len(dataloader))
+                pbar = tqdm(dataloader, total=len(dataloader))
                 pbar.set_description(f'Running {attack_name} eps/c={e} attack')
-                for i, batch in pbar:
-                    x = batch[0]
+                for batch in pbar:
+                    x_batch = batch[0]
                     end = start + len(x)
-                    X_adv[start:end] = attack(model, x, **adv_params)
+                    X_adv[start:end] = attack(model, x_batch, **adv_params)
                     start = end
 
                 # Save adversarial examples

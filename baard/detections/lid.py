@@ -74,29 +74,27 @@ class LIDDetector(Detector):
         self.lid_neg = None
         self.lid_pos = None
 
-    def train(self, X: Tensor = None, y: Tensor = None) -> None:
+    def train(self, X: Tensor, y: Tensor) -> None:
         """Train detector. Train is not required for extracting features. If X and y are None,
         use the training set from the classifier.
         """
         if X is None or y is None:
-            loader_train = self.model.train_dataloader()
-            X, y = dataloader2tensor(loader_train)
-            logger.warning('No sample is passed for training. Using the entire training set. %i examples.', X.size(0))
+            raise Exception('No sample is passed for training. LID does not use the entire training set!')
 
         X_noise = self.add_gaussian_noise(X, self.noise_eps, self.clip_range)
 
         X_adv = torch.zeros_like(X)
-        dataloader = DataLoader(TensorDataset(X), batch_size=ADV_BATCH_SIZE,
-                                num_workers=os.cpu_count(), shuffle=False)
+        dataloader_adv = DataLoader(TensorDataset(X), batch_size=ADV_BATCH_SIZE,
+                                    num_workers=os.cpu_count(), shuffle=False)
         start = 0
-        pbar = tqdm(enumerate(dataloader), total=len(dataloader))
+        pbar = tqdm(dataloader_adv, total=len(dataloader_adv))
         pbar.set_description('Running APGD mini-batch for LID', refresh=False)
-        for i, batch in pbar:
-            x = batch[0]
-            end = start + len(x)
+        for batch in pbar:
+            x_batch = batch[0]
+            end = start + len(x_batch)
             X_adv[start:end] = auto_projected_gradient_descent(
                 self.model,
-                X,
+                x_batch,
                 norm=self.attack_norm,
                 n_classes=self.n_classes,
                 eps=self.attack_eps,

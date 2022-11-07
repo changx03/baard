@@ -5,7 +5,7 @@ import os
 import pickle
 import warnings
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import numpy as np
 import torch
@@ -20,6 +20,7 @@ from torch.nn import Module, Sequential
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
+from baard.attacks.apgd import auto_projected_gradient_descent
 from baard.classifiers import DATASETS
 from baard.utils.miscellaneous import create_parent_dir
 from baard.utils.torch_utils import (batch_forward, dataloader2tensor,
@@ -29,6 +30,7 @@ from baard.utils.torch_utils import (batch_forward, dataloader2tensor,
 from .base_detector import Detector
 
 AVAILABLE_STATS_LIST = ('std', 'variance', 'con', 'mad', 'kurtosis', 'skewness', 'quantile')
+ADV_BATCH_SIZE = 32
 
 
 class MLLooDetector(Detector):
@@ -39,6 +41,9 @@ class MLLooDetector(Detector):
                  data_name: str,
                  device: str = 'cuda',
                  stats_list: Tuple = AVAILABLE_STATS_LIST,
+                 attack_eps: float = 0.22,
+                 attack_norm: Union[float, int] = np.inf,
+                 clip_range: Tuple = (0., 1.),
                  ):
         super().__init__(model, data_name)
 
@@ -53,11 +58,17 @@ class MLLooDetector(Detector):
         latent_nets, n_classes = self.get_latent_models_and_n_classes(model, data_name)
         self.multi_nets = latent_nets
         self.n_classes = n_classes
+        self.attack_eps = attack_eps
+        self.attack_norm = attack_norm
+        self.clip_range = clip_range
 
         # Register params
         self.params['device'] = self.device
         self.params['stats_list'] = self.stats_list
         self.params['n_classes'] = self.n_classes
+        self.params['attack_eps'] = self.attack_eps
+        self.params['attack_norm'] = self.attack_norm
+        self.params['clip_range'] = self.clip_range
 
         # Tunable parameters:
         self.train_mlloss_stats = None
@@ -65,9 +76,12 @@ class MLLooDetector(Detector):
         self.scaler = None
         self.logistic_regressor = None
 
-    def train(self, X: Tensor, y: Tensor, X_adv: Tensor = None) -> None:
+    def train(self, X: Tensor, y: Tensor) -> None:
         """Train detector. Train is not required for extracting features.
         """
+        if X is None or y is None:
+            raise Exception('No sample is passed for training. ML-LOO does not use the entire training set!')
+
         # Check predictions and true labels
         loader_clean = DataLoader(TensorDataset(X, y),
                                   batch_size=self.batch_size,
@@ -86,36 +100,55 @@ class MLLooDetector(Detector):
         # Train clean examples
         self.train_mlloss_stats = self.extract_features(X)
 
-        if X_adv is not None:
-            assert X_adv.size() == X.size(), 'Training adversarial examples should generated from the clean set.'
-
-            print('Train ML-LOO stats on adversarial training data...')
-            # Adversarial examples should NOT have same labels as true labels.
-            loader_adv = DataLoader(TensorDataset(X_adv, y),
-                                    batch_size=self.batch_size,
-                                    num_workers=self.num_workers,
-                                    shuffle=False)
-
-            # only uses correctly classified examples.
-            loader_adv = get_incorrect_examples(self.model, loader_adv)
-            X, y = dataloader2tensor(loader_adv)
-            self.adv_mlloss_stats = self.extract_features(X)
-
-            # Train Logistic Regression Model only when adversarial examples are exist.
-            n_train = len(self.train_mlloss_stats)
-            n_adv = len(self.adv_mlloss_stats)
-            X_mlloo = np.vstack([self.train_mlloss_stats, self.adv_mlloss_stats])
-            y_mlloo = np.concatenate([np.zeros(n_train), np.ones(n_adv)])
-
-            self.scaler = StandardScaler()
-            self.logistic_regressor = LogisticRegressionCV(
-                penalty='l1',  # Large feature space, prefer sparse weights
-                solver='saga',  # Faster algorithm, but need standardized data.
-                max_iter=5000,  # Default param is 100, which does not converge.
-                n_jobs=self.num_workers,
+        # Train adversarial examples
+        X_adv = torch.zeros_like(X)
+        dataloader_adv = DataLoader(TensorDataset(X), batch_size=ADV_BATCH_SIZE,
+                                    num_workers=os.cpu_count(), shuffle=False)
+        start = 0
+        pbar = tqdm(dataloader_adv, total=len(dataloader_adv))
+        pbar.set_description('Running APGD mini-batch for ML-Loo', refresh=False)
+        for batch in pbar:
+            x_batch = batch[0]
+            end = start + len(x_batch)
+            X_adv[start:end] = auto_projected_gradient_descent(
+                self.model,
+                x_batch,
+                norm=self.attack_norm,
+                n_classes=self.n_classes,
+                eps=self.attack_eps,
+                nb_iter=100,
+                clip_min=self.clip_range[0],
+                clip_max=self.clip_range[1],
             )
-            X_mlloo = self.scaler.fit_transform(X_mlloo)
-            self.logistic_regressor.fit(X_mlloo, y_mlloo)
+            start = end
+
+        print('Train ML-LOO stats on adversarial training data...')
+        # Adversarial examples should NOT have same labels as true labels.
+        loader_adv = DataLoader(TensorDataset(X_adv, y),
+                                batch_size=self.batch_size,
+                                num_workers=self.num_workers,
+                                shuffle=False)
+
+        # only uses correctly classified examples.
+        loader_adv = get_incorrect_examples(self.model, loader_adv)
+        X, y = dataloader2tensor(loader_adv)
+        self.adv_mlloss_stats = self.extract_features(X)
+
+        # Train Logistic Regression Model only when adversarial examples are exist.
+        n_train = len(self.train_mlloss_stats)
+        n_adv = len(self.adv_mlloss_stats)
+        X_mlloo = np.vstack([self.train_mlloss_stats, self.adv_mlloss_stats])
+        y_mlloo = np.concatenate([np.zeros(n_train), np.ones(n_adv)])
+
+        self.scaler = StandardScaler()
+        self.logistic_regressor = LogisticRegressionCV(
+            penalty='l1',  # Large feature space, prefer sparse weights
+            solver='saga',  # Faster algorithm, but need standardized data.
+            max_iter=5000,  # Default param is 100, which does not converge.
+            n_jobs=self.num_workers,
+        )
+        X_mlloo = self.scaler.fit_transform(X_mlloo)
+        self.logistic_regressor.fit(X_mlloo, y_mlloo)
 
     def extract_features(self, X: Tensor, flatten: bool = True) -> ArrayLike:
         """Extract ML-LOO statistics from X."""

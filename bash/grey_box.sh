@@ -10,8 +10,8 @@ SEEDS=(1234) # TODO: Run 1 repeatation first
 DETECTORS=("FS" "LID" "ML-LOO" "Odds" "PN" "RC" "BAARD-S1" "BAARD-S2" "BAARD-S3" "BAARD")
 DATASETS=("MNIST" "CIFAR10")
 
-for DETECTOR in ${DETECTORS[@]}; do
-    for DATA in ${DATASETS[@]}; do
+for DATA in ${DATASETS[@]}; do
+    for DETECTOR in ${DETECTORS[@]}; do
         ATTACK="APGD"
         NORMS=("inf" "2")
         for NORM in ${NORMS[@]}; do
