@@ -153,4 +153,4 @@ Code demo can be found under `./examples/`.
 
 ## Run experiments from terminal
 
-Under `./bash` folder, there are scripts for running the experiment.
+Under `./linux` folder, there are scripts for running the experiment on a Linux machine.

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script generates adversaral examples.
+# This script generates adversaral examples for grey-box benchmark.
 
 source ./.venv/bin/activate
 python -m pip install --upgrade .
