@@ -2,6 +2,22 @@
 
 ## Install
 
+Required packages:
+
+- adversarial-robustness-toolbox
+- jupyterlab
+- lightning-bolts
+- matplotlib
+- opencv-python
+- pandas
+- pytorch-lightning
+- scikit-learn
+- seaborn
+- torch
+- torchmetrics
+- torchvision
+- tqdm
+
 All scripts are tested on Python `3.9.15` with PyTorch `1.12.1+cu116` on Ubuntu `20.04.5 LTS`.
 
 ```bash
@@ -24,19 +40,6 @@ python -m pip install --upgrade .
 python ./examples/check_gpu.py
 ```
 
-### Create `venv` on Windows
-
-```bash
-conda create -n baard
-conda activate baard
-conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.6 -c pytorch -c conda-forge
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python -m pip install --upgrade .
-
-python ./examples/check_gpu.py
-```
-
 ### Shortcut for creating `venv`
 
 Or you can run bash `create_venv.sh` which contains the script above.
@@ -45,7 +48,20 @@ Or you can run bash `create_venv.sh` which contains the script above.
 bash ./create_venv.sh
 ```
 
-### Notes
+### Create `venv` on Windows
+
+```bash
+conda create -n baard
+conda activate baard
+conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.6 -c pytorch -c conda-forge
+conda install adversarial-robustness-toolbox jupyterlab lightning-bolts matplotlib pandas pytorch-lightning scikit-learn seaborn torchmetrics tqdm -c conda-forge
+python -m pip install opencv-python
+python -m pip install --upgrade .
+
+python ./examples/check_gpu.py
+```
+
+### NOTE
 
 - All bash script and terminal commands are prepared for Linux only. Changing the script according when running on a Windows machine.
 - If an alternative version of `PyTorch` is installed, remove all `PyTorch` related packages from `requirements.txt` file,
@@ -54,7 +70,7 @@ bash ./create_venv.sh
 - `OpenCV` is required for `Feature Squeezing` detector. The script from `requirements.txt` will try to install
   a pre-build **CPU-only** version. Check [here](https://pypi.org/project/opencv-python/) for more details.
 
-## Train clasifiers
+## Train classifiers
 
 The Python script for training the classifier takes command line arguments and passes them to `PyTorch-Lightning`'s `Trainer` class.
 A full list of parameters can be found [here](https://pytorch-lightning.readthedocs.io/en/latest/common/trainer.html#trainer-flags).
@@ -93,6 +109,10 @@ To check log files from `TensorBoard`, run:
 ```bash
 tensorboard --logdir logs
 ```
+
+### NOTE
+
+- The pre-trained models are saved under `./pretrained_clf/`.
 
 ## Generate adversarial examples
 
