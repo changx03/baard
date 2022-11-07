@@ -3,7 +3,7 @@
 # This script generates adversarial examples for the ablation study for BAARD.
 
 source ./.venv/bin/activate
-pip install --upgrade .
+python -m pip install --upgrade .
 
 # A seed starts with 6 to indicate this is for ablation study. 
 # 1-5 are reserved for repeated experiment for grey-box evaluation.

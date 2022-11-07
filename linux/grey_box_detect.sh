@@ -1,12 +1,14 @@
 #!/bin/bash
 
 # This script runs the grey-box evaluation.
+# NOTE: Adversarial examples need to be pre-trained.
 
 source ./.venv/bin/activate
-pip install --upgrade .
+python -m pip install --upgrade .
 
 # SEEDS=(188283 292478 382347 466364 543597)
-SEEDS=(1234) # TODO: Run 1 repeatation first
+SEEDS=(188283) # TODO: Run 1 repeatation first
+# SEEDS=(1234) # Use this for testing!
 DETECTORS=("FS" "LID" "ML-LOO" "Odds" "PN" "RC" "BAARD-S1" "BAARD-S2" "BAARD-S3" "BAARD")
 DATASETS=("MNIST" "CIFAR10")
 

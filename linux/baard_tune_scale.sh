@@ -4,7 +4,7 @@
 # Tuning K first, before tuning the parameter `scale`.
 
 source ./.venv/bin/activate
-pip install --upgrade .
+python -m pip install --upgrade .
 
 SEED=643896
 ATTACK="APGD"

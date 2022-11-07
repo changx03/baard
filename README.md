@@ -2,6 +2,22 @@
 
 ## Install
 
+Required packages:
+
+- adversarial-robustness-toolbox
+- jupyterlab
+- lightning-bolts
+- matplotlib
+- opencv-python
+- pandas
+- pytorch-lightning
+- scikit-learn
+- seaborn
+- torch
+- torchmetrics
+- torchvision
+- tqdm
+
 All scripts are tested on Python `3.9.15` with PyTorch `1.12.1+cu116` on Ubuntu `20.04.5 LTS`.
 
 ```bash
@@ -9,16 +25,16 @@ All scripts are tested on Python `3.9.15` with PyTorch `1.12.1+cu116` on Ubuntu 
 python3.9 -m venv .venv  # Create virtual environment
 source ./.venv/bin/activate  # Activate venv
 
-pip install --upgrade pip
+python -m pip install --upgrade pip
 
 # Install PyTorch
-pip install torch==1.12.1 torchvision==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu116
+python -m pip install torch==1.12.1 torchvision==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu116
 
 # Install other requirements
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 
 # Install local package
-pip install --upgrade .
+python -m pip install --upgrade .
 
 # To check if PyTorch is correctly installed and GPU is working.
 python ./examples/check_gpu.py
@@ -32,15 +48,16 @@ Or you can run bash `create_venv.sh` which contains the script above.
 bash ./create_venv.sh
 ```
 
-### Notes
+### NOTE
 
+- All bash script and terminal commands are prepared for **Linux** only. Changing the script according when running on a Windows machine.
 - If an alternative version of `PyTorch` is installed, remove all `PyTorch` related packages from `requirements.txt` file,
   and install them manually, including: `pytorch-lightning`, `torch`, `torch-tb-profiler`, `torchinfo`, `torchmetrics`,
   and `torchvision`.
 - `OpenCV` is required for `Feature Squeezing` detector. The script from `requirements.txt` will try to install
   a pre-build **CPU-only** version. Check [here](https://pypi.org/project/opencv-python/) for more details.
 
-## Train clasifiers
+## Train Classifiers
 
 The Python script for training the classifier takes command line arguments and passes them to `PyTorch-Lightning`'s `Trainer` class.
 A full list of parameters can be found [here](https://pytorch-lightning.readthedocs.io/en/latest/common/trainer.html#trainer-flags).
@@ -80,7 +97,11 @@ To check log files from `TensorBoard`, run:
 tensorboard --logdir logs
 ```
 
-## Generate adversarial examples
+### NOTE
+
+- All pre-trained models are saved under `./pretrained_clf/`.
+
+## Generate Adversarial Examples
 
 ### Basic usage
 
@@ -101,11 +122,11 @@ python ./experiments/train_adv_examples.py [-s SEED] [-d DATASET_NAME] [--n_att 
 - '--params': Parameters for the adversarial attack as a JSON string. e.g., `{"norm":"inf", "clip_min":0, "clip_max":1}`.
   This JSON string will be converted into a dictionary and pass directly to the attack. Check `./baard/attacks` to see the specific parameters for each attack.
 
-#### Note
+### NOTE
 
-Windows OS cannot pass single quote as string wrapper, e.g., `'{"norm":"inf", }'`. Use `\` to escape the double quote `"` symbol, e.g., `"{\"norm\":\"inf\", }"`.
+- Windows OS cannot cannot escape double quote `"`, e.g., `'{"norm":"inf"}'`. Use `\` to escape the double quote `"` symbol, e.g., `'{\"norm\":\"inf\"}'`.
 
-### Attack Example
+### Attack example
 
 Generating 100 adversarial examples on `MNIST` using FGSM on L2 norm with Epsilon=0.06
 
@@ -113,10 +134,14 @@ Generating 100 adversarial examples on `MNIST` using FGSM on L2 norm with Epsilo
 python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":"inf", "clip_min":0, "clip_max":1}' --eps="[0.06]" --n_att=100 --n_val=1000
 ```
 
+## Extracting Features Using Detectors
+
+TODO: Explain the code.
+
 ## Code demo
 
 Code demo can be found under `./examples/`.
 
 ## Run experiments from terminal
 
-Under `./bash` folder, there are scripts for running the experiment.
+Under `./linux` folder, there are scripts for running the experiment on a Linux machine.
