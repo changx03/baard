@@ -124,7 +124,7 @@ def to_json(data_dict: object, path: str) -> None:
             return float(obj)
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
-        elif isinstance(obj, datetime.datetime):
+        else:  # Handle datetime.datetime and numpy.INF.
             return str(obj)
 
     with open(path, 'w', encoding='UTF-8') as file:
