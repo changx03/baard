@@ -11,10 +11,9 @@ from baard_tune_utils import baard_tune_k, baard_tune_scale, find_attack_path
 BAARD_TUNABLE = ['BAARD-S2', 'BAARD-S3']
 
 
-def main_pipeline():
-    """Full pipeline for running a detector."""
-    path_output, data_name, attack_name, l_norm, path_adv, eps, detector_name, k_neighbors = parse_arguments()
-
+def baard_tune(path_output: str, data_name: str, attack_name: str, l_norm: str, path_adv: str, eps: str,
+               detector_name: str, k_neighbors: int = None):
+    """Tune BAARD."""
     if path_adv is None:
         raise Exception(f'Cannot find {attack_name} eps={eps}. Try another format, e.g., from `2.0` to `2`.')
 
@@ -69,5 +68,11 @@ def parse_arguments():
     return path_attack, data_name, attack_name, l_norm, path_adv, eps, detector_name, k_neighbors
 
 
+def main():
+    """Main pipeline of tuning BAARD."""
+    path_output, data_name, attack_name, l_norm, path_adv, eps, detector_name, k_neighbors = parse_arguments()
+    baard_tune(path_output, data_name, attack_name, l_norm, path_adv, eps, detector_name, k_neighbors)
+
+
 if __name__ == '__main__':
-    main_pipeline()
+    main()

@@ -204,7 +204,8 @@ def extract_and_save_features(detector: Detector, attack_name: str, data_name: s
     with open(path_record, 'a', encoding='UTF-8') as file:
         file.write(','.join(['attack', 'path']) + '\n')
         for eps, path_data in zip(att_eps_list, adv_files):
-            path_features = os.path.join(path_output, detector_name, f'{attack_name}-{l_norm}', f'{detector_name}-{data_name}-{attack_name}-{l_norm}-{eps}.pt')
+            path_features = os.path.join(path_output, detector_name, f'{attack_name}-{l_norm}',
+                                         f'{detector_name}-{data_name}-{attack_name}-{l_norm}-{eps}.pt')
             if not os.path.exists(path_features):
                 file.write(','.join([str(eps), path_data]) + '\n')
 

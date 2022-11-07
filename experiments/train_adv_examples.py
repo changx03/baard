@@ -76,17 +76,16 @@ def get_attack(attack_name: str, adv_params: dict):
     return attack, adv_params
 
 
-def generate_adv_examples(
-    data: str,
-    attack_name: str,
-    eps: list,
-    adv_params: dict,
-    path_outputs: str,
-    n_att: int,
-    n_val: int,
-    seed: int
-):
+def generate_adv_examples(data: str,
+                          attack_name: str,
+                          eps: list,
+                          adv_params: dict,
+                          path_outputs: str,
+                          n_att: int,
+                          n_val: int,
+                          seed: int):
     """Generate adversarial examples based on given epsilons (perturbation)."""
+    pl.seed_everything(seed)
 
     # Step 1: Get correct labelled data
     model = get_model(data)
@@ -199,8 +198,8 @@ def generate_adv_examples(
                 print(f'WARNING: Catch an exception: {err}')
 
 
-def main():
-    """
+def parse_arguments():
+    """Parse command line arguments.
     Examples:
     For quick develop only. Set `n_att` to a larger value when running the experiment!
     Data: MNIST, Attack: FGSM
@@ -271,8 +270,12 @@ def main():
         os.makedirs(path_outputs)
         print(f'Creates dir: {path_outputs}')
 
-    pl.seed_everything(seed)
+    return data, attack_name, eps, adv_params, path_outputs, n_att, n_val, seed
 
+
+def main():
+    """Main pipeline for generating adversarial examples."""
+    data, attack_name, eps, adv_params, path_outputs, n_att, n_val, seed = parse_arguments()
     generate_adv_examples(data, attack_name, eps, adv_params, path_outputs, n_att, n_val, seed)
 
 

@@ -3,6 +3,8 @@ import json
 import os
 from argparse import ArgumentParser
 from pathlib import Path
+from typing import List
+
 
 from baard.attacks import ATTACKS, L_NORM
 from baard.classifiers import DATASETS
@@ -14,8 +16,15 @@ from extract_features_utils import (extract_and_save_features,
                                     prepare_detector)
 
 
-def main_pipeline():
-    """Full pipeline for running a detector."""
+def detector_extract_features(path_output: str,
+                              seed: int,
+                              data_name: str,
+                              attack_name: str,
+                              l_norm: str,
+                              adv_files: List,
+                              att_eps_list: List,
+                              detector_name: str):
+    """Use a detector to extract features."""
     path_output, seed, data_name, attack_name, l_norm, adv_files, att_eps_list, detector_name = parse_arguments()
 
     # Initialize detector
@@ -73,5 +82,11 @@ def parse_arguments():
     return path_attack, seed, data_name, attack_name, l_norm, adv_files, att_eps_list, detector_name
 
 
+def main():
+    """Main pipeline for extracting features."""
+    path_output, seed, data_name, attack_name, l_norm, adv_files, att_eps_list, detector_name = parse_arguments()
+    detector_extract_features(path_output, seed, data_name, attack_name, l_norm, adv_files, att_eps_list, detector_name)
+
+
 if __name__ == '__main__':
-    main_pipeline()
+    main()
