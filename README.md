@@ -4,9 +4,6 @@
 
 All scripts are tested on Python `3.9.15` with PyTorch `1.12.1+cu116` on Ubuntu `20.04.5 LTS`.
 
-**NOTE** All bash script and terminal commands are prepared for Linux only. Changing the script according when running
-on a Windows machine.
-
 ```bash
 # Only tested on Linux
 python3.9 -m venv .venv  # Create virtual environment
@@ -27,6 +24,19 @@ python -m pip install --upgrade .
 python ./examples/check_gpu.py
 ```
 
+### Create `venv` on Windows
+
+```bash
+conda create -n baard
+conda activate baard
+conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.6 -c pytorch -c conda-forge
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m pip install --upgrade .
+
+python ./examples/check_gpu.py
+```
+
 ### Shortcut for creating `venv`
 
 Or you can run bash `create_venv.sh` which contains the script above.
@@ -37,6 +47,7 @@ bash ./create_venv.sh
 
 ### Notes
 
+- All bash script and terminal commands are prepared for Linux only. Changing the script according when running on a Windows machine.
 - If an alternative version of `PyTorch` is installed, remove all `PyTorch` related packages from `requirements.txt` file,
   and install them manually, including: `pytorch-lightning`, `torch`, `torch-tb-profiler`, `torchinfo`, `torchmetrics`,
   and `torchvision`.
