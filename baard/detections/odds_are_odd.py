@@ -159,6 +159,7 @@ class OddsAreOddDetector(Detector):
             clip_range = (0, 1)
             return latent_net, weight, n_classes, clip_range
         elif data_name == DATASETS[1]:  # CIFAR10
+            # TODO: sequential model and weights for CIFAR10
             raise NotImplementedError()
         else:
             raise NotImplementedError()

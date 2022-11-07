@@ -215,9 +215,10 @@ class MLLooDetector(Detector):
                 model,    # Model has no SoftMax
             ]
         elif data_name == DATASETS[1]:  # CIFAR10 ResNet18
-            raise NotImplementedError()
+            # TODO: sequential model for ResNet18.
+            raise NotImplementedError
         else:
-            raise NotImplementedError()
+            raise NotImplementedError
         return models, n_classes
 
     @classmethod
