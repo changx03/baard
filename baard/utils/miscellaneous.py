@@ -40,8 +40,7 @@ def filter_exist_eps(eps_list: ArrayLike,
                      path: str,
                      attack_name: str,
                      lnorm: Union[str, int],
-                     n: int
-                     ) -> List:
+                     n: int) -> List:
     """Remove epsilon if it is already exist."""
     lnorm = norm_parser(lnorm)
     eps_list_not_trained = []
@@ -53,7 +52,10 @@ def filter_exist_eps(eps_list: ArrayLike,
     return eps_list_not_trained
 
 
-def find_available_attacks(path_attack: str, attack_name: str, l_norm: str, eps_list: List) -> tuple[List, List, int]:
+def find_available_attacks(path_attack: str,
+                           attack_name: str,
+                           l_norm: str,
+                           eps_list: List = None) -> tuple[List, List, int]:
     """Find pre-trained adversarial examples from the directory."""
     l_norm = norm_parser(l_norm)
 
@@ -113,7 +115,7 @@ def norm_parser(lnorm: Union[str, int]) -> str:
     return lnorm
 
 
-def to_json(data_dict: object, path: str):
+def to_json(data_dict: object, path: str) -> None:
     """Save dictionary as JSON."""
     def converter(obj):
         if isinstance(obj, np.integer):

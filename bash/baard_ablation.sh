@@ -1,16 +1,26 @@
 #!/bin/bash
 
 # This script runs the ablation study for BAARD.
+# This script run BAARD on a wide range of epsilon.
+# NOTE: The adversarial examples MUST be pre-trained!
 
 source ./.venv/bin/activate
 pip install --upgrade .
 
-# A seed starts with 6 to indicate this is for ablation study. 
-# 1-5 are reserved for repeated experiment for grey-box evaluation.
 SEED=643896
 SIZE=1000
+ATTACK="APGD"
+NORMS=("inf" "2")
+DETECTORS=("BAARD-S1" "BAARD-S2" "BAARD-S3" "BAARD")
+DATASETS=("MNIST" "CIFAR10")
 
-# 2. Reliability: Tuning K on entire set.
-# 3. Reliability: Tuning scale on optimal k.
-# 4. Decidability: Tuning K on entire set.
-# 5. Decidability: Tuning scale on optimal k.
+for DATA in ${DATASETS[@]}; do
+    for DETECTOR in ${DETECTORS[@]}; do
+        ATTACK="APGD"
+        NORMS=("inf" "2")
+        for NORM in ${NORMS[@]}; do
+            echo "Running $DETECTOR on $DATA with $ATTACK L$NORM"
+            python ./experiments/detectors_extract_features.py --s $SEEDS --data $DATA --attack $ATTACK -l $NORM --detector $DETECTOR
+        done
+    done
+done

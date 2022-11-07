@@ -28,8 +28,7 @@ def main_pipeline():
     detector_name = detector.__class__.__name__
     path_json = create_parent_dir(
         os.path.join(path_output, detector_name, f'{detector_name}-{data_name}.json'), file_ext='.json')
-    no_json_params = not os.path.exists(path_json)
-    if no_json_params:
+    if not os.path.exists(path_json):
         detector.save_params(path_json)
     # Train or load previous results.
     detector = prepare_detector(detector, detector_name, detector_ext, data_name, path=path_output)
@@ -40,7 +39,7 @@ def main_pipeline():
 def parse_arguments():
     """Parse command line arguments.
     Example:
-    python ./experiments/detectors_extract_features.py --s 1234 --data MNIST --attack APGD -l 2 --detector "BAARD-S2"
+    python ./experiments/detectors_extract_features.py -s 1234 --data MNIST --attack APGD -l 2 --detector "BAARD-S2"
     """
     parser = ArgumentParser()
     # NOTE: seed, data, and detector should NOT have default value! Debug only.
