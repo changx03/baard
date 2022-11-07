@@ -48,29 +48,16 @@ Or you can run bash `create_venv.sh` which contains the script above.
 bash ./create_venv.sh
 ```
 
-### Create `venv` on Windows
-
-```bash
-conda create -n baard
-conda activate baard
-conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.6 -c pytorch -c conda-forge
-conda install adversarial-robustness-toolbox jupyterlab lightning-bolts matplotlib pandas pytorch-lightning scikit-learn seaborn torchmetrics tqdm -c conda-forge
-python -m pip install opencv-python
-python -m pip install --upgrade .
-
-python ./examples/check_gpu.py
-```
-
 ### NOTE
 
-- All bash script and terminal commands are prepared for Linux only. Changing the script according when running on a Windows machine.
+- All bash script and terminal commands are prepared for **Linux** only. Changing the script according when running on a Windows machine.
 - If an alternative version of `PyTorch` is installed, remove all `PyTorch` related packages from `requirements.txt` file,
   and install them manually, including: `pytorch-lightning`, `torch`, `torch-tb-profiler`, `torchinfo`, `torchmetrics`,
   and `torchvision`.
 - `OpenCV` is required for `Feature Squeezing` detector. The script from `requirements.txt` will try to install
   a pre-build **CPU-only** version. Check [here](https://pypi.org/project/opencv-python/) for more details.
 
-## Train classifiers
+## Train Classifiers
 
 The Python script for training the classifier takes command line arguments and passes them to `PyTorch-Lightning`'s `Trainer` class.
 A full list of parameters can be found [here](https://pytorch-lightning.readthedocs.io/en/latest/common/trainer.html#trainer-flags).
@@ -112,9 +99,9 @@ tensorboard --logdir logs
 
 ### NOTE
 
-- The pre-trained models are saved under `./pretrained_clf/`.
+- All pre-trained models are saved under `./pretrained_clf/`.
 
-## Generate adversarial examples
+## Generate Adversarial Examples
 
 ### Basic usage
 
@@ -135,17 +122,21 @@ python ./experiments/train_adv_examples.py [-s SEED] [-d DATASET_NAME] [--n_att 
 - '--params': Parameters for the adversarial attack as a JSON string. e.g., `{"norm":"inf", "clip_min":0, "clip_max":1}`.
   This JSON string will be converted into a dictionary and pass directly to the attack. Check `./baard/attacks` to see the specific parameters for each attack.
 
-#### Note
+### NOTE
 
-Windows OS cannot pass single quote as string wrapper, e.g., `'{"norm":"inf", }'`. Use `\` to escape the double quote `"` symbol, e.g., `"{\"norm\":\"inf\", }"`.
+- Windows OS cannot cannot escape double quote `"`, e.g., `'{"norm":"inf"}'`. Use `\` to escape the double quote `"` symbol, e.g., `'{\"norm\":\"inf\"}'`.
 
-### Attack Example
+### Attack example
 
 Generating 100 adversarial examples on `MNIST` using FGSM on L2 norm with Epsilon=0.06
 
 ```bash
 python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":"inf", "clip_min":0, "clip_max":1}' --eps="[0.06]" --n_att=100 --n_val=1000
 ```
+
+## Extracting Features Using Detectors
+
+TODO: Explain the code.
 
 ## Code demo
 
