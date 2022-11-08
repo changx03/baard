@@ -16,14 +16,14 @@ from extract_features_utils import (extract_and_save_features,
                                     prepare_detector)
 
 
-def detector_extract_features(path_output: str,
-                              seed: int,
-                              data_name: str,
-                              attack_name: str,
-                              l_norm: str,
-                              adv_files: List,
-                              att_eps_list: List,
-                              detector_name: str):
+def extract_features(path_output: str,
+                     seed: int,
+                     data_name: str,
+                     attack_name: str,
+                     l_norm: str,
+                     adv_files: List,
+                     att_eps_list: List,
+                     detector_name: str):
     """Use a detector to extract features."""
     path_output, seed, data_name, attack_name, l_norm, adv_files, att_eps_list, detector_name = parse_arguments()
 
@@ -48,7 +48,7 @@ def detector_extract_features(path_output: str,
 def parse_arguments():
     """Parse command line arguments.
     Example:
-    python ./experiments/detectors_extract_features.py -s 1234 --data MNIST --attack APGD -l 2 --detector "BAARD-S2"
+    python ./experiments/extract_features.py -s 1234 --data MNIST --attack APGD -l 2 --detector "BAARD-S2"
     """
     parser = ArgumentParser()
     # NOTE: seed, data, and detector should NOT have default value! Debug only.
@@ -85,7 +85,7 @@ def parse_arguments():
 def main():
     """Main pipeline for extracting features."""
     path_output, seed, data_name, attack_name, l_norm, adv_files, att_eps_list, detector_name = parse_arguments()
-    detector_extract_features(path_output, seed, data_name, attack_name, l_norm, adv_files, att_eps_list, detector_name)
+    extract_features(path_output, seed, data_name, attack_name, l_norm, adv_files, att_eps_list, detector_name)
 
 
 if __name__ == '__main__':

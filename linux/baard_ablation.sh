@@ -17,7 +17,7 @@ for DATA in ${DATASETS[@]}; do
     for DETECTOR in ${DETECTORS[@]}; do
         for NORM in ${NORMS[@]}; do
             echo "Running $DETECTOR on $DATA with $ATTACK L$NORM"
-            python ./experiments/detectors_extract_features.py --s $SEEDS --data $DATA --attack $ATTACK -l $NORM --detector $DETECTOR
+            python ./experiments/extract_features.py --s $SEEDS --data $DATA --attack $ATTACK -l $NORM --detector $DETECTOR
         done
     done
 done

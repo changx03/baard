@@ -9,7 +9,8 @@ python -m pip install --upgrade .
 # SEEDS=(188283 292478 382347 466364 543597)
 # SEEDS=(188283) # TODO: Run 1 repeatation first
 SEEDS=(1234) # Use this for testing!
-DETECTORS=("BAARD-S1" "BAARD-S2" "BAARD-S3" "BAARD" "FS" "LID" "ML-LOO" "Odds" "PN" "RC")
+# DETECTORS=("BAARD-S1" "BAARD-S2" "BAARD-S3" "BAARD" "FS" "LID" "ML-LOO" "Odds" "PN" "RC")
+DETECTORS=("ML-LOO")
 DATASETS=("MNIST" "CIFAR10")
 
 for DATA in ${DATASETS[@]}; do
@@ -18,12 +19,12 @@ for DATA in ${DATASETS[@]}; do
         NORMS=("inf" "2")
         for NORM in ${NORMS[@]}; do
             echo "Running $DETECTOR on $DATA with $ATTACK L$NORM"
-            python ./experiments/detectors_extract_features.py --s $SEEDS --data $DATA --attack $ATTACK -l $NORM --detector $DETECTOR
+            python ./experiments/extract_features.py --s $SEEDS --data $DATA --attack $ATTACK -l $NORM --detector $DETECTOR
         done
 
         ATTACK="CW2"
         NORM="2"
         echo "Running $DETECTOR on $DATA with $ATTACK L$NORM"
-        python ./experiments/detectors_extract_features.py --s $SEEDS --data $DATA --attack $ATTACK -l $NORM --detector $DETECTOR
+        python ./experiments/extract_features.py --s $SEEDS --data $DATA --attack $ATTACK -l $NORM --detector $DETECTOR
     done
 done
