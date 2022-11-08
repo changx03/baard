@@ -1,6 +1,7 @@
 """Implementing the paper "Feature Squeezing: Detecting Adversarial Examples in
 Deep Neural Networks" -- Xu et. al. (2018)
 """
+import logging
 from abc import ABC, abstractmethod
 from typing import Dict
 
@@ -18,9 +19,12 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from baard.classifiers import DATASETS, get_lightning_module
 from baard.utils.torch_utils import dataloader2tensor
+
 from .base_detector import Detector
 
 SQUEEZER = ('depth', 'median', 'nl_mean')
+
+logger = logging.getLogger(__name__)
 
 
 class Squeezer(ABC):
@@ -128,7 +132,7 @@ class FeatureSqueezingDetector(Detector):
     def train(self, X: Tensor = None, y: Tensor = None) -> None:
         """Train detector. X and y are dummy variables."""
         for squeezer_name, squeezer in self.squeezers.items():
-            print(f'Training {squeezer_name} classifier...')
+            logger.info('Training %s classifier...', squeezer_name)
 
             # Apply filter on the training set
             dataloader_train = self.model.train_dataloader()
@@ -144,13 +148,13 @@ class FeatureSqueezingDetector(Detector):
 
             classifier = self.squeezed_models[squeezer_name]
             model_name = f'FeatureSqueezer_{self.data_name}_{squeezer_name}'
-            logger = TensorBoardLogger(save_dir=self.path_checkpoint, name=model_name)
+            tensor_logger = TensorBoardLogger(save_dir=self.path_checkpoint, name=model_name)
             trainer = pl.Trainer(
                 accelerator='auto',
                 precision=16,
                 max_epochs=self.max_epochs,
                 num_sanity_val_steps=0,
-                logger=logger,
+                logger=tensor_logger,
                 callbacks=[
                     LearningRateMonitor(logging_interval='step'),
                 ],

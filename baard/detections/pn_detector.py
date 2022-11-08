@@ -1,6 +1,8 @@
 """Implementing the paper "Detecting adversarial examples by positive and
 negative representations" -- Luo et. al. (2022)
 """
+import logging
+
 import numpy as np
 import pytorch_lightning as pl
 import torch
@@ -16,6 +18,8 @@ from torch.utils.data import DataLoader, TensorDataset
 from baard.classifiers import get_lightning_module
 from baard.utils.torch_utils import dataloader2tensor, predict
 from .base_detector import Detector
+
+logger = logging.getLogger(__name__)
 
 
 class PNDetector(Detector):
@@ -77,7 +81,7 @@ class PNDetector(Detector):
             torch.vstack([X, X_neg]),
             torch.hstack([y, y_neg]).long(),
         )
-        print(f'Training set size: {len(dataset)}')
+        logger.info('Training set size: %d', len(dataset))
         dataloader = DataLoader(dataset,
                                 batch_size=self.batch_size,
                                 num_workers=self.num_workers,
@@ -115,7 +119,7 @@ class PNDetector(Detector):
         corrects = preds == y_val
         acc_pos = corrects.float().mean()
 
-        print(f'Accuracy on X+: {acc_pos}, on X-: {acc_neg}.')
+        logger.info('Accuracy on X+: %f, on X-: %f.', acc_pos, acc_neg)
 
     def extract_features(self, X: Tensor) -> ArrayLike:
         """Extract Positive Negative similarity."""
