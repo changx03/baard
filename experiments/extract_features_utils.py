@@ -25,10 +25,11 @@ FS_MAX_EPOCHS = 30  # Max. number of epochs used by the detectors.
 # For LID. Used in LID original paper
 LID_BATCH_SIZE = 100
 LID_K_NEIGHBORS = 20
-# For Odds. Used in Odds original paper
-ODDS_NOISE_LIST = ['n0.003', 'n0.005', 'n0.008', 'n0.01', 'n0.02', 'n0.03',
-                   's0.003', 's0.005', 's0.008', 's0.01', 's0.02', 's0.03',
-                   'u0.003', 'u0.005', 'u0.008', 'u0.01', 'u0.02', 'u0.03']
+# For Odds.
+# ODDS_NOISE_LIST = ['n0.003', 'n0.005', 'n0.008', 'n0.01', 'n0.02', 'n0.03',
+#                    's0.003', 's0.005', 's0.008', 's0.01', 's0.02', 's0.03',
+#                    'u0.003', 'u0.005', 'u0.008', 'u0.01', 'u0.02', 'u0.03']
+ODDS_NOISE_LIST = ['n0.003', 's0.003', 'u0.003']  # Used by the original paper for evaluation.
 ODDS_N_SAMPLE = 1000
 # For PNClassification
 PN_MAX_EPOCHS = 30
