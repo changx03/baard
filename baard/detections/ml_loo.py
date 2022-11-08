@@ -1,14 +1,14 @@
 """Implementing the paper "ML-LOO: Detecting Adversarial Examples with Feature
 Attribution". -- Yang et. al. (2020)
 """
+import logging
 import os
 import pickle
-import warnings
-from pathlib import Path
 from typing import List, Tuple, Union
 
 import numpy as np
 import torch
+import torch.nn as nn
 from numpy.typing import ArrayLike
 from pytorch_lightning import LightningModule
 from scipy.spatial.distance import pdist
@@ -22,15 +22,18 @@ from tqdm import tqdm
 
 from baard.attacks.apgd import auto_projected_gradient_descent
 from baard.classifiers import DATASETS
+from baard.detections.base_detector import Detector
 from baard.utils.miscellaneous import create_parent_dir
 from baard.utils.torch_utils import (batch_forward, dataloader2tensor,
                                      get_correct_examples,
                                      get_dataloader_shape,
                                      get_incorrect_examples)
-from .base_detector import Detector
 
-AVAILABLE_STATS_LIST = ('std', 'variance', 'con', 'mad', 'kurtosis', 'skewness', 'quantile')
+AVAILABLE_STATS_LIST = ('std', 'variance', 'mad', 'kurtosis', 'skewness')
 ADV_BATCH_SIZE = 32
+
+
+logger = logging.getLogger(__name__)
 
 
 class MLLooDetector(Detector):
@@ -50,7 +53,7 @@ class MLLooDetector(Detector):
         self.stats_list = stats_list
 
         if not torch.cuda.is_available() and device == 'cuda':
-            warnings.warn('GPU is not available. Using CPU...')
+            logger.warning('GPU is not available. Using CPU...')
             device = 'cpu'
         self.device = device
 
@@ -90,9 +93,9 @@ class MLLooDetector(Detector):
         loader_clean = get_correct_examples(self.model, loader_clean)
         x_corr_shape = get_dataloader_shape(loader_clean)
         if x_corr_shape[0] != len(X):
-            warnings.warn(f'{len(X) - x_corr_shape.size(0)} are classified incorrectly! Use {len(x_corr_shape)} examples instead.')
+            logger.warning('%d are classified incorrectly! Use %d examples instead.', len(X) - x_corr_shape.size(0), x_corr_shape)
 
-        print('Train ML-LOO stats on clean training data...')
+        logger.info('Train ML-LOO stats on clean training data...')
         X, y = dataloader2tensor(loader_clean)
         # Check if labels match the number of classes
         n_unique = len(y.unique())
@@ -122,7 +125,7 @@ class MLLooDetector(Detector):
             )
             start = end
 
-        print('Train ML-LOO stats on adversarial training data...')
+        logger.info('Train ML-LOO stats on adversarial training data...')
         # Adversarial examples should NOT have same labels as true labels.
         loader_adv = DataLoader(TensorDataset(X_adv, y),
                                 batch_size=self.batch_size,
@@ -144,7 +147,7 @@ class MLLooDetector(Detector):
         self.logistic_regressor = LogisticRegressionCV(
             penalty='l1',  # Large feature space, prefer sparse weights
             solver='saga',  # Faster algorithm, but need standardized data.
-            max_iter=5000,  # Default param is 100, which does not converge.
+            max_iter=10000,  # Default param is 100, which does not converge.
             n_jobs=self.num_workers,
         )
         X_mlloo = self.scaler.fit_transform(X_mlloo)
@@ -164,6 +167,9 @@ class MLLooDetector(Detector):
         if flatten:
             n = len(X_mlloo_stats)
             X_mlloo_stats = X_mlloo_stats.reshape(n, -1)
+
+        # Handle nan
+        X_mlloo_stats = np.nan_to_num(X_mlloo_stats)
         return X_mlloo_stats
 
     def predict_proba(self, X: Tensor) -> ArrayLike:
@@ -210,13 +216,16 @@ class MLLooDetector(Detector):
         n_classes = 10
         if data_name == DATASETS[0]:  # MNIST CNN
             models = [
-                # Sequential(*list(model.children())[:6]),  # Flattened layer after MaxPool
                 Sequential(*list(model.children())[:7]),  # Last hidden layer before output (Without ReLU)
                 model,    # Model has no SoftMax
             ]
         elif data_name == DATASETS[1]:  # CIFAR10 ResNet18
-            # TODO: sequential model for ResNet18.
-            raise NotImplementedError
+            resnet18_list = list(model.model.children())
+            models = [
+                # Sequential(*resnet18_list[:7], nn.AdaptiveMaxPool3d((256, 1, 1))),
+                Sequential(*resnet18_list[:-1], nn.AdaptiveMaxPool3d((256, 1, 1))),
+                model,
+            ]
         else:
             raise NotImplementedError
         return models, n_classes
@@ -272,7 +281,7 @@ class MLLooDetector(Detector):
         k = []
         for i in range(len(score)):
             di = score[i]
-            ki = kurtosis(di, nan_policy='raise')
+            ki = kurtosis(di, nan_policy='omit')
             k.append(ki)
         k = np.array(k)
         return -k
@@ -307,7 +316,7 @@ class MLLooDetector(Detector):
         elif stats_name == 'kurtosis':
             results = cls.neg_kurtosis(net_outputs)
         elif stats_name == 'skewness':
-            results = -skew(net_outputs, axis=-1)
+            results = -skew(net_outputs, axis=-1, nan_policy='omit')
         elif stats_name == 'quantile':
             results = cls.quantile(net_outputs)
         return results
@@ -332,6 +341,7 @@ class MLLooDetector(Detector):
             )
             # LOO output - original output (at last example)
             loo_outputs_1layer = loo_outputs[:-1] - loo_outputs[-1]
+            loo_outputs_1layer = torch.flatten(loo_outputs_1layer, start_dim=1)
             x_mlloo_maps.append(loo_outputs_1layer)
         x_mlloo_maps = torch.hstack(x_mlloo_maps).transpose(0, 1)
         # Each LOO map has the same size of input features, and there're n_hidden_neurons of them.

@@ -23,40 +23,46 @@ import pytorch_lightning as pl
 import torch
 from sklearn.model_selection import train_test_split
 
-from baard.classifiers import DATASETS
-from baard.classifiers.mnist_cnn import MNIST_CNN
+from baard.classifiers import MNIST_CNN, CIFAR10_ResNet18
 from baard.detections.ml_loo import MLLooDetector
 from baard.utils.torch_utils import dataset2tensor
 
+PATH_ROOT = Path(os.getcwd()).absolute()
 
-def run_demo():
+# Parameters for development:
+SEED_DEV = 123456
+SIZE_DEV = 40  # For quick development
+TINY_TEST_SIZE = 10
+
+
+def run_mlloo(data_name: str):
     """Test ML-LOO Detector."""
-    PATH_ROOT = Path(os.getcwd()).absolute()
-    PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
-    PATH_DATA_CLEAN = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'AdvClean-100.pt')
-    PATH_DATA_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'APGD-Linf-100-0.22.pt')
-    PATH_MLLOO_DEV = os.path.join('temp', 'dev_mlloo_detector.mlloo')
-
-    # Parameters for development:
-    SEED_DEV = 0
-    DATASET = DATASETS[0]
-    SIZE_DEV = 40  # For quick development
-    TINY_TEST_SIZE = 10
+    if data_name == 'MNIST':
+        eps = 0.22  # Epsilon controls the adversarial perturbation.
+        path_checkpoint = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
+        my_model = MNIST_CNN.load_from_checkpoint(path_checkpoint)
+    elif data_name == 'CIFAR10':
+        eps = 0.02  # Min L-inf attack eps for CIFAR10
+        path_checkpoint = os.path.join(PATH_ROOT, 'pretrained_clf', 'cifar10_resnet18.ckpt')
+        my_model = CIFAR10_ResNet18.load_from_checkpoint(path_checkpoint)
+    else:
+        raise NotImplementedError
+    path_data_clean = os.path.join(PATH_ROOT, 'results', 'exp1234', data_name, 'AdvClean-100.pt')
+    path_data_adv = os.path.join(PATH_ROOT, 'results', 'exp1234', data_name, f'APGD-Linf-100-{eps}.pt')
+    path_mlloo_dev = os.path.join('temp', f'dev_MLLooDetector_{data_name}.mlloo')
 
     pl.seed_everything(SEED_DEV)
 
     print('PATH ROOT:', PATH_ROOT)
-    print('DATASET:', DATASET)
-    print('PATH_CHECKPOINT:', PATH_CHECKPOINT)
-
-    model = MNIST_CNN.load_from_checkpoint(PATH_CHECKPOINT)
+    print('DATASET:', data_name)
+    print('PATH_CHECKPOINT:', path_checkpoint)
 
     # Clean examples
-    dataset_clean = torch.load(PATH_DATA_CLEAN)
+    dataset_clean = torch.load(path_data_clean)
     X_clean, y_clean = dataset2tensor(dataset_clean)
 
     # Corresponding adversarial examples
-    dataset_adv = torch.load(PATH_DATA_ADV)
+    dataset_adv = torch.load(path_data_adv)
     X_adv, y_adv_true = dataset2tensor(dataset_adv)
 
     assert torch.all(y_clean == y_adv_true), 'True labels should be the same!'
@@ -78,20 +84,21 @@ def run_demo():
     X_eval_adv = X_adv[indices_eval][:TINY_TEST_SIZE]
     # y_eval_true = y_clean[indices_eval][:TINY_TEST_SIZE]
 
-    print('Pre-trained ML-LOO path:', PATH_MLLOO_DEV)
+    print('Pre-trained ML-LOO path:', path_mlloo_dev)
 
     # Save results
     ############################################################################
     # Uncomment the block below to train the detector:
 
-    # detector = MLLooDetector(model, DATASET)
-    # detector.train(X_train_clean, y_train_true)
-    # detector.save(PATH_MLLOO_DEV)
+    detector = MLLooDetector(my_model, data_name)
+    detector.train(X_train_clean, y_train_true)
+    detector.save(path_mlloo_dev)
+    del detector
     ############################################################################
 
     # Load detector
-    detector2 = MLLooDetector(model, DATASET)
-    detector2.load(PATH_MLLOO_DEV)
+    detector2 = MLLooDetector(my_model, data_name)
+    detector2.load(path_mlloo_dev)
 
     # Making prediction
     score_clean = detector2.predict_proba(X_eval_clean)
@@ -102,4 +109,5 @@ def run_demo():
 
 
 if __name__ == '__main__':
-    run_demo()
+    # run_mlloo('MNIST')
+    run_mlloo('CIFAR10')
