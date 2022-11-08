@@ -95,27 +95,27 @@ def generate_adv_examples(data: str,
     path_correct_val_dataset = os.path.join(path_outputs, 'CorrectValDataset.pt')
 
     if not os.path.isfile(path_correct_val_dataset):
-        dataset = get_correct_examples(model, val_loader, return_loader=False)
-        print(f'{len(dataset)} examples are correctly classified.')
-        torch.save(dataset, path_correct_val_dataset)
+        dataset_val_correct = get_correct_examples(model, val_loader, return_loader=False)
+        print(f'{len(dataset_val_correct)} examples are correctly classified.')
+        torch.save(dataset_val_correct, path_correct_val_dataset)
     else:
-        dataset = torch.load(path_correct_val_dataset)
+        dataset_val_correct = torch.load(path_correct_val_dataset)
         print('Load existing `CorrectValDataset.pt`...')
-    dataloader = DataLoader(dataset, batch_size=val_loader.batch_size,
+    loader_val_correct = DataLoader(dataset_val_correct, batch_size=val_loader.batch_size,
                             num_workers=num_workers, shuffle=False)
-    _dataset = get_correct_examples(model, dataloader, return_loader=False)
-    print(f'{len(_dataset) / len(dataset) * 100}% out of {len(dataset)} examples are correctly classified.')
+    _dataset = get_correct_examples(model, loader_val_correct, return_loader=False)
+    print(f'{len(_dataset) / len(dataset_val_correct) * 100}% out of {len(dataset_val_correct)} examples are correctly classified.')
     del _dataset
 
     # Step 2: Split the data
-    if n_att + n_val > len(dataset):
+    if n_att + n_val > len(dataset_val_correct):
         raise ValueError('The total number of adversarial and validation examples are larger than the test set.')
 
-    x, y = dataloader2tensor(dataloader)
+    X_val, y_val = dataloader2tensor(loader_val_correct)
     path_adv_clean = os.path.join(path_outputs, f'AdvClean-{n_att}.pt')
     if not os.path.isfile(path_adv_clean):
         # `train_test_split` can work directly with PyTorch Tensor
-        X_leftover, X_adv_clean, y_leftover, y_adv_clean = train_test_split(x, y, test_size=n_att, random_state=seed)
+        X_leftover, X_adv_clean, y_leftover, y_adv_clean = train_test_split(X_val, y_val, test_size=n_att, random_state=seed)
         assert len(X_adv_clean) == n_att
         torch.save(TensorDataset(X_adv_clean, y_adv_clean), path_adv_clean)
 
@@ -135,7 +135,7 @@ def generate_adv_examples(data: str,
         path_val_clean = os.path.join(path_outputs, f'ValClean-{n_val}.pt')
         if n_val > 0 and not os.path.isfile(path_val_clean):
             print(f'WARNING: Validation dataset is missing! Delete `AdvClean-{n_att}.pt` and run the code again!')
-    del x, y, dataset, dataloader
+    del X_val, y_val, dataset_val_correct, loader_val_correct
 
     # Step 3: Generate adversarial examples
     # Same trainer, the model has no change.
@@ -170,14 +170,14 @@ def generate_adv_examples(data: str,
                     adv_params['confidence'] = e
 
                 X_adv = torch.zeros_like(X_adv_clean)
-                dataloader = DataLoader(TensorDataset(X_adv_clean), batch_size=ADV_BATCH_SIZE,
+                loader_val_correct = DataLoader(TensorDataset(X_adv_clean), batch_size=ADV_BATCH_SIZE,
                                         num_workers=num_workers, shuffle=False)
                 start = 0
-                pbar = tqdm(dataloader, total=len(dataloader))
+                pbar = tqdm(loader_val_correct, total=len(loader_val_correct))
                 pbar.set_description(f'Running {attack_name} eps/c={e} attack')
                 for batch in pbar:
                     x_batch = batch[0]
-                    end = start + len(x)
+                    end = start + len(x_batch)
                     X_adv[start:end] = attack(model, x_batch, **adv_params)
                     start = end
 
