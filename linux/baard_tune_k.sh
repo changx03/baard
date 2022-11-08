@@ -19,7 +19,7 @@ for DETECTOR in ${DETECTORS[@]}; do
 done
 
 NORM=2
-EPS=4  # Min. epsilon to achieve 95 success rate.
+EPS=4.0  # Min. epsilon to achieve 95 success rate.
 for DETECTOR in ${DETECTORS[@]}; do
     echo "Running $DETECTOR on $DATA with $ATTACK L$NORM eps=$EPS"
     python ./experiments/baard_tune.py -s $SEED --data $DATA --detector $DETECTOR -l $NORM --eps $EPS

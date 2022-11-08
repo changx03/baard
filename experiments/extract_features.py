@@ -5,6 +5,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 from typing import List
 
+import numpy as np
 
 from baard.attacks import ATTACKS, L_NORM
 from baard.classifiers import DATASETS
@@ -69,7 +70,7 @@ def parse_arguments():
     l_norm = args.lnorm
     detector_name = args.detector
     path = args.path
-    eps_list = args.eps
+    eps_list = np.round(args.eps, 2).astype(float)
 
     path_attack = Path(os.path.join(path, f'exp{seed}', data_name)).absolute()
     adv_files, att_eps_list = find_available_attacks(path_attack, attack_name, l_norm, eps_list)

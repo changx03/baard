@@ -52,7 +52,7 @@ def parse_arguments():
     l_norm = args.lnorm
     detector_name = args.detector
     path = args.path
-    eps = args.eps
+    eps = float(args.eps)
     k_neighbors = args.k
 
     path_attack = Path(os.path.join(path, f'exp{seed}', data_name)).absolute()

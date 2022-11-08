@@ -89,7 +89,7 @@ def baard_tune_scale(path_output: str, detector_name: str, data_name: str, attac
         baard_inner_train_extract(detector, data_name, eps, path_detector, path_features, path_adv)
 
 
-def find_attack_path(path_attack: str, attack_name: str, l_norm: str, eps: str) -> str:
+def find_attack_path(path_attack: str, attack_name: str, l_norm: str, eps: float) -> str:
     """Find a valid adversarial example path for a given epsilon."""
     def _get_file_path(path_base, attack_name, l_norm, eps):
         path_expression = os.path.join(path_base, f'{attack_name}-{l_norm}-*-{eps}.pt')

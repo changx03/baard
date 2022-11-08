@@ -10,7 +10,8 @@ python -m pip install --upgrade .
 SEEDS=(188283) # TODO: Run 1 repeatation first
 # SEEDS=(1234) # Use this for testing!
 DETECTORS=("BAARD-S1" "BAARD-S2" "BAARD-S3" "BAARD" "FS" "LID" "ML-LOO" "Odds" "PN" "RC")
-DATASETS=("MNIST" "CIFAR10")
+# DATASETS=("MNIST" "CIFAR10")
+DATASETS=("MNIST")  # TODO: Do NOT commit this!
 
 for DATA in ${DATASETS[@]}; do
     for DETECTOR in ${DETECTORS[@]}; do

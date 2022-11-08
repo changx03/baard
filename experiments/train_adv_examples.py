@@ -6,6 +6,7 @@ from argparse import ArgumentParser
 import numpy as np
 import pytorch_lightning as pl
 import torch
+from numpy.typing import ArrayLike
 from pytorch_lightning import LightningModule
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, TensorDataset
@@ -78,7 +79,7 @@ def get_attack(attack_name: str, adv_params: dict):
 
 def generate_adv_examples(data: str,
                           attack_name: str,
-                          eps: list,
+                          eps: ArrayLike,
                           adv_params: dict,
                           path_outputs: str,
                           n_att: int,
@@ -102,7 +103,7 @@ def generate_adv_examples(data: str,
         dataset_val_correct = torch.load(path_correct_val_dataset)
         print('Load existing `CorrectValDataset.pt`...')
     loader_val_correct = DataLoader(dataset_val_correct, batch_size=val_loader.batch_size,
-                            num_workers=num_workers, shuffle=False)
+                                    num_workers=num_workers, shuffle=False)
     _dataset = get_correct_examples(model, loader_val_correct, return_loader=False)
     print(f'{len(_dataset) / len(dataset_val_correct) * 100}% out of {len(dataset_val_correct)} examples are correctly classified.')
     del _dataset
@@ -171,7 +172,7 @@ def generate_adv_examples(data: str,
 
                 X_adv = torch.zeros_like(X_adv_clean)
                 loader_val_correct = DataLoader(TensorDataset(X_adv_clean), batch_size=ADV_BATCH_SIZE,
-                                        num_workers=num_workers, shuffle=False)
+                                                num_workers=num_workers, shuffle=False)
                 start = 0
                 pbar = tqdm(loader_val_correct, total=len(loader_val_correct))
                 pbar.set_description(f'Running {attack_name} eps/c={e} attack')
@@ -239,10 +240,10 @@ def parse_arguments():
     # NOTE: Default value is for quick developing only. Use 1000 for actual experiments.
     parser.add_argument('--n_att', type=int, default=100)
     parser.add_argument('--n_val', type=int, default=1000)
-    parser.add_argument('-a', '--attack', default=ATTACKS[0], choices=ATTACKS)
-    parser.add_argument('--eps', type=json.loads, default='[0.06]',
+    parser.add_argument('-a', '--attack', default='APGD', choices=ATTACKS)
+    parser.add_argument('--eps', type=json.loads, default='[1,4,8]',
                         help='A list of epsilons as a JSON string. e.g., "[0.06, 0.13, 0.25]".')
-    parser.add_argument('--params', type=json.loads, default='{"norm":"inf"}',
+    parser.add_argument('--params', type=json.loads, default='{"norm":2, "eps_iter":0.1}',
                         help='Parameters for the adversarial attack as a JSON string. e.g., \'{"norm":"inf"}\'.')
     args = parser.parse_args()
     seed = args.seed
@@ -250,7 +251,7 @@ def parse_arguments():
     n_att = args.n_att
     n_val = args.n_val
     attack_name = args.attack
-    eps = args.eps
+    eps = np.round(args.eps, 2).astype(float)  # Use float numbers.
     adv_params = args.params if args.params is not None else dict()
 
     print('PATH_ROOT', PATH_ROOT)

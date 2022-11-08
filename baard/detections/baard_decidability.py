@@ -143,10 +143,16 @@ class DecidabilityStage(Detector):
             class_highest = probs[i].argmax()
             highest_prob = probs[i, class_highest]
 
-            # Use train_test_split to achieve stratified sampling.
-            indices_subsample, _, y_subset, _ = train_test_split(
-                indices_train, self.features_labels,
-                train_size=self.n_subset, shuffle=False)  # Don't need shuffle.
+            # Handle value error
+            n_subset = min(self.n_subset, len(indices_train))
+            if n_subset == len(indices_train):  # Use all data, no split
+                indices_subsample = indices_train
+                y_subset = self.features_labels
+            else:
+                # Use train_test_split to achieve stratified sampling
+                indices_subsample, _, y_subset, _ = train_test_split(
+                    indices_train, self.features_labels,
+                    train_size=n_subset)  # NOTE: shuffle=True will disable stratify!
 
             # The subset contains all classes.
             feature_train_subset = self.features_train[indices_subsample]
@@ -159,7 +165,7 @@ class DecidabilityStage(Detector):
             # Find K-nearest neighbors. Output shape: (dist, indices).
             _, indices_neighbor = torch.topk(angular_dist, k=self.k_neighbors, largest=False)
             probs_neighbor = probs_train_subset[indices_neighbor]
-            # assert torch.all(torch.argmax(probs_neighbor, 1) == y_subset[indices_neighbor])
+            assert torch.all(torch.argmax(probs_neighbor, 1) == y_subset[indices_neighbor])
 
             # Get probability estimates of the corresponding label.
             probs_neighbor = probs_neighbor[:, class_highest]
