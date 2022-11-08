@@ -213,10 +213,31 @@ def extract_and_save_features(detector: Detector, attack_name: str, data_name: s
                 dataset = torch.load(path_data)
                 X, _ = dataset2tensor(dataset)
                 features = detector.extract_features(X)
-
                 path_features = create_parent_dir(path_features, file_ext='.pt')
                 print(f'Save features to: {path_features}')
                 torch.save(features, path_features)
             else:
-                print(f'Found {path_features}. Skip!')
+                print(f'Found {path_features} Skip!')
             print('#' * 80)
+
+            if detector_name == 'MLLooDetector':
+                extract_mlloo_proba(detector, detector_name, path_output, data_name, attack_name, l_norm, eps)
+
+
+def extract_mlloo_proba(detector: MLLooDetector, detector_name, path_output, data_name, attack_name, l_norm, eps):
+    """ML-LOO extracts a huge vector that cannot be fit with simple logistic regression model. Compute probabilities
+    instead.
+    """
+    path_features = os.path.join(path_output, detector_name, f'{attack_name}-{l_norm}',
+                                 f'{detector_name}-{data_name}-{attack_name}-{l_norm}-{eps}.pt')
+    path_probas = os.path.join(path_output, detector_name, f'{attack_name}-{l_norm}',
+                               f'{detector_name}(proba)-{data_name}-{attack_name}-{l_norm}-{eps}.pt')
+    if not os.path.exists(path_probas):
+        features = torch.load(path_features)
+        features = detector.scaler.transform(features)
+        probs = detector.logistic_regressor.predict_proba(features)
+        probs = probs[:, 1]  # Only return the 2nd column
+        print(f'Save ML-LOO probabilities to: {path_probas}')
+        torch.save(probs, path_probas)
+    else:
+        print(f'Found {path_probas} Skip!')
