@@ -23,37 +23,43 @@ import pytorch_lightning as pl
 import torch
 from sklearn.model_selection import train_test_split
 
-from baard.classifiers import DATASETS
-from baard.classifiers.mnist_cnn import MNIST_CNN
+from baard.classifiers import MNIST_CNN, CIFAR10_ResNet18
 from baard.detections.odds_are_odd import OddsAreOddDetector
 from baard.utils.torch_utils import dataset2tensor
 
+PATH_ROOT = Path(os.getcwd()).absolute()
+# Parameters for development:
+SEED_DEV = 0
+NOIST_LIST_DEV = ['n0.03', 'u0.03']
+N_NOISE_DEV = 30
+SIZE_DEV = 100
+TINY_TEST_SIZE = 10
 
-def run_demo():
+
+def run_odds_detector(data_name: str):
     """Test OddsAreOdd Detector"""
-    PATH_ROOT = Path(os.getcwd()).absolute()
-    PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
-    PATH_VAL_DATA = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'ValClean-1000.pt')
-    PATH_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'APGD-Linf-100-0.22.pt')
-    PATH_WEIGHTS_DEV = os.path.join('temp', 'dev_odds_detector.odds')
+    if data_name == 'MNIST':
+        eps = 0.22  # Epsilon controls the adversarial perturbation.
+        path_checkpoint = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
+        my_model = MNIST_CNN.load_from_checkpoint(path_checkpoint)
+    elif data_name == 'CIFAR10':
+        eps = 0.02  # Min L-inf attack eps for CIFAR10
+        path_checkpoint = os.path.join(PATH_ROOT, 'pretrained_clf', 'cifar10_resnet18.ckpt')
+        my_model = CIFAR10_ResNet18.load_from_checkpoint(path_checkpoint)
+    else:
+        raise NotImplementedError
 
-    # Parameters for development:
-    DATASET = DATASETS[0]
-    SEED_DEV = 0
-    NOIST_LIST_DEV = ['n0.01', 'u0.01']
-    N_NOISE_DEV = 30
-    SIZE_DEV = 100
-    TINY_TEST_SIZE = 10
+    path_val_data = os.path.join(PATH_ROOT, 'results', 'exp1234', data_name, 'ValClean-1000.pt')
+    path_adv = os.path.join(PATH_ROOT, 'results', 'exp1234', data_name, f'APGD-Linf-100-{eps}.pt')
+    path_odds_dev = os.path.join('temp', f'dev_OddsAreOddDetector_{data_name}.odds')
 
     pl.seed_everything(SEED_DEV)
 
     print('PATH ROOT:', PATH_ROOT)
-    print('DATASET:', DATASET)
-    print('PATH_CHECKPOINT:', PATH_CHECKPOINT)
+    print('DATASET:', data_name)
+    print('PATH_CHECKPOINT:', path_checkpoint)
 
-    model = MNIST_CNN.load_from_checkpoint(PATH_CHECKPOINT)
-
-    val_dataset = torch.load(PATH_VAL_DATA)
+    val_dataset = torch.load(path_val_data)
     X_val, y_val = dataset2tensor(val_dataset)
     # Limit the size for quick development. Using stratified sampling to ensure class distribution.
     _, X_dev, _, y_dev = train_test_split(X_val, y_val, test_size=SIZE_DEV, random_state=SEED_DEV)
@@ -62,30 +68,32 @@ def run_demo():
     ############################################################################
     # Uncomment the block below to train the detector:
 
-    # detector = OddsAreOddDetector(model,
-    #                               DATASET,
-    #                               noise_list=NOIST_LIST_DEV,
-    #                               n_noise_samples=N_NOISE_DEV)
-    # detector.train(X_dev, y_dev)
-    # detector.save(PATH_WEIGHTS_DEV)
+    detector = OddsAreOddDetector(my_model,
+                                  data_name,
+                                  noise_list=NOIST_LIST_DEV,
+                                  n_noise_samples=N_NOISE_DEV)
+    detector.train(X_dev, y_dev)
+    detector.save(path_odds_dev)
+    del detector
     ############################################################################
 
     # Evaluate detector
-    detector2 = OddsAreOddDetector(model,
-                                   DATASET,
+    detector2 = OddsAreOddDetector(my_model,
+                                   data_name,
                                    noise_list=NOIST_LIST_DEV,
                                    n_noise_samples=N_NOISE_DEV)
-    detector2.load(PATH_WEIGHTS_DEV)
+    detector2.load(path_odds_dev)
 
     scores = detector2.extract_features(X_dev[:TINY_TEST_SIZE])
     print(scores)
 
     # Load adversarial examples
-    adv_dataset = torch.load(PATH_ADV)
+    adv_dataset = torch.load(path_adv)
     X_adv, _ = dataset2tensor(adv_dataset)
     scores_adv = detector2.extract_features(X_adv[:TINY_TEST_SIZE])
     print(scores_adv)
 
 
 if __name__ == '__main__':
-    run_demo()
+    run_odds_detector('MNIST')
+    run_odds_detector('CIFAR10')

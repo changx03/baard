@@ -9,6 +9,7 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 import torch
+import torch.nn as nn
 from numpy.typing import ArrayLike
 from pytorch_lightning import LightningModule
 from torch import Tensor
@@ -144,6 +145,10 @@ class OddsAreOddDetector(Detector):
     @classmethod
     def get_odds_params_from_data(cls, data_name: str, model: LightningModule) -> Tuple[Module, Tensor, int, Tuple]:
         """Get Odds are odd parameters based on dataset."""
+        # These are for both MNIST and CIFAR10
+        n_classes = 10
+        clip_range = (0, 1)
+
         if data_name == DATASETS[0]:  # MNIST
             latent_net = torch.nn.Sequential(
                 model.conv1,
@@ -155,14 +160,16 @@ class OddsAreOddDetector(Detector):
                 model.fc1,
             )
             weight = list(model.children())[-1].weight
-            n_classes = 10
-            clip_range = (0, 1)
-            return latent_net, weight, n_classes, clip_range
         elif data_name == DATASETS[1]:  # CIFAR10
-            # TODO: sequential model and weights for CIFAR10
-            raise NotImplementedError()
+            resnet18_list = list(model.model.children())
+            latent_net = nn.Sequential(
+                *list(resnet18_list)[:-1],
+                nn.Flatten(start_dim=1)
+            )
+            weight = list(model.model.children())[-1].weight
         else:
             raise NotImplementedError()
+        return latent_net, weight, n_classes, clip_range
 
     def __compute_single_noise_alignment(self, hidden_out_x: Tensor, hidden_out_noise: Tensor,
                                          negative_labels, weight_relevant: Tensor
