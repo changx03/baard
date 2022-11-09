@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def eval_features(path_input, path_output, file_clean, file_adv,
-                  filename_output: None) -> Union[DataFrame, DataFrame]:
+                  filename_output=None) -> Union[DataFrame, DataFrame]:
     """Compute ans save ROC, AUC, TPR at 1%, 5% and 10% FPR. Returns (ROC, others).
     """
     features_clean = torch.load(os.path.join(path_input, file_clean))
