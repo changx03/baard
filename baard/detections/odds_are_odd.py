@@ -113,7 +113,7 @@ class OddsAreOddDetector(Detector):
                 score = alignments[noise_eps].mean(0)
                 mean = self.weights_stats[(pred, noise_eps)]['mean']
                 std = self.weights_stats[(pred, noise_eps)]['std']
-                z_score = (score - mean) / std
+                z_score = (score - mean) / (std + 1e-9)
                 # 2 tailed Z-score
                 z_max = np.abs(z_score.detach().numpy()).max()
                 max_Z_scores.append(z_max)

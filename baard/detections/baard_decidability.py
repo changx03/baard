@@ -171,7 +171,8 @@ class DecidabilityStage(Detector):
             probs_neighbor = probs_neighbor[:, class_highest]
             neighbor_mean = probs_neighbor.mean()
             neighbor_str = probs_neighbor.std()
-            z_score = (highest_prob - neighbor_mean) / neighbor_str
+            # Avoid divide by 0.
+            z_score = (highest_prob - neighbor_mean) / (neighbor_str + 1e-9)
             # 2-tailed Z-score.
             z_score = torch.abs(z_score)
             scores[i] = z_score

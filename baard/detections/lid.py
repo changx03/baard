@@ -265,7 +265,7 @@ class LIDDetector(Detector):
         if np.isclose(k_dist[0].item(), 0):  # Find x itself
             k_dist = k_dist[1:]  # Discard itself.
         max_dist = k_dist[-1]  # the max neighbor distance
-        lid = - len(k_dist) / torch.log(k_dist / max_dist).sum()
+        lid = - len(k_dist) / (torch.log(k_dist / (max_dist + 1e-9)).sum() + 1e-9)
         return lid
 
     @classmethod

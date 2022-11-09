@@ -124,7 +124,8 @@ class ApplicabilityStage(Detector):
             features_subset = hidden_features[indices_with_label_c]
             latent_feature_mean = self.zstats_dict[c]['mean']
             latent_feature_std = self.zstats_dict[c]['std']
-            z_score = (features_subset - latent_feature_mean) / latent_feature_std
+            # Avoid divide by 0
+            z_score = (features_subset - latent_feature_mean) / (latent_feature_std + 1e-9)
             # 2-tailed Z-score.
             z_max, _ = torch.abs(z_score).max(dim=1)  # Return (max, indices_max).
             scores[indices_with_label_c] = z_max
