@@ -70,7 +70,7 @@ def parse_arguments():
     l_norm = args.lnorm
     detector_name = args.detector
     path = args.path
-    eps_list = np.round(args.eps, 2).astype(float)
+    eps_list = args.eps
 
     path_attack = Path(os.path.join(path, f'exp{seed}', data_name)).absolute()
     adv_files, att_eps_list = find_available_attacks(path_attack, attack_name, l_norm, eps_list)

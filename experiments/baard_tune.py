@@ -40,7 +40,7 @@ def parse_arguments():
     parser.add_argument('-l', '--lnorm', type=str, choices=L_NORM, default='2')
     parser.add_argument('-p', '--path', type=str, default='results',
                         help='The path for loading pre-trained adversarial examples, and saving results.')
-    parser.add_argument('--eps', type=str, default=None,
+    parser.add_argument('--eps', type=str, required=True,
                         help="""The epsilon can be both float and int. The code will search existing files for both 
                         format.""")
     parser.add_argument('--k', type=int, default=None,
@@ -52,7 +52,7 @@ def parse_arguments():
     l_norm = args.lnorm
     detector_name = args.detector
     path = args.path
-    eps = float(args.eps)
+    eps = args.eps
     k_neighbors = args.k
 
     path_attack = Path(os.path.join(path, f'exp{seed}', data_name)).absolute()
