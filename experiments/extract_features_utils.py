@@ -37,7 +37,7 @@ PN_MAX_EPOCHS = 30
 # For Region-based classification
 RC_N_SAMPLE = 1000
 # For BAARD S2 - Reliability  # TODO: This need tuning!
-B2_K_NEIGHBORS = 20
+B2_K_NEIGHBORS = 5
 B2_SAMPLE_SCALE = 50  # Number of examples in the subset: 50 * 20 = 1000
 # For BAARD S3 - Decidability
 B3_K_NEIGHBORS = 20

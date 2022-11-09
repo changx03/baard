@@ -10,7 +10,7 @@ SEED=643896
 ATTACK="APGD"
 DETECTORS=("BAARD-S2" "BAARD-S3") # Only Stage 2 and 3 require tuning.
 
-K=20 # TODO: This k value should be the optimail value from `baard_tune_k.sh`.
+K=5 # TODO: This k value should be the optimail value from `baard_tune_k.sh`.
 
 DATA="MNIST"
 NORM="inf"
