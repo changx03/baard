@@ -241,7 +241,7 @@ def parse_arguments():
     parser.add_argument('--n_att', type=int, default=100)
     parser.add_argument('--n_val', type=int, default=1000)
     parser.add_argument('-a', '--attack', default='APGD', choices=ATTACKS)
-    parser.add_argument('--eps', type=json.loads, default='[1,4,8]',
+    parser.add_argument('--eps', type=json.loads, default='[1,4,8]', required=True,
                         help='A list of epsilons as a JSON string. e.g., "[0.06, 0.13, 0.25]".')
     parser.add_argument('--params', type=json.loads, default='{"norm":2, "eps_iter":0.1}',
                         help='Parameters for the adversarial attack as a JSON string. e.g., \'{"norm":"inf"}\'.')
@@ -251,16 +251,18 @@ def parse_arguments():
     n_att = args.n_att
     n_val = args.n_val
     attack_name = args.attack
-    eps = np.round(args.eps, 2).astype(float)  # Use float numbers.
+    eps_list = args.eps
     adv_params = args.params if args.params is not None else dict()
 
+    eps_list = np.round(eps_list, 2).astype(float)  # Use float numbers.
+    
     print('PATH_ROOT', PATH_ROOT)
     print('SEED:', seed)
     print('DATA:', data)
     print('N_ATT:', n_att)
     print('N_VAL:', n_val)
     print('ATTACK:', attack_name)
-    print('EPS:', eps)
+    print('EPS:', eps_list)
 
     if 'norm' in adv_params.keys() and adv_params['norm'] == 'inf':
         adv_params['norm'] = np.inf
@@ -271,7 +273,7 @@ def parse_arguments():
         os.makedirs(path_outputs)
         print(f'Creates dir: {path_outputs}')
 
-    return data, attack_name, eps, adv_params, path_outputs, n_att, n_val, seed
+    return data, attack_name, eps_list, adv_params, path_outputs, n_att, n_val, seed
 
 
 def main():
