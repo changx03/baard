@@ -17,8 +17,8 @@ from baard.utils.miscellaneous import norm_parser
 logger = logging.getLogger(__name__)
 
 
-def eval_features(path_input, path_output, file_clean, file_adv
-                  ) -> Union[DataFrame, DataFrame]:
+def eval_features(path_input, path_output, file_clean, file_adv,
+                  filename_output: None) -> Union[DataFrame, DataFrame]:
     """Compute ans save ROC, AUC, TPR at 1%, 5% and 10% FPR. Returns (ROC, others).
     """
     features_clean = torch.load(os.path.join(path_input, file_clean))
@@ -30,7 +30,8 @@ def eval_features(path_input, path_output, file_clean, file_adv
     tpr_10fpr, _ = tpr_at_n_fpr(fpr, tpr, thresholds, n_fpr=0.1)
 
     # Use `file_adv` name to store
-    filename_output = Path(file_adv).stem  # Remove extension
+    if filename_output is None:
+        filename_output = Path(file_adv).stem  # Remove extension
     # Use DataFrame to save ROC
     data_roc = {
         'fpr': fpr,
