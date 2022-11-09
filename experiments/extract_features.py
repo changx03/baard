@@ -5,8 +5,6 @@ from argparse import ArgumentParser
 from pathlib import Path
 from typing import List
 
-import numpy as np
-
 from baard.attacks import ATTACKS, L_NORM
 from baard.classifiers import DATASETS
 from baard.detections import DETECTORS

@@ -19,7 +19,7 @@ BAARD_TUNABLE = ['BAARD-S2', 'BAARD-S3']
 
 def baard_inner_train_extract(detector: Detector, data_name: str, eps: str, path_detector: str,
                               path_features: str, path_adv: str) -> None:
-    """Train ord load a BAARD detector, then extract features"""
+    """Train or load a BAARD detector, then extract features"""
     detector_file_name = Path(path_detector).stem
     if not os.path.exists(path_detector):
         detector.train()
@@ -66,6 +66,14 @@ def baard_tune_k(path_output: str, detector_name: str, data_name: str, attack_na
             f'{detector_name}-{k}-{data_name}-{attack_name}-{l_norm}-{eps}.pt')
         baard_inner_train_extract(detector, data_name, eps, path_detector, path_features, path_adv)
 
+        # Extract features from clean data
+        path_features_clean = os.path.join(
+            path_output, f'{detector_name}_tune{tune_var}', f'{attack_name}-{l_norm}',
+            f'{detector_name}-{k}-{data_name}-{attack_name}-{l_norm}-clean.pt')
+        # NOTE: Clean dataset is hard coded to 1000!
+        path_clean = os.path.join(Path(path_adv).resolve().parent, 'AdvClean-1000.pt')
+        baard_inner_train_extract(detector, data_name, 'clean', path_detector, path_features_clean, path_clean)
+
 
 def baard_tune_scale(path_output: str, detector_name: str, data_name: str, attack_name: str, l_norm: str,
                      path_adv: str, eps: str, k: str) -> None:
@@ -87,6 +95,14 @@ def baard_tune_scale(path_output: str, detector_name: str, data_name: str, attac
             path_output, f'{detector_name}_tune{tune_var}', f'{attack_name}-{l_norm}',
             f'{detector_name}-{k}-{data_name}-{attack_name}-{l_norm}-{eps}.pt')
         baard_inner_train_extract(detector, data_name, eps, path_detector, path_features, path_adv)
+
+        # Extract features from clean data
+        path_features_clean = os.path.join(
+            path_output, f'{detector_name}_tune{tune_var}', f'{attack_name}-{l_norm}',
+            f'{detector_name}-{k}-{data_name}-{attack_name}-{l_norm}-clean.pt')
+        # NOTE: Clean dataset is hard coded to 1000!
+        path_clean = os.path.join(Path(path_adv).resolve().parent, 'AdvClean-1000.pt')
+        baard_inner_train_extract(detector, data_name, 'clean', path_detector, path_features_clean, path_clean)
 
 
 def find_attack_path(path_attack: str, attack_name: str, l_norm: str, eps: str) -> str:
