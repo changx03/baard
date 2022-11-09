@@ -17,10 +17,10 @@ def eval_features(path_input, path_output, file_clean, file_adv,
                   filename_output=None) -> Union[DataFrame, DataFrame]:
     """Compute ans save ROC, AUC, TPR at 1%, 5% and 10% FPR. Returns (ROC, others).
     """
+    logger.info('Read adv from: %s', file_adv)
     features_clean = torch.load(os.path.join(path_input, file_clean))
     features_adv = torch.load(os.path.join(path_input, file_adv))
     fpr, tpr, auc_score, thresholds = compute_roc_auc(features_clean, features_adv)
-
     tpr_1fpr, _ = tpr_at_n_fpr(fpr, tpr, thresholds, n_fpr=0.01)
     tpr_5fpr, _ = tpr_at_n_fpr(fpr, tpr, thresholds, n_fpr=0.05)
     tpr_10fpr, _ = tpr_at_n_fpr(fpr, tpr, thresholds, n_fpr=0.1)

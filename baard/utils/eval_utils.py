@@ -43,3 +43,27 @@ def compute_roc_auc(features_clean, features_adv):
     auc_score = metrics.auc(fpr, tpr)
 
     return fpr, tpr, auc_score, thresholds
+
+
+# def test_compute_roc_auc():
+#     import os
+#     import torch
+
+#     detector_name = 'DecidabilityStage_tuneK'
+#     _detector_name = detector_name.split('_')[0]
+#     data_name = 'CIFAR10'
+#     # attack_name = 'APGD-inf'
+#     # eps = 0.01
+#     attack_name = 'APGD-2'
+#     eps = 0.3
+#     k = 3
+#     path = os.path.join('results', 'exp643896', data_name, detector_name, attack_name)
+#     file_clean = f'{_detector_name}-{k}-{data_name}-{attack_name}-clean.pt'
+#     features_clean = torch.load(os.path.join(path, file_clean))
+#     file_adv = f'{_detector_name}-{k}-{data_name}-{attack_name}-{eps}.pt'
+#     features_adv = torch.load(os.path.join(path, file_adv))
+#     compute_roc_auc(features_clean, features_adv)
+
+
+# if __name__ == '__main__':
+#     test_compute_roc_auc()
