@@ -90,10 +90,10 @@ def baard_tune_scale(path_output: str, detector_name: str, data_name: str, attac
         detector_ext = DETECTOR_EXTENSIONS[detector.__class__.__name__]
 
         path_detector = os.path.join(
-            path_output, f'{detector_name}_tune{tune_var}', f'{detector_name}-{k}-{data_name}{detector_ext}')
+            path_output, f'{detector_name}_tune{tune_var}', f'{detector_name}-{scale}-{data_name}{detector_ext}')
         path_features = os.path.join(
             path_output, f'{detector_name}_tune{tune_var}', f'{attack_name}-{l_norm}',
-            f'{detector_name}-{k}-{data_name}-{attack_name}-{l_norm}-{eps}.pt')
+            f'{detector_name}-{scale}-{data_name}-{attack_name}-{l_norm}-{eps}.pt')
         baard_inner_train_extract(detector, data_name, eps, path_detector, path_features, path_adv)
 
         # Extract features from clean data

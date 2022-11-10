@@ -43,7 +43,7 @@ def parse_arguments():
     parser.add_argument('--eps', type=str, required=True,
                         help="""The epsilon can be both float and int. The code will search existing files for both 
                         format.""")
-    parser.add_argument('--k', type=int, default=None,
+    parser.add_argument('-k', '--k', type=int, default=None,
                         help='When k is None, the script searches for optimal k. Otherwise, it tunes the scale.')
     args = parser.parse_args()
     seed = args.seed
