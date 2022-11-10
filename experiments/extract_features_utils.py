@@ -38,7 +38,7 @@ PN_MAX_EPOCHS = 30
 RC_N_SAMPLE = 1000
 # For BAARD S2 - Reliability  # TODO: This need tuning!
 B2_K_NEIGHBORS = 5
-B2_SAMPLE_SCALE = 200  # Number of examples in the subset: 200 * 5 = 1000
+B2_SAMPLE_SCALE = 500  # Number of examples in the subset: 500 * 5 = 2500
 # For BAARD S3 - Decidability
 B3_K_NEIGHBORS = 100
 B3_SAMPLE_SCALE = 50  # Number of examples in the subset: 50 * 100 = 5000

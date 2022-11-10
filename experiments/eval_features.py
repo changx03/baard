@@ -18,8 +18,17 @@ def eval_features(path_input, path_output, file_clean, file_adv,
     """Compute ans save ROC, AUC, TPR at 1%, 5% and 10% FPR. Returns (ROC, others).
     """
     logger.info('Read adv from: %s', file_adv)
-    features_clean = torch.load(os.path.join(path_input, file_clean))
-    features_adv = torch.load(os.path.join(path_input, file_adv))
+    path_clean = os.path.join(path_input, file_clean)
+    path_adv = os.path.join(path_input, file_adv)
+    if not (os.path.exists(path_clean) and os.path.exists(path_adv)):
+        logger.warning('Cannot find %s Return empty DataFrame', path_adv)
+        return (
+            DataFrame({'fpr': [], 'tpr': [], 'thresholds': []}),
+            DataFrame({'auc': [0], '1fpr': [0], '5fpr': [0], '10fpr': [0]}),
+        )
+
+    features_clean = torch.load(path_clean)
+    features_adv = torch.load(path_adv)
     fpr, tpr, auc_score, thresholds = compute_roc_auc(features_clean, features_adv)
     tpr_1fpr, _ = tpr_at_n_fpr(fpr, tpr, thresholds, n_fpr=0.01)
     tpr_5fpr, _ = tpr_at_n_fpr(fpr, tpr, thresholds, n_fpr=0.05)
