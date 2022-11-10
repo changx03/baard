@@ -99,7 +99,7 @@ def baard_tune_scale(path_output: str, detector_name: str, data_name: str, attac
         # Extract features from clean data
         path_features_clean = os.path.join(
             path_output, f'{detector_name}_tune{tune_var}', f'{attack_name}-{l_norm}',
-            f'{detector_name}-{k}-{data_name}-{attack_name}-{l_norm}-clean.pt')
+            f'{detector_name}-{scale}-{data_name}-{attack_name}-{l_norm}-clean.pt')
         # NOTE: Clean dataset is hard coded to 1000!
         path_clean = os.path.join(Path(path_adv).resolve().parent, 'AdvClean-1000.pt')
         baard_inner_train_extract(detector, data_name, 'clean', path_detector, path_features_clean, path_clean)
