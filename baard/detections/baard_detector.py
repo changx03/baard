@@ -20,9 +20,9 @@ from torch import Tensor
 
 from baard.detections.baard_applicability import ApplicabilityStage
 from baard.detections.baard_decidability import DecidabilityStage
+from baard.detections.baard_detector import Detector
 from baard.detections.baard_reliability import ReliabilityStage
 from baard.utils.miscellaneous import create_parent_dir
-from .base_detector import Detector
 
 logger = logging.getLogger(__name__)
 
