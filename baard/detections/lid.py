@@ -12,6 +12,7 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 from numpy.typing import ArrayLike
+from sklearn.linear_model import LogisticRegressionCV
 from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
@@ -73,6 +74,7 @@ class LIDDetector(Detector):
         # Tunable parameters
         self.lid_neg = None
         self.lid_pos = None
+        self.logistic_regressor = None
 
     def train(self, X: Tensor, y: Tensor) -> None:
         """Train detector. Train is not required for extracting features. If X and y are None,
@@ -169,6 +171,20 @@ class LIDDetector(Detector):
         self.lid_neg = nn.functional.normalize(self.lid_neg, p=2, dim=1).numpy()
         self.lid_pos = nn.functional.normalize(self.lid_pos, p=2, dim=1).numpy()
 
+        # Train Logistic Regression
+        n_neg = len(self.lid_neg)
+        n_pos = len(self.lid_pos)
+        X_lid = np.vstack([self.lid_neg, self.lid_pos])
+        y_lid = np.concatenate([np.zeros(n_neg), np.ones(n_pos)])
+
+        self.logistic_regressor = LogisticRegressionCV(
+            penalty='l1',  # Large feature space, prefer sparse weights
+            solver='saga',  # Faster algorithm, but need standardized data.
+            max_iter=10000,  # Default param is 100, which does not converge.
+            n_jobs=self.num_workers,
+        )
+        self.logistic_regressor.fit(X_lid, y_lid)
+
     def extract_features(self, X: Tensor) -> ArrayLike:
         """Extract LID features."""
         n_samples = X.size(0)
@@ -212,6 +228,14 @@ class LIDDetector(Detector):
         multi_layer_lid = nn.functional.normalize(multi_layer_lid, p=2, dim=1).numpy()
         return multi_layer_lid
 
+    def predict_proba(self, X: Tensor) -> ArrayLike:
+        """Compute probability estimate based on LID."""
+        if self.logistic_regressor is None:
+            raise Exception('Logistic regression model is not trained yet!')
+        X_lid = self.extract_features(X)
+        probs = self.logistic_regressor.predict_proba(X_lid)
+        return probs[:, 1]  # Only return the 2nd column
+
     def save(self, path: str = None) -> None:
         """Save extracted features for the training set. The ideal extension is `.lid`."""
         if self.lid_neg is None or self.lid_pos is None:
@@ -222,6 +246,7 @@ class LIDDetector(Detector):
         save_obj = {
             'lid_neg': self.lid_neg,
             'lid_pos': self.lid_pos,
+            'logistic_regressor': self.logistic_regressor,
         }
         pickle.dump(save_obj, open(path, 'wb'))
 
@@ -231,6 +256,7 @@ class LIDDetector(Detector):
             save_obj = pickle.load(open(path, 'rb'))
             self.lid_neg = save_obj['lid_neg']
             self.lid_pos = save_obj['lid_pos']
+            self.logistic_regressor = save_obj['logistic_regressor']
         else:
             raise FileExistsError(f'{path} does not exist!')
 

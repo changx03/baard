@@ -22,7 +22,6 @@ from pathlib import Path
 import numpy as np
 import pytorch_lightning as pl
 import torch
-from sklearn.linear_model import LogisticRegressionCV
 from sklearn.model_selection import train_test_split
 
 from baard.classifiers import MNIST_CNN, CIFAR10_ResNet18
@@ -32,13 +31,13 @@ from baard.utils.torch_utils import dataloader2tensor, dataset2tensor
 
 def run_demo():
     """Test LIDDetector."""
-    # DATASET = 'CIFAR10'
-    # CHECKPOINT = 'cifar10_resnet18.ckpt'
-    # EPS = 0.06  # Epsilon controls the noise and adversarial perturbation.
-
     DATASET = 'MNIST'
     CHECKPOINT = 'mnist_cnn.ckpt'
     EPS = 0.22
+
+    # DATASET = 'CIFAR10'
+    # CHECKPOINT = 'cifar10_resnet18.ckpt'
+    # EPS = 0.06  # Epsilon controls the noise and adversarial perturbation.
 
     PATH_ROOT = Path(os.getcwd()).absolute()
     PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', CHECKPOINT)
@@ -61,6 +60,7 @@ def run_demo():
         my_model = MNIST_CNN.load_from_checkpoint(PATH_CHECKPOINT)
     else:
         my_model = CIFAR10_ResNet18.load_from_checkpoint(PATH_CHECKPOINT)
+
     detector = LIDDetector(
         my_model,
         DATASET,
@@ -102,6 +102,7 @@ def run_demo():
 
     features_clean = detector.extract_features(X_eval_clean)
     features_adv = detector.extract_features(X_eval_adv)
+    print('Feature shape:', features_adv.shape)
 
     print('      [Clean] LID features:')
     print(np.round(features_clean, 3))
@@ -110,20 +111,15 @@ def run_demo():
 
     # Train Logistic regression model
     ############################################################################
-    regressor = LogisticRegressionCV()
-    lid_train_X = np.concatenate([detector.lid_neg, detector.lid_pos]).astype(float)
-    lid_train_y = np.concatenate([
-        np.zeros(len(detector.lid_neg)),
-        np.ones(len(detector.lid_pos)),
-    ]).astype(int)
-    assert len(lid_train_X) == TINY_TRAIN_SIZE * 3, f'Training set != clean + noisy + adversarial examples. Expect {TINY_TRAIN_SIZE * 3} got {len(lid_train_X)}.'
-    regressor.fit(lid_train_X, lid_train_y)
+    # Making prediction
+    score_clean = detector.predict_proba(X_eval_clean)
+    print(score_clean)
 
-    results_clean = regressor.predict_proba(features_clean)[:, 1]  # Only choose 2nd column (positive)
-    results_adv = regressor.predict_proba(features_adv)[:, 1]
+    score_adv = detector.predict_proba(X_eval_adv)
+    print(score_adv)
 
-    print('Clean pred:', np.round(results_clean, 3))
-    print('  Adv pred:', np.round(results_adv, 3))
+    print('Clean pred:', np.round(score_clean, 3))
+    print('  Adv pred:', np.round(score_adv, 3))
 
 
 if __name__ == '__main__':
