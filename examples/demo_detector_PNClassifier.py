@@ -37,7 +37,7 @@ def run_demo():
     PATH_DATA_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', 'MNIST', 'FGSM-Linf-100-0.28.pt')
 
     # Parameters for development:
-    SEED_DEV = 0
+    SEED_DEV = 1
     DATASET = DATASETS[0]
     MAX_EPOCHS_DEV = 30
     TINY_TEST_SIZE = 10

@@ -37,7 +37,7 @@ PATH_ROOT = Path(os.getcwd()).absolute()
 
 # Parameters for development:
 TINY_TEST_SIZE = 5
-SEED_DEV = 0
+SEED_DEV = 1
 N_CLASSES = 10  # For both MNIST and CIFAR10
 
 

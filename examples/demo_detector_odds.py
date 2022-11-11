@@ -29,7 +29,7 @@ from baard.utils.torch_utils import dataset2tensor
 
 PATH_ROOT = Path(os.getcwd()).absolute()
 # Parameters for development:
-SEED_DEV = 0
+SEED_DEV = 1
 NOIST_LIST_DEV = ['n0.03', 'u0.03']
 N_NOISE_DEV = 30
 SIZE_DEV = 100

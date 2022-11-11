@@ -25,26 +25,31 @@ import torch
 from sklearn.linear_model import LogisticRegressionCV
 from sklearn.model_selection import train_test_split
 
-from baard.classifiers import MNIST_CNN
+from baard.classifiers import MNIST_CNN, CIFAR10_ResNet18
 from baard.detections.lid import LIDDetector
 from baard.utils.torch_utils import dataloader2tensor, dataset2tensor
 
 
 def run_demo():
     """Test LIDDetector."""
+    # DATASET = 'CIFAR10'
+    # CHECKPOINT = 'cifar10_resnet18.ckpt'
+    # EPS = 0.06  # Epsilon controls the noise and adversarial perturbation.
+
     DATASET = 'MNIST'
-    EPS = 0.22  # Epsilon controls the noise and adversarial perturbation.
+    CHECKPOINT = 'mnist_cnn.ckpt'
+    EPS = 0.22
 
     PATH_ROOT = Path(os.getcwd()).absolute()
-    PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', 'mnist_cnn.ckpt')
+    PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf', CHECKPOINT)
     PATH_DATA_CLEAN = os.path.join(PATH_ROOT, 'results', 'exp1234', DATASET, 'AdvClean-100.pt')
     PATH_DATA_ADV = os.path.join(PATH_ROOT, 'results', 'exp1234', DATASET, f'APGD-Linf-100-{EPS}.pt')
-    PATH_DETECTOR_DEV = os.path.join('temp', 'dev_lid_detector.lid')
+    PATH_DETECTOR_DEV = os.path.join('temp', f'dev_lid_detector_{DATASET}.lid')
 
     # Parameters for development:
     TINY_TRAIN_SIZE = 100
     TINY_TEST_SIZE = 10
-    SEED_DEV = 0
+    SEED_DEV = 1
 
     pl.seed_everything(SEED_DEV)
 
@@ -52,7 +57,10 @@ def run_demo():
     print('DATASET:', DATASET)
     print('PATH_CHECKPOINT:', PATH_CHECKPOINT)
 
-    my_model = MNIST_CNN.load_from_checkpoint(PATH_CHECKPOINT)
+    if DATASET == 'MNIST':
+        my_model = MNIST_CNN.load_from_checkpoint(PATH_CHECKPOINT)
+    else:
+        my_model = CIFAR10_ResNet18.load_from_checkpoint(PATH_CHECKPOINT)
     detector = LIDDetector(
         my_model,
         DATASET,
@@ -74,8 +82,8 @@ def run_demo():
     ############################################################################
     # Uncomment the block below to train the detector:
 
-    # detector.train(X_train, y_train)  # Don't need train to extract features.
-    # detector.save(PATH_DETECTOR_DEV)
+    detector.train(X_train, y_train)  # Don't need train to extract features.
+    detector.save(PATH_DETECTOR_DEV)
     ############################################################################
 
     detector.load(PATH_DETECTOR_DEV)
