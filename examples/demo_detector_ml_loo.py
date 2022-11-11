@@ -30,7 +30,7 @@ from baard.utils.torch_utils import dataset2tensor
 PATH_ROOT = Path(os.getcwd()).absolute()
 
 # Parameters for development:
-SEED_DEV = 123456
+SEED_DEV = 1
 SIZE_DEV = 40  # For quick development
 TINY_TEST_SIZE = 10
 
