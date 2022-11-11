@@ -13,14 +13,14 @@ import torch
 import torch.nn as nn
 from numpy.typing import ArrayLike
 from torch import Tensor
-from torch.nn import Module
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
 from baard.attacks.apgd import auto_projected_gradient_descent
+from baard.classifiers import DATASETS
+from baard.detections.baard_detector import Detector
 from baard.utils.miscellaneous import create_parent_dir
 from baard.utils.torch_utils import dataloader2tensor
-from .base_detector import Detector
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class LIDDetector(Detector):
         self.device = device
 
         # Get all hidden layers
-        self.latent_nets = self.get_hidden_layers(self.model, self.device)
+        self.latent_nets = self.get_hidden_layers()
 
         # Register params
         self.params['n_classes'] = self.n_classes
@@ -206,11 +206,11 @@ class LIDDetector(Detector):
                     out_neighbors = latent_outputs[1:]
                     one_sample_single_layer_lid = self.get_MLE_LID(out_x, out_neighbors, k=self.k_neighbors)
                     multi_layer_lid[i, j] = one_sample_single_layer_lid
-        multi_layer_lid = self.min_max_normalize(multi_layer_lid, dim=1)
+        # multi_layer_lid = self.min_max_normalize(multi_layer_lid, dim=1)
 
         # Row-wise normalize
-        multi_layer_lid = nn.functional.normalize(multi_layer_lid, p=2, dim=1)
-        return multi_layer_lid.numpy()
+        multi_layer_lid = nn.functional.normalize(multi_layer_lid, p=2, dim=1).numpy()
+        return multi_layer_lid
 
     def save(self, path: str = None) -> None:
         """Save extracted features for the training set. The ideal extension is `.lid`."""
@@ -234,6 +234,29 @@ class LIDDetector(Detector):
         else:
             raise FileExistsError(f'{path} does not exist!')
 
+    def get_hidden_layers(self) -> List:
+        """Return a list of sequences which computes the latent outputs for each hidden layer.
+        NOTE: ResNet18 need to call `model.model.children()` to get the list.
+        """
+        # get deep representations
+        model = self.model
+        device = self.device
+        hidden_layers = []
+        if self.data_name == DATASETS[0]:  # MNIST CNN
+            for i in range(1, len(list(model.children()))):
+                layer = nn.Sequential(*list(model.children())[:i]).to(device)
+                hidden_layers.append(layer)
+        elif self.data_name == DATASETS[1]:  # CIFAR10 ResNet18
+            resnet18_list = list(model.model.children())
+            n_layers = len(resnet18_list)
+            for i in range(1, n_layers):
+                layer = nn.Sequential(*resnet18_list[:i]).to(device)
+                hidden_layers.append(layer)
+        else:
+            raise NotImplementedError
+        logging.info('Found %d hidden layers.', len(hidden_layers))
+        return hidden_layers
+
     @classmethod
     def add_gaussian_noise(cls, X: Tensor, eps: float, clip_range: Tuple = (0, 1)) -> Tensor:
         """Add Gaussian noise to X."""
@@ -241,18 +264,6 @@ class LIDDetector(Detector):
         X_noisy = X + noise * eps
         X_noisy = torch.clamp(X_noisy, clip_range[0], clip_range[1])
         return X_noisy
-
-    @classmethod
-    def get_hidden_layers(cls, model: Module, device: str = 'cuda') -> List:
-        """Return a list of sequences which computes the latent outputs for each hidden layer.
-        """
-        # get deep representations
-        hidden_layers = []
-        for i in range(1, len(list(model.children()))):
-            layer = nn.Sequential(*list(model.children())[:i]).to(device)
-            hidden_layers.append(layer)
-        logging.info('Found %d hidden layers.', len(hidden_layers))
-        return hidden_layers
 
     @classmethod
     def get_MLE_LID(cls, x: Tensor, batch: Tensor, k: int) -> Tensor:
@@ -268,10 +279,10 @@ class LIDDetector(Detector):
         lid = - len(k_dist) / (torch.log(k_dist / (max_dist + 1e-9)).sum() + 1e-9)
         return lid
 
-    @classmethod
-    def min_max_normalize(cls, X: Tensor, dim=1) -> Tensor:
-        """Apply min-max normalization."""
-        X_min = torch.min(X, dim=dim)[0].unsqueeze(dim=dim)
-        X_max = torch.max(X, dim=dim)[0].unsqueeze(dim=dim)
-        X_norm = (X - X_min) / (X_max - X_min)
-        return X_norm
+    # @classmethod
+    # def min_max_normalize(cls, X: Tensor, dim=1) -> Tensor:
+    #     """Apply min-max normalization."""
+    #     X_min = torch.min(X, dim=dim)[0].unsqueeze(dim=dim)
+    #     X_max = torch.max(X, dim=dim)[0].unsqueeze(dim=dim)
+    #     X_norm = (X - X_min) / (X_max - X_min)
+    #     return X_norm
