@@ -12,7 +12,7 @@ from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
-from baard.detections.baard_detector import Detector
+from baard.detections.base_detector import Detector
 from baard.utils.torch_utils import create_noisy_examples, predict
 
 logger = logging.getLogger(__name__)

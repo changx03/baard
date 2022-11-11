@@ -18,7 +18,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
 from baard.classifiers import DATASETS
-from baard.detections.baard_detector import Detector
+from baard.detections.base_detector import Detector
 from baard.utils.miscellaneous import create_parent_dir
 from baard.utils.torch_utils import (batch_forward, create_noisy_examples,
                                      dataloader2tensor, get_correct_examples,

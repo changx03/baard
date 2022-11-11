@@ -20,7 +20,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
 from baard.detections.baard_applicability import ApplicabilityStage
-from baard.detections.baard_detector import Detector
+from baard.detections.base_detector import Detector
 from baard.utils.miscellaneous import create_parent_dir
 from baard.utils.torch_utils import batch_forward, dataloader2tensor, predict
 
