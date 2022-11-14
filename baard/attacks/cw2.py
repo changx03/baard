@@ -29,7 +29,7 @@ def carlini_wagner_l2(
     initial_const: float = 1e-2,
     binary_search_steps: float = 5,
     max_iterations: int = 1000,
-    norm: Any = None,
+    norm: Any = 2,
 ) -> Tensor:
     """
     This attack was originally proposed by Carlini and Wagner. It is an
