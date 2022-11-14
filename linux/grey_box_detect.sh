@@ -6,8 +6,8 @@
 source ./.venv/bin/activate
 python -m pip install --upgrade .
 
-# SEEDS=(188283 292478 382347 466364 543597)
-SEEDS=(188283) # TODO: Run 1 repeatation first
+SEEDS=(188283 292478 382347 466364 543597)
+# SEEDS=(188283) # TODO: Run 1 repeatation first
 # SEEDS=(1234) # Use this for testing!
 DETECTORS=("BAARD-S1" "BAARD-S2" "BAARD-S3" "BAARD" "FS" "LID" "ML-LOO" "Odds" "PN" "RC")
 DATASETS=("MNIST" "CIFAR10")

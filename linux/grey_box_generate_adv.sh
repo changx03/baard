@@ -5,8 +5,8 @@
 source ./.venv/bin/activate
 python -m pip install --upgrade .
 
-# SEEDS=(188283 292478 382347 466364 543597)
-SEEDS=(188283) # TODO: Run 1 repeatation first
+SEEDS=(188283 292478 382347 466364 543597)
+# SEEDS=(188283) # TODO: Run 1 repeatation first
 SIZE=1000
 
 for SEED in ${SEEDS[@]}; do

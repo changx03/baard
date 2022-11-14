@@ -19,7 +19,8 @@ from baard.attacks.fast_gradient_method import fast_gradient_method
 from baard.attacks.projected_gradient_descent import projected_gradient_descent
 from baard.classifiers import DATASETS
 from baard.utils.miscellaneous import filter_exist_eps, norm_parser
-from baard.utils.torch_utils import dataloader2tensor, get_correct_examples
+from baard.utils.torch_utils import (dataloader2tensor, dataset2tensor,
+                                     get_correct_examples)
 
 PATH_ROOT = os.getcwd()
 PATH_CHECKPOINT = os.path.join(PATH_ROOT, 'pretrained_clf')
@@ -170,21 +171,27 @@ def generate_adv_examples(data: str,
                     del adv_params['eps']
                     adv_params['confidence'] = e
 
-                X_adv = torch.zeros_like(X_adv_clean)
-                loader_val_correct = DataLoader(TensorDataset(X_adv_clean), batch_size=ADV_BATCH_SIZE,
-                                                num_workers=num_workers, shuffle=False)
-                start = 0
-                pbar = tqdm(loader_val_correct, total=len(loader_val_correct))
-                pbar.set_description(f'Running {attack_name} eps/c={e} attack')
-                for batch in pbar:
-                    x_batch = batch[0]
-                    end = start + len(x_batch)
-                    X_adv[start:end] = attack(model, x_batch, **adv_params)
-                    start = end
-
-                # Save adversarial examples
                 path_adv = os.path.join(path_outputs, f'{attack_name}-L{attack_norm}-{n_att}-{e}.pt')
-                torch.save(TensorDataset(X_adv, y_adv_clean), path_adv)
+                # Check results
+                if os.path.exists(path_adv):
+                    print(f'Found {path_adv} Skip!')
+                    dataset_adv = torch.load(path_adv)
+                    X_adv, _ = dataset2tensor(dataset_adv)
+                else:
+                    X_adv = torch.zeros_like(X_adv_clean)
+                    loader_val_correct = DataLoader(TensorDataset(X_adv_clean), batch_size=ADV_BATCH_SIZE,
+                                                    num_workers=num_workers, shuffle=False)
+                    start = 0
+                    pbar = tqdm(loader_val_correct, total=len(loader_val_correct))
+                    pbar.set_description(f'Running {attack_name} eps/c={e} attack')
+                    for batch in pbar:
+                        x_batch = batch[0]
+                        end = start + len(x_batch)
+                        X_adv[start:end] = attack(model, x_batch, **adv_params)
+                        start = end
+
+                    # Save adversarial examples
+                    torch.save(TensorDataset(X_adv, y_adv_clean), path_adv)
 
                 # Checking results
                 dataset_adv = TensorDataset(X_adv)
@@ -255,7 +262,7 @@ def parse_arguments():
     adv_params = args.params if args.params is not None else dict()
 
     eps_list = np.round(eps_list, 2).astype(float)  # Use float numbers.
-    
+
     print('PATH_ROOT', PATH_ROOT)
     print('SEED:', seed)
     print('DATA:', data)
