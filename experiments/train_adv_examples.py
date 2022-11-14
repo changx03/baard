@@ -63,8 +63,6 @@ def get_attack(attack_name: str, adv_params: dict):
         attack = projected_gradient_descent
     elif attack_name == ATTACKS[2]:
         attack = carlini_wagner_l2
-        if 'norm' in adv_params.keys():
-            del adv_params['norm']
         if 'eps' in adv_params.keys():
             del adv_params['eps']
         if 'eps_iter' in adv_params.keys():
