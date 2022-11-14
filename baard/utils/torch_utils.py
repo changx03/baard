@@ -205,10 +205,9 @@ def batch_forward(model: Module, X: Tensor, batch_size: int = 256, device='cuda'
     return outputs
 
 
-def show_top5_imgs(path_dataset, figsize=(8, 3), cmap='gray'):
+def show_top5_imgs(dataset, figsize=(8, 3), cmap='gray'):
     """Show top 5 images in a PyTorch dataset."""
-    dataset = torch.load(path_dataset)
-    images = [x for x, y in dataset]
+    images, labels = dataset2tensor(dataset)
     labels = [y for x, y in dataset]
     grid = tv.utils.make_grid(images[:5], nrow=5, padding=4, pad_value=1)
     grid = grid.permute(1, 2, 0)
@@ -231,12 +230,14 @@ def plot_images(path_img: str,
     """Plot top-5 images along with their adversarial examples."""
     lnorm = norm_parser(lnorm)
 
-    show_top5_imgs(os.path.join(path_img, f'AdvClean-{n}.pt'), cmap=None)
+    dataset_clean = torch.load(os.path.join(path_img, f'AdvClean-{n}.pt'))
+    show_top5_imgs(dataset_clean, cmap=None)
     print('Clean images')
 
     for eps in eps_list:
         path_img_adv = os.path.join(path_img, f'{attack_name}-{lnorm}-{n}-{eps}.pt')
-        show_top5_imgs(path_img_adv, cmap=None)
+        dataset_adv = torch.load(path_img_adv)
+        show_top5_imgs(dataset_adv, cmap=None)
         print(f'{attack_name} {lnorm} eps={eps}')
 
 
