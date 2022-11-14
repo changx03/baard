@@ -273,6 +273,8 @@ def parse_arguments():
 
     if 'norm' in adv_params.keys() and adv_params['norm'] == 'inf':
         adv_params['norm'] = np.inf
+    else:
+        adv_params['norm'] = 2
     print('PARAMS:', adv_params)
 
     path_outputs = os.path.join(PATH_ROOT, args.output, f'exp{seed}', data)
