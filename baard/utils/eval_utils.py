@@ -30,6 +30,10 @@ def compute_roc_auc(features_clean, features_adv):
     n_mix = len(features_mix)
     # Fit regression even with only 1 feature per sample!
     features_mix = np.reshape(features_mix, (n_mix, -1))
+
+    # Fix nan
+    features_mix = np.nan_to_num(features_mix, nan=9999, posinf=9999, neginf=-9999)
+
     # Prepare labels: clean: 0, adversarial examples: 1
     labels_mix = np.concatenate(
         [np.zeros(len(features_clean)), np.ones(len(features_adv))])
