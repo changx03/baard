@@ -87,7 +87,7 @@ def train_clf_generate_adv(data_name, path_outputs, path_input, seed, attack_nam
         print(f'Load model from: {path_model}')
         model = pickle.load(open(path_model, 'rb'))
     else:
-        model = SVC()
+        model = SVC(probability=True)
         model.fit(X_train, y_train)
         print(f'Save model to: {path_model}')
         pickle.dump(model, open(path_model, 'wb'))

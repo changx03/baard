@@ -2,7 +2,7 @@
 Implementing the algorithm of Blocking Adversarial Examples by Testing
 Applicability, Reliability and Decidability.
 
-Third Srage: Decidability
+Third Stage: Decidability
 """
 import logging
 import math
@@ -45,6 +45,7 @@ class DecidabilityStage(Detector):
 
         self.n_classes = n_classes
         self.k_neighbors = k_neighbors
+        # TODO: Change Scale to m, the sample size
         self.subsample_scale = subsample_scale
 
         # Use the same feature space as Applicability Stage.
@@ -134,6 +135,8 @@ class DecidabilityStage(Detector):
         probs = nn.functional.softmax(probs, dim=1)
 
         indices_train = np.arange(self.n_training_samples)
+        # Handle value error
+        n_subset = min(self.n_subset, self.n_training_samples)
 
         cosine_sim_fn = torch.nn.CosineSimilarity(dim=1)
         scores = torch.zeros(n_samples)
@@ -143,9 +146,7 @@ class DecidabilityStage(Detector):
             class_highest = probs[i].argmax()
             highest_prob = probs[i, class_highest]
 
-            # Handle value error
-            n_subset = min(self.n_subset, len(indices_train))
-            if n_subset == len(indices_train):  # Use all data, no split
+            if n_subset == self.n_training_samples:  # Use all data, no split
                 indices_subsample = indices_train
                 y_subset = self.features_labels
             else:

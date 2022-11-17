@@ -20,8 +20,8 @@ from torch import Tensor
 
 from baard.detections.baard_applicability import ApplicabilityStage
 from baard.detections.baard_decidability import DecidabilityStage
-from baard.detections.base_detector import Detector
 from baard.detections.baard_reliability import ReliabilityStage
+from baard.detections.base_detector import Detector
 from baard.utils.miscellaneous import create_parent_dir
 
 logger = logging.getLogger(__name__)
@@ -48,6 +48,7 @@ class BAARD(Detector):
 
         # Reliability Stage specific:
         self.k1_neighbors = k1_neighbors
+        # TODO: Change Scale to m, the sample size
         self.subsample_scale1 = subsample_scale1
 
         # Decidability Stage specific:

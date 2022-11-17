@@ -15,6 +15,7 @@ from tqdm import tqdm
 
 from baard.detections.base_detector import SklearnDetector
 from baard.utils.miscellaneous import create_parent_dir
+from baard.utils.sklearn_utils import get_correct_samples
 
 logger = logging.getLogger(__name__)
 
@@ -40,16 +41,8 @@ class SklearnApplicabilityStage(SklearnDetector):
         self.zstats_dict = None
 
     def train(self, X: ArrayLike, y: ArrayLike) -> None:
-        """Train detector. If X and y are None, use the training set from the classifier.
-        """
-        n_before = len(X)
-        pred = self.model.predict(X)
-        indices_correct = np.where(pred == y)[0]
-        X = X[indices_correct]
-        y = y[indices_correct]
-        n_after = len(X)
-        if n_after != n_before:
-            logger.warning('Misclassification in the training set. Before %d != After %d.', n_before, n_after)
+        """Train detector."""
+        X, y = get_correct_samples(self.model, X, y)
 
         # Initialize parameters
         self.zstats_dict = {c: {'mean': 0, 'std': 0} for c in range(self.n_classes)}

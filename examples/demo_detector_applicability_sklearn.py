@@ -5,24 +5,37 @@ from pathlib import Path
 
 from baard.detections.baard_applicability_sklearn import \
     SklearnApplicabilityStage
+from baard.detections.baard_decidability_sklearn import \
+    SklearnDecidabilityStage
 
 
-def test_SklearnApplicabilityStage():
-    """Test SklearnApplicabilityStage"""
+def get_stage_instance(stage_name, data_name, model, n_classes=2):
+    """Get one of BAARD instance."""
+    if stage_name == 'applicability':
+        return SklearnApplicabilityStage(model, data_name, n_classes)
+    elif stage_name == 'reliability':
+        raise NotImplementedError
+    elif stage_name == 'decidability':
+        return SklearnDecidabilityStage(model, data_name, n_classes)
+    elif stage_name == 'baard':
+        raise NotImplementedError
+    else:
+        raise NotImplementedError
 
+
+def test_baard_stage(stage_name, data_name='banknote', clf_name='SVM'):
+    """Test one of the BAARD's stages."""
     logging.basicConfig(level=logging.INFO)
 
     PATH_ROOT = Path(os.getcwd()).absolute()
 
-    data_name = 'banknote'
-    clf_name = 'SVM'
     path_data = os.path.join(PATH_ROOT, 'results', 'exp1234', f'{data_name}-{clf_name}')
 
     model = pickle.load(open(os.path.join(path_data, f'{clf_name}-{data_name}.pickle'), 'rb'))
-    detector = SklearnApplicabilityStage(model, 'banknote', 2)
+    detector = get_stage_instance(stage_name, data_name, model, n_classes=2)
 
     file_ext = '.skbaard1'
-    path_detector_dev = os.path.join('temp', f'dev_baard_applicability_sklearn_{data_name}{file_ext}')
+    path_detector_dev = os.path.join('temp', f'dev_baard_{stage_name}_sklearn_{data_name}{file_ext}')
     if os.path.exists(path_detector_dev):
         detector.load(path_detector_dev)
     else:
@@ -50,4 +63,5 @@ def test_SklearnApplicabilityStage():
 
 
 if __name__ == '__main__':
-    test_SklearnApplicabilityStage()
+    # test_baard_stage('applicability')
+    test_baard_stage('decidability')
