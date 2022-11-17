@@ -1,5 +1,4 @@
 """Miscellaneous utility functions. Anything hard to category."""
-import datetime
 import json
 import logging
 import os
@@ -10,6 +9,7 @@ from typing import List, Union
 
 import numpy as np
 from numpy.typing import ArrayLike
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -130,3 +130,11 @@ def to_json(data_dict: object, path: str) -> None:
     with open(path, 'w', encoding='UTF-8') as file:
         logger.info('Save to: %s', path)
         json.dump(data_dict, file, default=converter)
+
+
+def load_csv(file_path, label_column_name='Class'):
+    """Load a pre-processed CSV file."""
+    df = pd.read_csv(file_path, sep=',')
+    y = df[label_column_name].to_numpy().astype(np.long)
+    X = df.drop([label_column_name], axis=1).to_numpy().astype(np.float32)
+    return X, y

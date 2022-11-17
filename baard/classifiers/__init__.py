@@ -1,4 +1,5 @@
 """Global parameters for classifiers."""
+import os
 
 from pytorch_lightning import LightningModule
 
@@ -16,3 +17,10 @@ def get_lightning_module(data_name: str) -> LightningModule:
         return CIFAR10_ResNet18
     else:
         raise NotImplementedError()
+
+
+TABULAR_DATA_LOOKUP = {
+    'banknote': os.path.join('tabular', 'banknote_preprocessed.csv'),
+    'BC': os.path.join('tabular', 'breastcancer_preprocessed.csv'),
+    'HTRU2': os.path.join('tabular', 'htru2_preprocessed.csv'),
+}
