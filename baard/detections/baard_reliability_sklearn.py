@@ -30,7 +30,7 @@ class SklearnReliabilityStage(SklearnDetector):
     def __init__(self,
                  model: ClassifierMixin,
                  data_name: str,
-                 n_classes: int = 10,
+                 n_classes: int = 2,
                  k_neighbors: int = 1,
                  sample_size: int = 1000,
                  ) -> None:
@@ -99,11 +99,11 @@ class SklearnReliabilityStage(SklearnDetector):
         return scores.detach().numpy()
 
     def save(self, path: str = None) -> object:
-        """Save pre-trained features. The ideal extension is `.baard2`."""
+        """Save pre-trained features. The ideal extension is `.skbaard2`."""
         if self.features_train is None:
             raise Exception('No trained parameters. Nothing to save.')
 
-        path = create_parent_dir(path, file_ext='.baard2')
+        path = create_parent_dir(path, file_ext='.skbaard2')
 
         save_obj = {
             'features_train': self.features_train,
@@ -114,7 +114,7 @@ class SklearnReliabilityStage(SklearnDetector):
         return save_obj
 
     def load(self, path: str = None):
-        """Load pre-trained parameters. The default extension is `.baard2`."""
+        """Load pre-trained parameters. The default extension is `.skbaard2`."""
         if os.path.isfile(path):
             obj = pickle.load(open(path, 'rb'))
             self.features_train = obj['features_train']

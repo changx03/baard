@@ -30,7 +30,7 @@ class SklearnDecidabilityStage(SklearnDetector):
     def __init__(self,
                  model: ClassifierMixin,
                  data_name: str,
-                 n_classes: int = 10,
+                 n_classes: int = 2,
                  k_neighbors: int = 15,
                  sample_size: int = 1000,
                  ) -> None:

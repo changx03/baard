@@ -13,7 +13,7 @@ from baard.utils.miscellaneous import create_parent_dir, to_json
 class Detector(ABC):
     """Base class for a detector."""
 
-    def __init__(self, model: LightningModule, data_name: str) -> None:
+    def __init__(self, model: LightningModule, data_name: str):
         self.model = model
         self.data_name = data_name
 
@@ -30,7 +30,7 @@ class Detector(ABC):
         }
 
     @abstractmethod
-    def train(self, X: Tensor = None, y: Tensor = None) -> None:
+    def train(self, X: Tensor = None, y: Tensor = None):
         """Train detector."""
         raise NotImplementedError
 
@@ -39,15 +39,15 @@ class Detector(ABC):
         """Extract features from X."""
         raise NotImplementedError
 
-    def save(self, path: str = None) -> None:
+    def save(self, path: str = None):
         """Save detector's tunable parameters."""
         print('This detector does not provide save feature.')
 
-    def load(self, path: str = None) -> None:
+    def load(self, path: str = None):
         """Load pre-trained parameters."""
         print('This detector does not provide load feature.')
 
-    def save_params(self, path: str = None) -> None:
+    def save_params(self, path: str = None):
         """Save internal parameters as a JSON file."""
         path = create_parent_dir(path, '.json')
         to_json(self.params, path)
@@ -56,7 +56,7 @@ class Detector(ABC):
 class SklearnDetector(ABC):
     """Base class for a sklearn detector."""
 
-    def __init__(self, model: Any, data_name: str) -> None:
+    def __init__(self, model: Any, data_name: str):
         self.model = model
         self.data_name = data_name
 
@@ -66,7 +66,7 @@ class SklearnDetector(ABC):
         }
 
     @abstractmethod
-    def train(self, X: ArrayLike = None, y: ArrayLike = None) -> None:
+    def train(self, X: ArrayLike, y: ArrayLike):
         """Train detector."""
         raise NotImplementedError
 
@@ -75,15 +75,15 @@ class SklearnDetector(ABC):
         """Extract features from X."""
         raise NotImplementedError
 
-    def save(self, path: str = None) -> None:
+    def save(self, path: str = None):
         """Save detector's tunable parameters."""
         print('This detector does not provide save feature.')
 
-    def load(self, path: str = None) -> None:
+    def load(self, path: str = None):
         """Load pre-trained parameters."""
         print('This detector does not provide load feature.')
 
-    def save_params(self, path: str = None) -> None:
+    def save_params(self, path: str = None):
         """Save internal parameters as a JSON file."""
         path = create_parent_dir(path, '.json')
         to_json(self.params, path)
