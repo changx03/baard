@@ -1,6 +1,7 @@
 """Base class for detectors."""
 import os
 from abc import ABC, abstractmethod
+from typing import Any
 
 from numpy.typing import ArrayLike
 from pytorch_lightning import LightningModule
@@ -35,6 +36,42 @@ class Detector(ABC):
 
     @abstractmethod
     def extract_features(self, X: Tensor) -> ArrayLike:
+        """Extract features from X."""
+        raise NotImplementedError
+
+    def save(self, path: str = None) -> None:
+        """Save detector's tunable parameters."""
+        print('This detector does not provide save feature.')
+
+    def load(self, path: str = None) -> None:
+        """Load pre-trained parameters."""
+        print('This detector does not provide load feature.')
+
+    def save_params(self, path: str = None) -> None:
+        """Save internal parameters as a JSON file."""
+        path = create_parent_dir(path, '.json')
+        to_json(self.params, path)
+
+
+class SklearnDetector(ABC):
+    """Base class for a sklearn detector."""
+
+    def __init__(self, model: Any, data_name: str) -> None:
+        self.model = model
+        self.data_name = data_name
+
+        # These parameters can be saved as a JSON file.
+        self.params = {
+            'data_name': self.data_name,
+        }
+
+    @abstractmethod
+    def train(self, X: ArrayLike = None, y: ArrayLike = None) -> None:
+        """Train detector."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def extract_features(self, X: ArrayLike) -> ArrayLike:
         """Extract features from X."""
         raise NotImplementedError
 
