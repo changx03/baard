@@ -69,7 +69,7 @@ class DecidabilityStage(Detector):
         self.features_labels = None
         self.probs_correct = None
 
-    def train(self, X: Tensor = None, y: Tensor = None) -> None:
+    def train(self, X: Tensor = None, y: Tensor = None):
         """Train detector. If X and y are None, use the training set from the classifier.
         """
         if X is None or y is None:
@@ -77,106 +77,108 @@ class DecidabilityStage(Detector):
             X, y = dataloader2tensor(loader_train)
             logger.warning('No sample is passed for training. Using the entire training set. %i examples.', X.size(0))
 
-        # Get correctly predicted hidden feature outputs. This is the same procedure as ReliabilityStage.
-        latent_features, y_correct, loader_correct = ApplicabilityStage.compute_correct_latent_features(
-            X, y,
-            model=self.model,
-            latent_net=self.latent_net,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            device=self.device)
+        with torch.no_grad():
+            # Get correctly predicted hidden feature outputs. This is the same procedure as ReliabilityStage.
+            latent_features, y_correct, loader_correct = ApplicabilityStage.compute_correct_latent_features(
+                X, y,
+                model=self.model,
+                latent_net=self.latent_net,
+                batch_size=self.batch_size,
+                num_workers=self.num_workers,
+                device=self.device)
 
-        # Row-wise normalize.
-        self.features_train = nn.functional.normalize(latent_features, p=2, dim=1)
-        self.features_labels = y_correct
-        assert self.features_train.size(0) == self.features_labels.size(0)
-        self.n_training_samples = self.features_train.size(0)
-        self.n_subset = min(
-            math.floor(self.subsample_scale * self.k_neighbors),
-            self.n_training_samples
-        )
-        logger.info('Number of subset = %i', self.n_subset)
+            # Row-wise normalize.
+            self.features_train = nn.functional.normalize(latent_features, p=2, dim=1)
+            self.features_labels = y_correct
+            assert self.features_train.size(0) == self.features_labels.size(0)
+            self.n_training_samples = self.features_train.size(0)
+            self.n_subset = min(
+                math.floor(self.subsample_scale * self.k_neighbors),
+                self.n_training_samples
+            )
+            logger.info('Number of subset = %i', self.n_subset)
 
-        # Also save the model's outputs.
-        trainer = pl.Trainer(accelerator='auto',
-                             logger=False,
-                             enable_model_summary=False,
-                             enable_progress_bar=False)
-        outputs_correct = torch.vstack(trainer.predict(self.model, loader_correct))
-        # Neural network models do NOT have Softmax layer at the end. Run Softmax and save probability estimates.
-        self.probs_correct = nn.functional.softmax(outputs_correct, dim=1)
+            # Also save the model's outputs.
+            trainer = pl.Trainer(accelerator='auto',
+                                 logger=False,
+                                 enable_model_summary=False,
+                                 enable_progress_bar=False)
+            outputs_correct = torch.vstack(trainer.predict(self.model, loader_correct))
+            # Neural network models do NOT have Softmax layer at the end. Run Softmax and save probability estimates.
+            self.probs_correct = nn.functional.softmax(outputs_correct, dim=1)
 
     def extract_features(self, X: Tensor) -> ArrayLike:
         if self.features_train is None:
             raise Exception('The detector have not trained yet. Call `train` or `load` first!')
         n_samples = X.size(0)
 
-        # Get latent outputs.
-        hidden_features = batch_forward(self.latent_net,
-                                        X=X,
-                                        batch_size=self.batch_size,
-                                        device=self.device,
-                                        num_workers=self.num_workers,
-                                        )
-        # Apply normalization.
-        hidden_features = nn.functional.normalize(hidden_features, p=2, dim=1)
+        with torch.no_grad():
+            # Get latent outputs.
+            hidden_features = batch_forward(self.latent_net,
+                                            X=X,
+                                            batch_size=self.batch_size,
+                                            device=self.device,
+                                            num_workers=self.num_workers,
+                                            )
+            # Apply normalization.
+            hidden_features = nn.functional.normalize(hidden_features, p=2, dim=1)
 
-        # Get probability predictions.
-        trainer = pl.Trainer(accelerator='auto',
-                             logger=False,
-                             enable_model_summary=False,
-                             enable_progress_bar=False)
-        loader = DataLoader(TensorDataset(X),
-                            batch_size=self.batch_size,
-                            shuffle=False,
-                            num_workers=self.num_workers
-                            )
-        probs = torch.vstack(trainer.predict(self.model, loader))
-        probs = nn.functional.softmax(probs, dim=1)
+            # Get probability predictions.
+            trainer = pl.Trainer(accelerator='auto',
+                                 logger=False,
+                                 enable_model_summary=False,
+                                 enable_progress_bar=False)
+            loader = DataLoader(TensorDataset(X),
+                                batch_size=self.batch_size,
+                                shuffle=False,
+                                num_workers=self.num_workers
+                                )
+            probs = torch.vstack(trainer.predict(self.model, loader))
+            probs = nn.functional.softmax(probs, dim=1)
 
-        indices_train = np.arange(self.n_training_samples)
-        # Handle value error
-        n_subset = min(self.n_subset, self.n_training_samples)
+            indices_train = np.arange(self.n_training_samples)
+            # Handle value error
+            n_subset = min(self.n_subset, self.n_training_samples)
 
-        cosine_sim_fn = torch.nn.CosineSimilarity(dim=1)
-        scores = torch.zeros(n_samples)
-        pbar = tqdm(range(n_samples), total=n_samples)
-        pbar.set_description('Extracting decidability features', refresh=False)
-        for i in pbar:
-            class_highest = probs[i].argmax()
-            highest_prob = probs[i, class_highest]
+            cosine_sim_fn = torch.nn.CosineSimilarity(dim=1)
+            scores = torch.zeros(n_samples)
+            pbar = tqdm(range(n_samples), total=n_samples)
+            pbar.set_description('Extracting decidability features', refresh=False)
+            for i in pbar:
+                class_highest = probs[i].argmax()
+                highest_prob = probs[i, class_highest]
 
-            if n_subset == self.n_training_samples:  # Use all data, no split
-                indices_subsample = indices_train
-                y_subset = self.features_labels
-            else:
-                # Use train_test_split to achieve stratified sampling
-                indices_subsample, _, y_subset, _ = train_test_split(
-                    indices_train, self.features_labels,
-                    train_size=n_subset)  # NOTE: shuffle=True will disable stratify!
+                if n_subset == self.n_training_samples:  # Use all data, no split
+                    indices_subsample = indices_train
+                    y_subset = self.features_labels
+                else:
+                    # Use train_test_split to achieve stratified sampling
+                    indices_subsample, _, y_subset, _ = train_test_split(
+                        indices_train, self.features_labels,
+                        train_size=n_subset)  # NOTE: shuffle=True will disable stratify!
 
-            # The subset contains all classes.
-            feature_train_subset = self.features_train[indices_subsample]
-            probs_train_subset = self.probs_correct[indices_subsample]
+                # The subset contains all classes.
+                feature_train_subset = self.features_train[indices_subsample]
+                probs_train_subset = self.probs_correct[indices_subsample]
 
-            # Compute cosine similarity.
-            cos_similarity = cosine_sim_fn(feature_train_subset, hidden_features[i])
-            # Compute angular distance
-            angular_dist = torch.arccos(cos_similarity) / torch.pi
-            # Find K-nearest neighbors. Output shape: (dist, indices).
-            _, indices_neighbor = torch.topk(angular_dist, k=self.k_neighbors, largest=False)
-            probs_neighbor = probs_train_subset[indices_neighbor]
-            assert torch.all(torch.argmax(probs_neighbor, 1) == y_subset[indices_neighbor])
+                # Compute cosine similarity.
+                cos_similarity = cosine_sim_fn(feature_train_subset, hidden_features[i])
+                # Compute angular distance
+                angular_dist = torch.arccos(cos_similarity) / torch.pi
+                # Find K-nearest neighbors. Output shape: (dist, indices).
+                _, indices_neighbor = torch.topk(angular_dist, k=self.k_neighbors, largest=False)
+                probs_neighbor = probs_train_subset[indices_neighbor]
+                assert torch.all(torch.argmax(probs_neighbor, 1) == y_subset[indices_neighbor])
 
-            # Get probability estimates of the corresponding label.
-            probs_neighbor = probs_neighbor[:, class_highest]
-            neighbor_mean = probs_neighbor.mean()
-            neighbor_str = probs_neighbor.std()
-            # Avoid divide by 0.
-            z_score = (highest_prob - neighbor_mean) / (neighbor_str + 1e-9)
-            # 2-tailed Z-score.
-            z_score = torch.abs(z_score)
-            scores[i] = z_score
+                # Get probability estimates of the corresponding label.
+                probs_neighbor = probs_neighbor[:, class_highest]
+                neighbor_mean = probs_neighbor.mean()
+                neighbor_str = probs_neighbor.std()
+                # Avoid divide by 0.
+                z_score = (highest_prob - neighbor_mean) / (neighbor_str + 1e-9)
+                # 2-tailed Z-score.
+                z_score = torch.abs(z_score)
+                scores[i] = z_score
         return scores.detach().numpy()
 
     def save(self, path: str = None) -> object:
@@ -196,7 +198,7 @@ class DecidabilityStage(Detector):
         pickle.dump(save_obj, open(path, 'wb'))
         return save_obj
 
-    def load(self, path: str = None) -> None:
+    def load(self, path: str = None):
         """Load pre-trained parameters. The default extension is `.baard3`."""
         if os.path.isfile(path):
             obj = pickle.load(open(path, 'rb'))

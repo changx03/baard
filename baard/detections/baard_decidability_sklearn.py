@@ -51,7 +51,7 @@ class SklearnDecidabilityStage(SklearnDetector):
         self.features_labels = None
         self.probs_correct = None
 
-    def train(self, X: ArrayLike, y: ArrayLike) -> None:
+    def train(self, X: ArrayLike, y: ArrayLike):
         """Train detector."""
         # Check classifier's accuracy.
         X, y = get_correct_samples(self.model, X, y)
@@ -137,7 +137,7 @@ class SklearnDecidabilityStage(SklearnDetector):
         pickle.dump(save_obj, open(path, 'wb'))
         return save_obj
 
-    def load(self, path: str = None) -> None:
+    def load(self, path: str = None):
         """Load pre-trained parameters. The default extension is `.skbaard3`."""
         if os.path.isfile(path):
             obj = pickle.load(open(path, 'rb'))

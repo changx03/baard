@@ -1,3 +1,4 @@
+"""Demo for BAARD on sklearn classifier."""
 import logging
 import os
 import pickle
@@ -7,6 +8,7 @@ from baard.detections.baard_applicability_sklearn import \
     SklearnApplicabilityStage
 from baard.detections.baard_decidability_sklearn import \
     SklearnDecidabilityStage
+from baard.detections.baard_reliability_sklearn import SklearnReliabilityStage
 
 
 def get_stage_instance(stage_name, data_name, model, n_classes=2):
@@ -14,7 +16,7 @@ def get_stage_instance(stage_name, data_name, model, n_classes=2):
     if stage_name == 'applicability':
         return SklearnApplicabilityStage(model, data_name, n_classes)
     elif stage_name == 'reliability':
-        raise NotImplementedError
+        return SklearnReliabilityStage(model, data_name, n_classes)
     elif stage_name == 'decidability':
         return SklearnDecidabilityStage(model, data_name, n_classes)
     elif stage_name == 'baard':
@@ -63,5 +65,6 @@ def test_baard_stage(stage_name, data_name='banknote', clf_name='SVM'):
 
 
 if __name__ == '__main__':
-    # test_baard_stage('applicability')
+    test_baard_stage('applicability')
+    test_baard_stage('reliability')
     test_baard_stage('decidability')

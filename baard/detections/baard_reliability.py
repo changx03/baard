@@ -66,70 +66,73 @@ class ReliabilityStage(Detector):
         self.features_train = None
         self.features_labels = None
 
-    def train(self, X: Tensor = None, y: Tensor = None) -> None:
+    def train(self, X: Tensor = None, y: Tensor = None):
         """Train detector. If X and y are None, use the training set from the classifier.
         """
-        if X is None or y is None:
-            loader_train = self.model.train_dataloader()
-            X, y = dataloader2tensor(loader_train)
-            logger.warning('No sample is passed for training. Using the entire training set. %i examples.', X.size(0))
+        with torch.no_grad():
+            if X is None or y is None:
+                loader_train = self.model.train_dataloader()
+                X, y = dataloader2tensor(loader_train)
+                logger.warning('No sample is passed for training. Using the entire training set. %i examples.', X.size(0))
 
-        latent_features, y_correct, _ = ApplicabilityStage.compute_correct_latent_features(
-            X, y,
-            model=self.model,
-            latent_net=self.latent_net,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            device=self.device)
-        # Row-wise normalize
-        self.features_train = nn.functional.normalize(latent_features, p=2, dim=1)
-        self.features_labels = y_correct
-        assert self.features_train.size(0) == self.features_labels.size(0)
-        self.n_training_samples = self.features_train.size(0)
-        self.n_subset = min(math.floor(self.subsample_scale * self.k_neighbors), self.n_training_samples)
+            latent_features, y_correct, _ = ApplicabilityStage.compute_correct_latent_features(
+                X, y,
+                model=self.model,
+                latent_net=self.latent_net,
+                batch_size=self.batch_size,
+                num_workers=self.num_workers,
+                device=self.device)
+            # Row-wise normalize
+            self.features_train = nn.functional.normalize(latent_features, p=2, dim=1)
+            self.features_labels = y_correct
+            assert self.features_train.size(0) == self.features_labels.size(0)
+            self.n_training_samples = self.features_train.size(0)
+            self.n_subset = min(math.floor(self.subsample_scale * self.k_neighbors), self.n_training_samples)
 
     def extract_features(self, X: Tensor) -> ArrayLike:
         if self.features_train is None:
             raise Exception('The detector have not trained yet. Call `train` or `load` first!')
-        n_samples = X.size(0)
-        hidden_features = batch_forward(self.latent_net,
-                                        X=X,
-                                        batch_size=self.batch_size,
-                                        device=self.device,
-                                        num_workers=self.num_workers,
-                                        )
-        # Apply normalization
-        hidden_features = nn.functional.normalize(hidden_features, p=2, dim=1)
-        dataloader = DataLoader(TensorDataset(X),
-                                batch_size=self.batch_size,
-                                shuffle=False,
-                                num_workers=self.num_workers,
-                                )
-        preds = predict(self.model, dataloader)
-        cosine_sim_fn = torch.nn.CosineSimilarity(dim=1)
-        scores = torch.zeros(n_samples)
-        pbar = tqdm(range(n_samples), total=n_samples)
-        pbar.set_description('Extracting reliability features', refresh=False)
-        for i in pbar:
-            indices_train_as_sample = torch.where(self.features_labels == preds[i])[0]
-            # The subset which is labelled as i is much smaller than the total training set.
-            n_subset = min(len(indices_train_as_sample), self.n_subset)
-            indices_subsample = np.random.choice(indices_train_as_sample,
-                                                 size=n_subset,
-                                                 replace=False)  # No replacement, no duplicates.
-            # This subset should have the same label as X[i].
-            feature_train_subset = self.features_train[indices_subsample]
-            # Compute cosine similarity
-            cos_similarity = cosine_sim_fn(feature_train_subset, hidden_features[i])
 
-            # Cosine similarity is in range [-1, 1], where 0 is orthogonal vectors.
-            # Compute angular distance
-            angular_dist = torch.arccos(cos_similarity) / torch.pi
+        with torch.no_grad():
+            n_samples = X.size(0)
+            hidden_features = batch_forward(self.latent_net,
+                                            X=X,
+                                            batch_size=self.batch_size,
+                                            device=self.device,
+                                            num_workers=self.num_workers,
+                                            )
+            # Apply normalization
+            hidden_features = nn.functional.normalize(hidden_features, p=2, dim=1)
+            dataloader = DataLoader(TensorDataset(X),
+                                    batch_size=self.batch_size,
+                                    shuffle=False,
+                                    num_workers=self.num_workers,
+                                    )
+            preds = predict(self.model, dataloader)
+            cosine_sim_fn = torch.nn.CosineSimilarity(dim=1)
+            scores = torch.zeros(n_samples)
+            pbar = tqdm(range(n_samples), total=n_samples)
+            pbar.set_description('Extracting reliability features', refresh=False)
+            for i in pbar:
+                indices_train_as_sample = torch.where(self.features_labels == preds[i])[0]
+                # The subset which is labelled as i is much smaller than the total training set.
+                n_subset = min(len(indices_train_as_sample), self.n_subset)
+                indices_subsample = np.random.choice(indices_train_as_sample,
+                                                     size=n_subset,
+                                                     replace=False)  # No replacement, no duplicates.
+                # This subset should have the same label as X[i].
+                feature_train_subset = self.features_train[indices_subsample]
+                # Compute cosine similarity
+                cos_similarity = cosine_sim_fn(feature_train_subset, hidden_features[i])
 
-            # Find K-nearest neighbors. (dist, indices)
-            dist_neighbors, _ = torch.topk(angular_dist, k=self.k_neighbors, largest=False)
-            mean_dist = dist_neighbors.mean()
-            scores[i] = mean_dist
+                # Cosine similarity is in range [-1, 1], where 0 is orthogonal vectors.
+                # Compute angular distance
+                angular_dist = torch.arccos(cos_similarity) / torch.pi
+
+                # Find K-nearest neighbors. (dist, indices)
+                dist_neighbors, _ = torch.topk(angular_dist, k=self.k_neighbors, largest=False)
+                mean_dist = dist_neighbors.mean()
+                scores[i] = mean_dist
         return scores.detach().numpy()
 
     def save(self, path: str = None) -> object:
@@ -148,7 +151,7 @@ class ReliabilityStage(Detector):
         pickle.dump(save_obj, open(path, 'wb'))
         return save_obj
 
-    def load(self, path: str = None) -> None:
+    def load(self, path: str = None):
         """Load pre-trained parameters. The default extension is `.baard2`."""
         if os.path.isfile(path):
             obj = pickle.load(open(path, 'rb'))
