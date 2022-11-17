@@ -3,10 +3,6 @@ Implementing the algorithm of Blocking Adversarial Examples by Testing
 Applicability, Reliability and Decidability.
 
 First Stage: Applicability
-
-NOTE: Cosine similarity is not angular distance. Link [here](https://en.wikipedia.org/wiki/Cosine_similarity#Angular_distance_and_similarity).
-angular_dist = arccos(cos_sim) / pi
-
 """
 import logging
 import os
