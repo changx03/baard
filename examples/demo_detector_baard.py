@@ -127,25 +127,25 @@ if __name__ == '__main__':
     # run_baard('MNIST', ReliabilityStage, train=True, params={'k_neighbors': 20, 'subsample_scale': 30})
     # run_baard('MNIST', DecidabilityStage, train=True, params={'k_neighbors': 20, 'subsample_scale': 50})
 
-    params_baard = {
-        'k1_neighbors': 20,
-        'subsample_scale1': 10,
-        'k2_neighbors': 20,
-        'subsample_scale2': 10,
-    }
-    run_baard('MNIST', BAARD, train=True, params=params_baard)
+    # params_baard = {
+    #     'k1_neighbors': 20,
+    #     'subsample_scale1': 10,
+    #     'k2_neighbors': 20,
+    #     'subsample_scale2': 10,
+    # }
+    # run_baard('MNIST', BAARD, train=True, params=params_baard)
 
     # ###########################################################################
     # # For CIFAR10:
 
     # run_baard('CIFAR10', ApplicabilityStage)
     # run_baard('CIFAR10', ReliabilityStage, train=True, params={'k_neighbors': 20, 'subsample_scale': 50})
-    # run_baard('CIFAR10', DecidabilityStage, train=True, params={'k_neighbors': 20, 'subsample_scale': 50})
+    run_baard('CIFAR10', DecidabilityStage, train=True, params={'k_neighbors': 20, 'subsample_scale': 50})
 
-    params_baard = {
-        'k1_neighbors': 20,
-        'subsample_scale1': 10,
-        'k2_neighbors': 20,
-        'subsample_scale2': 10,
-    }
-    run_baard('CIFAR10', BAARD, train=False, params=params_baard)
+    # params_baard = {
+    #     'k1_neighbors': 20,
+    #     'subsample_scale1': 10,
+    #     'k2_neighbors': 20,
+    #     'subsample_scale2': 10,
+    # }
+    # run_baard('CIFAR10', BAARD, train=False, params=params_baard)

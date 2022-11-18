@@ -137,7 +137,7 @@ def extract_features(seed: int,
 def parse_arguments():
     """Parse command line arguments.
     Example:
-    python ./experiments/extract_features_sklearn.py -s 1234 --data banknote --model SVM --attack PGD-Linf --detector "BAARD-S1"
+    python ./experiments/extract_features_sklearn.py -s 1234 --data BC --model SVM --attack PGD-Linf --detector "BAARD-S3"
     python ./experiments/extract_features_sklearn.py -s 1234 --data banknote --model SVM --attack PGD-Linf --detector "RC"
     python ./experiments/extract_features_sklearn.py -s 1234 --data banknote --model DecisionTree --attack DecisionTreeAttack --detector "BAARD-S1"
     python ./experiments/extract_features_sklearn.py -s 1234 --data banknote --model DecisionTree --attack DecisionTreeAttack --detector "RC"

@@ -4,6 +4,7 @@ import os
 import pickle
 from pathlib import Path
 
+from baard.detections import DETECTOR_EXTENSIONS
 from baard.detections.baard_applicability_sklearn import \
     SklearnApplicabilityStage
 from baard.detections.baard_decidability_sklearn import \
@@ -36,8 +37,9 @@ def test_baard_stage(stage_name, data_name='banknote', clf_name='SVM'):
 
     model = pickle.load(open(os.path.join(path_data, f'{clf_name}-{data_name}.pickle'), 'rb'))
     detector = get_stage_instance(stage_name, data_name, model, n_classes=2)
+    detector_name = detector.__class__.__name__
 
-    file_ext = '.skbaard1'
+    file_ext = DETECTOR_EXTENSIONS[detector_name]
     path_detector_dev = os.path.join('temp', f'dev_baard_{stage_name}_sklearn_{data_name}{file_ext}')
     if os.path.exists(path_detector_dev):
         detector.load(path_detector_dev)
@@ -68,5 +70,6 @@ def test_baard_stage(stage_name, data_name='banknote', clf_name='SVM'):
 if __name__ == '__main__':
     # test_baard_stage('applicability')
     # test_baard_stage('reliability')
-    # test_baard_stage('decidability')
+    # test_baard_stage('decidability', data_name='BC')
     test_baard_stage('baard')
+    test_baard_stage('baard', data_name='BC')

@@ -168,16 +168,20 @@ class DecidabilityStage(Detector):
                 # Find K-nearest neighbors. Output shape: (dist, indices).
                 _, indices_neighbor = torch.topk(angular_dist, k=self.k_neighbors, largest=False)
                 probs_neighbor = probs_train_subset[indices_neighbor]
+
                 # assert torch.all(torch.argmax(probs_neighbor, 1) == y_subset[indices_neighbor])
-                if not torch.all(torch.argmax(probs_neighbor, 1) == torch.from_numpy(y_subset)[indices_neighbor]):
-                    logger.warning('Unmatched labels: %s', torch.where(torch.argmax(probs_neighbor, 1) != torch.from_numpy(y_subset)[indices_neighbor])[0])
+                indices_matched_label = torch.where(torch.argmax(probs_neighbor, 1) == y_subset[indices_neighbor])[0]
+                if len(indices_matched_label) != len(probs_neighbor):
+                    logger.warning('Found %d unmatched labels!', (len(probs_neighbor) - len(indices_matched_label)))
+                    # NOTE: Only use matched neighbors!
+                    probs_neighbor = probs_neighbor[indices_matched_label]
 
                 # Get probability estimates of the corresponding label.
                 probs_neighbor = probs_neighbor[:, class_highest]
                 neighbor_mean = probs_neighbor.mean()
-                neighbor_str = probs_neighbor.std()
+                neighbor_std = probs_neighbor.std()
                 # Avoid divide by 0.
-                z_score = (highest_prob - neighbor_mean) / (neighbor_str + 1e-9)
+                z_score = (highest_prob - neighbor_mean) / (neighbor_std + 1e-9)
                 # 2-tailed Z-score.
                 z_score = torch.abs(z_score)
                 scores[i] = z_score
