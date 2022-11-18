@@ -14,8 +14,8 @@ DATASETS=("banknote" "BC")
 for SEED in ${SEEDS[@]}; do
     for DATA in ${DATASETS[@]}; do
         for DETECTOR in ${DETECTORS[@]}; do
-            python ./experiments/extract_features_sklearn.py -s $SEEDS --data $DATA --model="SVM" --detector $DETECTOR -a "PGD-Linf"
-            python ./experiments/extract_features_sklearn.py -s $SEEDS --data $DATA --model="DecisionTree" --detector $DETECTOR -a "DecisionTreeAttack"
+            python ./experiments/extract_features_sklearn.py -s $SEED --data $DATA --model="SVM" --detector $DETECTOR -a "PGD-Linf"
+            python ./experiments/extract_features_sklearn.py -s $SEED --data $DATA --model="DecisionTree" --detector $DETECTOR -a "DecisionTreeAttack"
         done
     done
 done
