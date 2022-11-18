@@ -106,13 +106,13 @@ class BAARD(Detector):
         return scores
 
     def save(self, path: str = None):
-        """Save pre-trained features. The ideal extension is `.baard`."""
-        path = create_parent_dir(path, file_ext='.baard')
+        """Save pre-trained features. The ideal extension is `.skbaard`."""
+        path = create_parent_dir(path, file_ext='.skbaard')
         filename, _ = os.path.splitext(path)  # Get filename without extension.
 
-        obj_app = self.applicability.save(filename + '.baard1')
-        obj_rel = self.reliability.save(filename + '.baard2')
-        obj_dec = self.decidability.save(filename + '.baard3')
+        obj_app = self.applicability.save(filename + '.skbaard1')
+        obj_rel = self.reliability.save(filename + '.skbaard2')
+        obj_dec = self.decidability.save(filename + '.skbaard3')
 
         obj_baard = {
             'app': obj_app,
@@ -122,7 +122,7 @@ class BAARD(Detector):
         pickle.dump(obj_baard, open(path, 'wb'))
 
     def load(self, path: str = None):
-        """Load pre-trained parameters. The default extension is `.baard`."""
+        """Load pre-trained parameters. The default extension is `.skbaard`."""
         if os.path.isfile(path):
             obj = pickle.load(open(path, 'rb'))
             obj_app = obj['app']
