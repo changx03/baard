@@ -108,7 +108,9 @@ class SklearnDecidabilityStage(SklearnDetector):
                 # Find K-nearest neighbors. Output shape: (dist, indices).
                 _, indices_neighbor = torch.topk(angular_dist, k=self.k_neighbors, largest=False)
                 probs_neighbor = probs_train_subset_torch[indices_neighbor]
-                assert torch.all(torch.argmax(probs_neighbor, 1) == torch.from_numpy(y_subset)[indices_neighbor])
+                # assert torch.all(torch.argmax(probs_neighbor, 1) == torch.from_numpy(y_subset)[indices_neighbor])
+                if not torch.all(torch.argmax(probs_neighbor, 1) == torch.from_numpy(y_subset)[indices_neighbor]):
+                    logger.warning('Unmatched labels: %s', torch.where(torch.argmax(probs_neighbor, 1) != torch.from_numpy(y_subset)[indices_neighbor])[0])
 
                 # Get probability estimates of the corresponding label.
                 probs_neighbor = probs_neighbor[:, class_highest]

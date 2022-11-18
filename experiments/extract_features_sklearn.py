@@ -177,6 +177,12 @@ def main():
     seed, data_name, model_name, detector_name, attack_name, path_attack, adv_files, att_eps_list = parse_arguments()
     extract_features(seed, data_name, model_name, detector_name, attack_name, path_attack, adv_files, att_eps_list)
 
+    # TODO: Known issue in Decidability Stage. Unmatched label in BC trained with SVM.
+    # # python ./experiments/extract_features_sklearn.py -s 543597 --data "BC" --model="SVM" --detector "BAARD" -a "PGD-Linf"
+    # path_attack = Path(os.path.join('results', 'exp543597', 'BC-SVM')).absolute()
+    # adv_files, att_eps_list = find_available_attacks_sklearn(path_attack, 'PGD-Linf')
+    # extract_features(543597, 'BC', 'SVM', 'BAARD-S3', 'PGD-Linf', path_attack, adv_files, att_eps_list)
+
 
 if __name__ == '__main__':
     main()

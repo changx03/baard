@@ -95,7 +95,7 @@ class SklearnBAARD(SklearnDetector):
 
     def save(self, path: str = None):
         """Save pre-trained features. The ideal extension is `.skbaard`."""
-        path = create_parent_dir(path, file_ext='.baard')
+        path = create_parent_dir(path, file_ext='.skbaard')
         filename, _ = os.path.splitext(path)  # Get filename without extension.
 
         obj_app = self.applicability.save(filename + '.skbaard1')

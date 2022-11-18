@@ -128,7 +128,7 @@ def find_available_attacks_sklearn(path_attack: str,
     files = np.array(files)[indices_sorted]
     eps_list_confirmed = np.array(eps_list_confirmed)[indices_sorted]
     assert len(files) == len(eps_list_confirmed)
-    return list(files), list(eps_list_confirmed)
+    return [str(f) for f in files], list(eps_list_confirmed)
 
 
 def norm_parser(lnorm: Union[str, int]) -> str:
