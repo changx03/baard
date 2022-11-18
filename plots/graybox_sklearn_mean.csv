@@ -1,0 +1,13 @@
+data,detector,attack,eps,auc,1fpr,5fpr,10fpr
+BC,BAARD,DecisionTreeAttack,NA,98.57,83.87,93.57,96.8
+BC,BAARD,PGD-Linf,High,52.4,9.03,10.23,12.07
+BC,BAARD,PGD-Linf,Low,81.5,7.23,22.17,35.87
+BC,RC,DecisionTreeAttack,NA,97.6,70.8,89.0,94.03
+BC,RC,PGD-Linf,High,74.8,0.0,0.0,0.0
+BC,RC,PGD-Linf,Low,65.13,0.0,0.0,0.0
+banknote,BAARD,DecisionTreeAttack,NA,96.03,69.8,85.23,89.43
+banknote,BAARD,PGD-Linf,High,100.0,100.0,100.0,100.0
+banknote,BAARD,PGD-Linf,Low,97.07,81.77,89.53,91.27
+banknote,RC,DecisionTreeAttack,NA,88.07,42.37,58.37,67.7
+banknote,RC,PGD-Linf,High,99.0,33.33,100.0,100.0
+banknote,RC,PGD-Linf,Low,78.63,6.2,41.93,62.33
