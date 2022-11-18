@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import List, Union
 
 import numpy as np
-from numpy.typing import ArrayLike
 import pandas as pd
+from numpy.typing import ArrayLike
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +83,7 @@ def find_available_attacks(path_attack: str,
     if eps_list is not None:
         files = []
         for eps in eps_list:
-            data_path = Path(os.path.join(path_attack, f'{attack_name}-L{l_norm}-{n_sample}-{eps}.pt'))
+            data_path = Path(os.path.join(path_attack, f'{attack_name}-{l_norm}-{n_sample}-{eps}.pt'))
             if data_path.is_file():
                 files.append(data_path)
                 eps_list_confirmed.append(eps)
@@ -92,6 +92,35 @@ def find_available_attacks(path_attack: str,
     else:
         eps_list_confirmed = eps_list_confirmed + eps_file_list
     files = [os.path.join(path_attack, f'AdvClean-{n_sample}.pt')] + files
+    logger.info('Found %d files for data including clean and adversarial examples.', len(files))
+
+    # Sort list
+    indices_sorted = argsort_by_eps(eps_list_confirmed)
+    files = np.array(files)[indices_sorted]
+    eps_list_confirmed = np.array(eps_list_confirmed)[indices_sorted]
+    assert len(files) == len(eps_list_confirmed)
+    return list(files), list(eps_list_confirmed)
+
+
+def find_available_attacks_sklearn(path_attack: str,
+                                   attack_name: str) -> tuple[List, List, int]:
+    """Find pre-trained adversarial examples. sklearn has a different filename format.
+    """
+    files = glob(os.path.join(path_attack, f'{attack_name}*.pickle'))
+    file_names = [os.path.basename(f) for f in files]
+    if attack_name == 'DecisionTreeAttack':
+        eps_file_list = ['0']
+    else:
+        eps_file_list = []
+        for name in file_names:
+            # Read epsilon
+            filename, _ = os.path.splitext(name)
+            eps = filename.split('-')[-1]
+            eps_file_list.append(eps)
+
+    eps_list_confirmed = ['clean']
+    eps_list_confirmed = eps_list_confirmed + eps_file_list
+    files = [os.path.join(path_attack, 'AdvClean.pickle')] + files
     logger.info('Found %d files for data including clean and adversarial examples.', len(files))
 
     # Sort list
@@ -138,3 +167,19 @@ def load_csv(file_path, label_column_name='Class'):
     y = df[label_column_name].to_numpy().astype(np.long)
     X = df.drop([label_column_name], axis=1).to_numpy().astype(np.float32)
     return X, y
+
+
+# def test_find_available_attacks():
+#     """Test find_available_attacks."""
+#     # path_attack = os.path.join('results', 'exp1234', 'CIFAR10')
+#     # print(find_available_attacks(path_attack, 'APGD', '2'))
+
+#     path_attack = os.path.join('results', 'exp1234', 'banknote-SVM')
+#     print(find_available_attacks_sklearn(path_attack, 'PGD-Linf'))
+
+#     path_attack = os.path.join('results', 'exp1234', 'BC-DecisionTree')
+#     print(find_available_attacks_sklearn(path_attack, 'DecisionTreeAttack'))
+
+
+# if __name__ == '__main__':
+#     test_find_available_attacks()

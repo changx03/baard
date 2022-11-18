@@ -21,7 +21,7 @@ class SklearnRegionBasedClassifier(SklearnDetector):
     def __init__(self,
                  model: Any,
                  data_name: str,
-                 n_classes: int = 10,
+                 n_classes: int = 2,
                  radius: float = 0.2,
                  n_noise_samples: int = 1000,
                  noise_clip_range: Tuple = (0., 1.)

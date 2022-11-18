@@ -115,7 +115,7 @@ def train_clf_generate_adv(data_name, path_outputs, path_input, seed):
     print((f'[After filter] Val: {acc_val:.4f}, Test: {acc_test:.4f}'))
 
     # Generate adversarial examples
-    path_adv = os.path.join(path_outputs, f'DecisionTreeAttack-{len(X_test)}.pickle')
+    path_adv = os.path.join(path_outputs, 'DecisionTreeAttack.pickle')
     if os.path.exists(path_adv):
         print(f'Found adversarial examples: {path_adv}')
         data_adv = pickle.load(open(path_adv, 'rb'))

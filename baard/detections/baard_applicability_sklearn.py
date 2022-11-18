@@ -28,7 +28,7 @@ class SklearnApplicabilityStage(SklearnDetector):
     def __init__(self,
                  model: Any,
                  data_name: str,
-                 n_classes: int = 10,
+                 n_classes: int = 2,
                  ) -> None:
         super().__init__(model, data_name)
 

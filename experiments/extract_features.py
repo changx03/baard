@@ -24,8 +24,6 @@ def extract_features(path_output: str,
                      att_eps_list: List,
                      detector_name: str):
     """Use a detector to extract features."""
-    path_output, seed, data_name, attack_name, l_norm, adv_files, att_eps_list, detector_name = parse_arguments()
-
     # Initialize detector
     path_clf_checkpoint = get_pretrained_model_path(data_name)
     detector, detector_ext = init_detector(detector_name=detector_name, data_name=data_name,
