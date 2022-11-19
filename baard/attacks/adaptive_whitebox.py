@@ -65,11 +65,13 @@ def targeted_whitebox_pgd(model: Module,
     X_adv = X + eta
     X_adv = torch.clamp(X_adv, clip[0], clip[1])
 
-    # NOTE: This adaptive attack is targeted!
-    y_target = torch.argmax(model(X_target), 1)
+    # NOTE: Try to match the output of the target!
+    # y_target = torch.argmax(model(X_target), 1)
+    y_target = model(X_target).detach().to(torch.float).requires_grad_(False)
 
-    loss_fn_CrossEntropy = torch.nn.CrossEntropyLoss()
-    loss_fn_MSE = torch.nn.MSELoss()
+    # loss_fn1 = torch.nn.CrossEntropyLoss()
+    loss_fn1 = torch.nn.MSELoss()
+    loss_fn2 = torch.nn.MSELoss()
 
     i = 0
     while i < nb_iter:
@@ -77,8 +79,8 @@ def targeted_whitebox_pgd(model: Module,
         X_next = X_adv.clone().detach().to(torch.float).requires_grad_(True)
 
         # NOTE: Negative, because it's targeted!
-        loss1 = -loss_fn_CrossEntropy(model(X_next), y_target)
-        loss2 = loss_fn_MSE(X_next, X_target)
+        loss1 = -loss_fn1(model(X_next), y_target)
+        loss2 = -loss_fn2(X_next, X_target)
         loss = loss1 + (c * loss2)
         loss.backward()
         optimal_perturbation = optimize_linear(X_next.grad, eps_iter, norm)
