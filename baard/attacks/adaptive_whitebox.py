@@ -5,6 +5,7 @@ accessed  on 27-Oct-2022.
 
 White-box adaptive attack on BAARD.
 """
+import logging
 from typing import Union
 
 import numpy as np
@@ -14,31 +15,38 @@ from torch.nn import Module
 
 from .utils import clip_eta, optimize_linear
 
+logger = logging.getLogger(__name__)
+
 
 def targeted_whitebox_pgd(model: Module,
-                          x: Tensor,
-                          y: Tensor,
+                          X: Tensor,
+                          X_target: Tensor,
                           eps: float,
                           eps_iter: float,
                           nb_iter: int = 100,
                           norm: Union[float, int] = np.inf,
                           clip: tuple[float, float] = (0., 1.),
-                          rand_init: bool = True,
+                          rand_init: bool = False,
+                          c: float = 1.,
+                          early_stop: bool = False,
                           ) -> Tensor:
     """
     Apply targeted adaptive white-box PGD attack on BAARD detector.
 
     :param model: a callable that takes an input tensor and returns the model logits.
-    :param x: input tensor.
-    :param y: Tensor with  the target label.
+    :param X: input tensor.
+    :param X_target: targeted X.
     :param eps: Epsilon. To control the perturbation.
     :param eps_iter: step size for each attack iteration
     :param nb_iter: Number of attack iterations. Default is 100.
     :param norm: Order of the norm (mimics NumPy). Possible values: np.inf, 1 or 2.
-              Default is np.inf.
-    :param clip: tuple[float, float]. Minimum and maximum float value for 
-                 adversarial example components. Default is (0, 1).
-    :param rand_init: (optional) bool. Whether to start the attack from a randomly perturbed x.
+        Default is np.inf.
+    :param clip: tuple[float, float]. Minimum and maximum float value for
+        adversarial example components. Default is (0, 1).
+    :param rand_init: (optional) bool. Whether to start the attack from a
+        randomly perturbed x.
+    :param c: the parameter that controls the weight of how X close to X_target.
+    :param early_stop: bool. Stops early when predictions match targets.
     :return: a tensor for the adversarial example.
     """
     if norm not in [np.inf, 2]:
@@ -48,40 +56,47 @@ def targeted_whitebox_pgd(model: Module,
 
     # Initialize loop variables
     if rand_init:
-        eta = torch.zeros_like(x).uniform_(-eps, eps)
+        eta = torch.zeros_like(X).uniform_(-eps, eps)
     else:
-        eta = torch.zeros_like(x)
+        eta = torch.zeros_like(X)
 
     # Clip eta
     eta = clip_eta(eta, norm, eps)
-    adv_x = x + eta
-    adv_x = torch.clamp(adv_x, clip[0], clip[1])
+    X_adv = X + eta
+    X_adv = torch.clamp(X_adv, clip[0], clip[1])
 
     # NOTE: This adaptive attack is targeted!
-    if y is None:
-        # Using model predictions as ground truth to avoid label leaking
-        _, y = torch.max(model(x), 1)
+    y_target = torch.argmax(model(X_target), 1)
+
+    loss_fn_CrossEntropy = torch.nn.CrossEntropyLoss()
+    loss_fn_MSE = torch.nn.MSELoss()
 
     i = 0
     while i < nb_iter:
         # Create a copy with gradient.
-        x_next = adv_x.clone().detach().to(torch.float).requires_grad_(True)
+        X_next = X_adv.clone().detach().to(torch.float).requires_grad_(True)
 
-        loss_fn = torch.nn.CrossEntropyLoss()
-        loss = loss_fn(model(x_next), y)
-        if y is not None:  # Targeted
-            loss = -loss
+        # NOTE: Negative, because it's targeted!
+        loss1 = -loss_fn_CrossEntropy(model(X_next), y_target)
+        loss2 = loss_fn_MSE(X_next, X_target)
+        loss = loss1 + (c * loss2)
         loss.backward()
-        optimal_perturbation = optimize_linear(x_next.grad, eps_iter, norm)
-        adv_x = x_next + optimal_perturbation
+        optimal_perturbation = optimize_linear(X_next.grad, eps_iter, norm)
+        X_adv = X_next + optimal_perturbation
 
         # Clipping perturbation eta to norm norm ball
-        eta = adv_x - x
+        eta = X_adv - X
         eta = clip_eta(eta, norm, eps)
-        adv_x = x + eta
+        X_adv = X + eta
 
         # Redo the clipping.
-        adv_x = torch.clamp(adv_x, clip[0], clip[1])
+        X_adv = torch.clamp(X_adv, clip[0], clip[1])
         i += 1
 
-    return adv_x
+        # Early stopping to target.
+        if early_stop:
+            y_adv = torch.argmax(model(X_adv), 1)
+            if torch.all(y_adv == y_target):
+                logger.info('Meet target at %d iteration. Stop!', i)
+                break
+    return X_adv
