@@ -221,6 +221,16 @@ def show_top5_imgs(dataset, figsize=(8, 3), cmap='gray'):
     print(f'Labels: {lbl_str}')
 
 
+def show_img(x: Tensor, figsize=(3, 3), cmap='gray'):
+    """Display a PyTorch Tensor image example."""
+    x = x.permute(1, 2, 0)
+
+    plt.figure(figsize=figsize)
+    plt.imshow(x.detach().numpy(), cmap=cmap)
+    plt.axis('off')
+    plt.show()
+
+
 def plot_images(path_img: str,
                 lnorm: Union[str, int],
                 eps_list: List,
