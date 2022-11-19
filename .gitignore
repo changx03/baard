@@ -479,3 +479,6 @@ results/
 
 # These files are genearted for develpment only
 dev_*
+
+# Error log file
+*.err
