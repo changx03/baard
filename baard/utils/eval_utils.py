@@ -38,7 +38,7 @@ def compute_roc_auc(features_clean, features_adv):
     labels_mix = np.concatenate(
         [np.zeros(len(features_clean)), np.ones(len(features_adv))])
 
-    regressor = LogisticRegressionCV()
+    regressor = LogisticRegressionCV(max_iter=5000)
     regressor.fit(features_mix, labels_mix)
     pred = regressor.predict_proba(features_mix)
     pred = pred[:, 1]

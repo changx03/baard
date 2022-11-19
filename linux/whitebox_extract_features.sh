@@ -7,6 +7,9 @@
 source ./.venv/bin/activate
 python -m pip install --upgrade .
 
+echo "Compute accuracy on adversarial examples. ###############################"
+python ./experiments/whitebox_save_acc.py
+
 SEED=727328
 ATTACK="whitebox"
 NORMS=("inf" "2")
@@ -16,7 +19,7 @@ DATASETS=("MNIST" "CIFAR10")
 for DATA in ${DATASETS[@]}; do
     for DETECTOR in ${DETECTORS[@]}; do
         for NORM in ${NORMS[@]}; do
-            echo "Running $DETECTOR on $DATA with $ATTACK L$NORM"
+            echo "Running $DETECTOR on $DATA with $ATTACK L$NORM ##############"
             python ./experiments/extract_features.py -s $SEED --data $DATA --attack $ATTACK -l $NORM --detector $DETECTOR
         done
     done
