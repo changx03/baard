@@ -41,7 +41,7 @@ for EPS in ${EPS_LIST[@]}; do
 done
 
 echo "Running CIFAR10 L2 ######################################################"
-EPS_LIST=(0.1 0.2 0.3 0.5 0.8 1 1.5 2 2.5 3 4)
+EPS_LIST=(0.1 0.2 0.3 0.5 0.75 1 1.5 2 3 4)
 for EPS in ${EPS_LIST[@]}; do
     python ./experiments/baard_whitebox.py --data CIFAR10 --seed $SEED --norm 2 --epsiter 0.05 --eps $EPS
 done

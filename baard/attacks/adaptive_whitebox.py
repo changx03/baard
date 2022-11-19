@@ -26,7 +26,7 @@ def targeted_whitebox_pgd(model: Module,
                           nb_iter: int = 100,
                           norm: Union[float, int] = np.inf,
                           clip: tuple[float, float] = (0., 1.),
-                          rand_init: bool = False,
+                          rand_init: bool = True,
                           c: float = 1.,
                           early_stop: bool = False,
                           ) -> Tensor:

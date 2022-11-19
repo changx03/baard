@@ -93,8 +93,7 @@ def get_correct_examples(model: LightningModule,
     correct_dataset = TensorDataset(x[indices], y_true[indices])
     if return_loader:
         batch_size = dataloader.batch_size
-        num_workers = os.cpu_count()
-        return DataLoader(correct_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
+        return DataLoader(correct_dataset, batch_size=batch_size, shuffle=False)
     else:
         return correct_dataset
 
@@ -123,6 +122,20 @@ def get_incorrect_examples(model: LightningModule,
         return DataLoader(correct_dataset, batch_size=batch_size, num_workers=num_workers, shuffle=False)
     else:
         return correct_dataset
+
+
+def get_score(model: LightningModule, dataloader: DataLoader) -> float:
+    """Compute the accuracy of the model"""
+    trainer = pl.Trainer(accelerator='auto',
+                         logger=False,
+                         enable_model_summary=False,
+                         enable_progress_bar=False)
+    X, y_true = dataloader2tensor(dataloader)
+    dataloader_X = DataLoader(TensorDataset(X), shuffle=False, batch_size=128)
+    preds_adv = torch.vstack(trainer.predict(model, dataloader_X))
+    preds_adv = torch.argmax(preds_adv, dim=1)
+    acc = (preds_adv == y_true).float().mean().item()
+    return acc
 
 
 def check_dataloader_shuffling(dataloader: DataLoader) -> bool:
@@ -177,11 +190,8 @@ def predict(model: LightningModule, dataloader: DataLoader, trainer: Trainer = N
     return preds
 
 
-def batch_forward(model: Module, X: Tensor, batch_size: int = 256, device='cuda', num_workers=-1):
+def batch_forward(model: Module, X: Tensor, batch_size: int = 256, device='cuda', num_workers=0):
     """Forward propagation in mini-batch."""
-    if num_workers <= 0 or num_workers > os.cpu_count():
-        num_workers = os.cpu_count()
-
     if not torch.cuda.is_available():
         device = 'cpu'
 
@@ -275,7 +285,24 @@ def find_last_checkpoint(model_name: str, data_name: str, kernel_name: str = Non
 #     path_last_checkpoint = find_last_checkpoint('FeatureSqueezer', 'MNIST', kernel_name='depth', path='logs')
 #     print(path_last_checkpoint)
 
+# def test_get_score():
+#     """Test get_score."""
+#     from pathlib import Path
+
+#     from baard.classifiers import MNIST_CNN
+
+#     path_model = Path(os.path.join('pretrained_clf', 'mnist_cnn.ckpt')).absolute()
+#     print(path_model)
+#     model = MNIST_CNN.load_from_checkpoint(path_model)
+#     # /home/lukec/workspace/baard_v4/results/exp727328/MNIST
+#     path_dataset = Path(os.path.join('results', 'exp727328', 'MNIST', 'whitebox-L2-1000-3.0.pt')).absolute()
+#     print(path_dataset)
+#     dataloader = DataLoader(torch.load(path_dataset), shuffle=False, batch_size=128)
+#     acc = get_score(model, dataloader)
+#     print(acc)
+
 
 # if __name__ == '__main__':
 #     logging.basicConfig(level=logging.INFO)
-#     test_find_last_checkpoint()
+#     # test_find_last_checkpoint()
+#     test_get_score()

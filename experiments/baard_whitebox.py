@@ -118,7 +118,7 @@ def generate_adv(model: LightningModule, X_clean: Tensor, X_target: Tensor,
                                       eps_iter=eps_iter,
                                       nb_iter=n_iter,
                                       norm=norm,
-                                      rand_init=False,
+                                      rand_init=True,
                                       c=1.,
                                       early_stop=False,
                                       )
