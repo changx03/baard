@@ -482,3 +482,9 @@ dev_*
 
 # Error log file
 *.err
+
+# Ignore temp files
+temp/
+
+# Ignore graybox table
+plots/grey-box-table*
