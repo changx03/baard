@@ -469,6 +469,7 @@ TSWLatexianTemp*
 
 # Ignore downloaded datasets
 data/
+!data/tabular/
 
 # Ignore logs
 logs/
