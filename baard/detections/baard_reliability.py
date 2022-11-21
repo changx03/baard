@@ -35,8 +35,8 @@ class ReliabilityStage(Detector):
                  model: LightningModule,
                  data_name: str,
                  n_classes: int = 10,
-                 k_neighbors: int = 20,
-                 sample_size: int = 1000,
+                 k_neighbors: int = 100,
+                 sample_size: int = 5000,
                  device: str = 'cuda',
                  ) -> None:
         super().__init__(model, data_name)

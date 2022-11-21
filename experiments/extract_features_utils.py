@@ -38,10 +38,10 @@ PN_MAX_EPOCHS = 30
 RC_N_SAMPLE = 1000
 # For BAARD S2 - Reliability  # TODO: This need tuning!
 B2_K_NEIGHBORS = 5
-B2_SAMPLE_SCALE = 500  # Number of examples in the subset: 500 * 5 = 2500
+B2_SAMPLE_SIZE = 1000  # Number of examples in the subset: 500 * 5 = 2500
 # For BAARD S3 - Decidability
 B3_K_NEIGHBORS = 100
-B3_SAMPLE_SCALE = 50  # Number of examples in the subset: 50 * 100 = 5000
+B3_SAMPLE_SIZE = 5000  # Number of examples in the subset: 50 * 100 = 5000
 
 
 def get_pretrained_model_path(data_name: str) -> str:
@@ -105,13 +105,13 @@ def init_detector(detector_name: str, data_name: str, path_checkpoint: str, seed
     elif detector_name == DETECTORS[6]:  # BAARD-S1 - Applicability
         detector = ApplicabilityStage(model, data_name)
     elif detector_name == DETECTORS[7]:  # BAARD-S2 - Reliability
-        detector = ReliabilityStage(model, data_name, k_neighbors=B2_K_NEIGHBORS, subsample_scale=B2_SAMPLE_SCALE)
+        detector = ReliabilityStage(model, data_name, k_neighbors=B2_K_NEIGHBORS, sample_size=B2_SAMPLE_SIZE)
     elif detector_name == DETECTORS[8]:  # BAARD-S3 - Decidability
-        detector = DecidabilityStage(model, data_name, k_neighbors=B3_K_NEIGHBORS, subsample_scale=B3_SAMPLE_SCALE)
+        detector = DecidabilityStage(model, data_name, k_neighbors=B3_K_NEIGHBORS, sample_size=B3_SAMPLE_SIZE)
     elif detector_name == DETECTORS[9]:  # BAARD Full
         detector = BAARD(model, data_name,
-                         k1_neighbors=B2_K_NEIGHBORS, subsample_scale1=B2_SAMPLE_SCALE,
-                         k2_neighbors=B3_K_NEIGHBORS, subsample_scale2=B3_SAMPLE_SCALE)
+                         k1_neighbors=B2_K_NEIGHBORS, sample_size1=B2_SAMPLE_SIZE,
+                         k2_neighbors=B3_K_NEIGHBORS, sample_size2=B3_SAMPLE_SIZE)
     else:
         raise NotImplementedError
     detector_ext = DETECTOR_EXTENSIONS[detector.__class__.__name__]

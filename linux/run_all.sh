@@ -10,14 +10,14 @@
 
 # echo "[NOTE] Update K value and then run the next! ##################################"
 
-# echo "Tuning Scale for BAARD ########################################################"
-# bash ./linux/baard_tune_scale.sh
+# echo "Tuning SampleSize for BAARD ########################################################"
+# bash ./linux/baard_tune_sample_size.sh
 
-# echo "[NOTE] Update K and Scale and then run the next! ##############################"
+# echo "[NOTE] Update K and SampleSize and then run the next! ##############################"
 # bash ./linux/baard_ablation.sh
 # echo "BAARD ablation study has completed! ###########################################"
 
-echo "[NOTE] K and Scale for BAARD need to be the optimal value! ####################"
+echo "[NOTE] K and SampleSize for BAARD need to be the optimal value! ####################"
 echo "Generating adversarial examples for grey-box benchmark ########################"
 bash ./linux/grey_box_generate_adv.sh
 

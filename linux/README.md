@@ -15,7 +15,7 @@ All bash script and terminal commands are prepared for Linux only. Changing the 
 
 1. Run `baard_generate_adv.sh` to generate adversarial examples.
 2. Run `baard_tune_k.sh` to tune the parameter `k_neighbors` for Stage 2 and 3.
-3. Run `baard_tune_scale.sh` to tune the parameter `scale` for Stage 2 and 3 (Use the optimal `k` value from previous step).
+3. Run `baard_tune_sample_size.sh` to tune the parameter `sample_size` for Stage 2 and 3 (Use the optimal `k` value from previous step).
 4. Run `baard_ablation.sh` to evaluate BAARD on each stage separately.
 
 ## Running all experiments

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This script tunes the parameter `k_neighbors` for Stage 2 and 3 in BAARD.
-# Tuning K first, before tuning the parameter `scale`.
+# Tuning K first, before tuning sample_size.
 
 source ./.venv/bin/activate
 python -m pip install --upgrade .

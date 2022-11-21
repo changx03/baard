@@ -47,14 +47,14 @@ def baard_tune_k(path_output: str, detector_name: str, data_name: str, attack_na
                  path_adv: str, eps: str) -> None:
     """Tune BAARD Stage 2: Reliability."""
     k_list = np.concatenate([np.arange(1, 10, 1), np.arange(10, 100, 5), np.arange(10, 201, 10)])
-    scale = int(1e5)  # 100k This guarantees to use all training examples.
     path_checkpoint = get_pretrained_model_path(data_name)
     model = get_lightning_module(data_name).load_from_checkpoint(path_checkpoint)
+    sample_size = 50000  # The largest dataset has 60000 samples -- CIFAR10
 
     detector_class = ReliabilityStage if detector_name == BAARD_TUNABLE[0] else DecidabilityStage
     tune_var = 'K'
     for k in k_list:
-        detector = detector_class(model, data_name, k_neighbors=k, subsample_scale=scale)
+        detector = detector_class(model, data_name, k_neighbors=k, sample_size=sample_size)
         detector_name = detector.__class__.__name__
         detector_ext = DETECTOR_EXTENSIONS[detector.__class__.__name__]
 
@@ -75,31 +75,32 @@ def baard_tune_k(path_output: str, detector_name: str, data_name: str, attack_na
         baard_inner_train_extract(detector, data_name, 'clean', path_detector, path_features_clean, path_clean)
 
 
-def baard_tune_scale(path_output: str, detector_name: str, data_name: str, attack_name: str, l_norm: str,
-                     path_adv: str, eps: str, k: str) -> None:
+def baard_tune_sample_size(path_output: str, detector_name: str, data_name: str, attack_name: str, l_norm: str,
+                           path_adv: str, eps: str, k: str) -> None:
     """Tune BAARD Stage 2: Reliability."""
-    scale_list = np.concatenate([np.arange(10, 100, 10), np.arange(100, 1100, 100)]).astype(float)
+    sample_size_list = np.concatenate([100, 500], np.arange(1000, 50000, 1000)).astype(int)
     path_checkpoint = get_pretrained_model_path(data_name)
     model = get_lightning_module(data_name).load_from_checkpoint(path_checkpoint)
 
     detector_class = ReliabilityStage if detector_name == BAARD_TUNABLE[0] else DecidabilityStage
-    tune_var = 'Scale'
-    for scale in scale_list:
-        detector = detector_class(model, data_name, k_neighbors=k, subsample_scale=scale)
+    tune_var = 'SampleSize'
+    for sample_size in sample_size_list:
+        detector = detector_class(model, data_name, k_neighbors=k, sample_size=sample_size)
         detector_name = detector.__class__.__name__
         detector_ext = DETECTOR_EXTENSIONS[detector.__class__.__name__]
 
         path_detector = os.path.join(
-            path_output, f'{detector_name}_tune{tune_var}', f'{detector_name}-{scale}-{data_name}{detector_ext}')
+            path_output, f'{detector_name}_tune{tune_var}',
+            f'{detector_name}-{sample_size}-{data_name}{detector_ext}')
         path_features = os.path.join(
             path_output, f'{detector_name}_tune{tune_var}', f'{attack_name}-{l_norm}',
-            f'{detector_name}-{scale}-{data_name}-{attack_name}-{l_norm}-{eps}.pt')
+            f'{detector_name}-{sample_size}-{data_name}-{attack_name}-{l_norm}-{eps}.pt')
         baard_inner_train_extract(detector, data_name, eps, path_detector, path_features, path_adv)
 
         # Extract features from clean data
         path_features_clean = os.path.join(
             path_output, f'{detector_name}_tune{tune_var}', f'{attack_name}-{l_norm}',
-            f'{detector_name}-{scale}-{data_name}-{attack_name}-{l_norm}-clean.pt')
+            f'{detector_name}-{sample_size}-{data_name}-{attack_name}-{l_norm}-clean.pt')
         # NOTE: Clean dataset is hard coded to 1000!
         path_clean = os.path.join(Path(path_adv).resolve().parent, 'AdvClean-1000.pt')
         baard_inner_train_extract(detector, data_name, 'clean', path_detector, path_features_clean, path_clean)

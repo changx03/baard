@@ -6,7 +6,7 @@ from pathlib import Path
 from baard.attacks import ATTACKS, L_NORM
 from baard.classifiers import DATASETS
 
-from baard_tune_utils import baard_tune_k, baard_tune_scale, find_attack_path
+from baard_tune_utils import baard_tune_k, baard_tune_sample_size, find_attack_path
 
 BAARD_TUNABLE = ['BAARD-S2', 'BAARD-S3']
 
@@ -21,8 +21,8 @@ def baard_tune(path_output: str, data_name: str, attack_name: str, l_norm: str, 
         print('Start tuning `k_neighbors`...')
         baard_tune_k(path_output, detector_name, data_name, attack_name, l_norm, path_adv, eps)
     else:
-        print('Start tuning `scale`...')
-        baard_tune_scale(path_output, detector_name, data_name, attack_name, l_norm, path_adv, eps, k_neighbors)
+        print('Start tuning `SampleSize`...')
+        baard_tune_sample_size(path_output, detector_name, data_name, attack_name, l_norm, path_adv, eps, k_neighbors)
 
 
 def parse_arguments():
@@ -41,10 +41,9 @@ def parse_arguments():
     parser.add_argument('-p', '--path', type=str, default='results',
                         help='The path for loading pre-trained adversarial examples, and saving results.')
     parser.add_argument('--eps', type=str, required=True,
-                        help="""The epsilon can be both float and int. The code will search existing files for both 
-                        format.""")
+                        help="""The epsilon can be both float and int. The code will search existing files for both format.""")
     parser.add_argument('-k', '--k', type=int, default=None,
-                        help='When k is None, the script searches for optimal k. Otherwise, it tunes the scale.')
+                        help='When k is None, the script searches for optimal k. Otherwise, it tunes the sample size.')
     args = parser.parse_args()
     seed = args.seed
     data_name = args.data

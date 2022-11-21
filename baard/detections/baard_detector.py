@@ -32,9 +32,9 @@ class BAARD(Detector):
                  model: LightningModule,
                  data_name: str,
                  n_classes: int = 10,
-                 k1_neighbors: int = 20,
+                 k1_neighbors: int = 5,
                  sample_size1: int = 1000,
-                 k2_neighbors: int = 20,
+                 k2_neighbors: int = 100,
                  sample_size2: int = 5000,
                  device: str = 'cuda',
                  ) -> None:

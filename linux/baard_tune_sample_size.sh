@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# This script tunes the parameter `scale` for Stage 2 and 3 in BAARD.
-# Tuning K first, before tuning the parameter `scale`.
+# This script tunes the parameter `sample_size` for Stage 2 and 3 in BAARD.
+# Tuning K first, before tuning the parameter `sample_size`.
 
 source ./.venv/bin/activate
 python -m pip install --upgrade .

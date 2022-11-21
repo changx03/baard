@@ -36,7 +36,7 @@ class DecidabilityStage(Detector):
                  model: LightningModule,
                  data_name: str,
                  n_classes: int = 10,
-                 k_neighbors: int = 20,
+                 k_neighbors: int = 100,
                  sample_size: int = 5000,
                  device: str = 'cuda',
                  ) -> None:
