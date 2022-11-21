@@ -5,7 +5,6 @@ Applicability, Reliability and Decidability.
 Third Stage: Decidability
 """
 import logging
-import math
 import os
 import pickle
 
@@ -38,15 +37,14 @@ class DecidabilityStage(Detector):
                  data_name: str,
                  n_classes: int = 10,
                  k_neighbors: int = 20,
-                 subsample_scale: float = 10.,
+                 sample_size: int = 5000,
                  device: str = 'cuda',
                  ) -> None:
         super().__init__(model, data_name)
 
         self.n_classes = n_classes
         self.k_neighbors = k_neighbors
-        # TODO: Change Scale to m, the sample size
-        self.subsample_scale = subsample_scale
+        self.sample_size = sample_size
 
         # Use the same feature space as Applicability Stage.
         self.latent_net = ApplicabilityStage.get_latent_net(model, data_name)
@@ -59,12 +57,11 @@ class DecidabilityStage(Detector):
         # Register params
         self.params['n_classes'] = self.n_classes
         self.params['k_neighbors'] = self.k_neighbors
-        self.params['subsample_scale'] = self.subsample_scale
+        self.params['sample_size'] = self.sample_size
         self.params['device'] = self.device
 
         # Tunable parameters:
         self.n_training_samples = None
-        self.n_subset = None
         self.features_train = None
         self.features_labels = None
         self.probs_correct = None
@@ -92,11 +89,8 @@ class DecidabilityStage(Detector):
             self.features_labels = y_correct
             assert self.features_train.size(0) == self.features_labels.size(0)
             self.n_training_samples = self.features_train.size(0)
-            self.n_subset = min(
-                math.floor(self.subsample_scale * self.k_neighbors),
-                self.n_training_samples
-            )
-            logger.info('Number of subset = %i', self.n_subset)
+            n_subset = min(self.sample_size, self.n_training_samples)
+            logger.info('Number of subset = %i', n_subset)
 
             # Also save the model's outputs.
             trainer = pl.Trainer(accelerator='auto',
@@ -138,7 +132,7 @@ class DecidabilityStage(Detector):
 
             indices_train = np.arange(self.n_training_samples)
             # Handle value error
-            n_subset = min(self.n_subset, self.n_training_samples)
+            n_subset = min(self.sample_size, self.n_training_samples)
 
             cosine_sim_fn = torch.nn.CosineSimilarity(dim=1)
             scores = torch.zeros(n_samples)
@@ -198,7 +192,6 @@ class DecidabilityStage(Detector):
             'features_train': self.features_train,
             'features_labels': self.features_labels,
             'n_training_samples': self.n_training_samples,
-            'n_subset': self.n_subset,
             'probs_correct': self.probs_correct,
         }
         pickle.dump(save_obj, open(path, 'wb'))
@@ -211,7 +204,6 @@ class DecidabilityStage(Detector):
             self.features_train = obj['features_train']
             self.features_labels = obj['features_labels']
             self.n_training_samples = obj['n_training_samples']
-            self.n_subset = obj['n_subset']
             self.probs_correct = obj['probs_correct']
         else:
             raise FileExistsError(f'{path} does not exist!')

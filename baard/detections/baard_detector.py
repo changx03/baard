@@ -33,24 +33,21 @@ class BAARD(Detector):
                  data_name: str,
                  n_classes: int = 10,
                  k1_neighbors: int = 20,
-                 subsample_scale1: float = 10.,
+                 sample_size1: int = 1000,
                  k2_neighbors: int = 20,
-                 subsample_scale2: float = 10.,
+                 sample_size2: int = 5000,
                  device: str = 'cuda',
                  ) -> None:
         super().__init__(model, data_name)
-        # TODO: Scale parameter should be replace with sample_size!
-
         self.n_classes = n_classes
 
         # Reliability Stage specific:
         self.k1_neighbors = k1_neighbors
-        # TODO: Change Scale to m, the sample size
-        self.subsample_scale1 = subsample_scale1
+        self.sample_size1 = sample_size1
 
         # Decidability Stage specific:
         self.k2_neighbors = k2_neighbors
-        self.subsample_scale2 = subsample_scale2
+        self.sample_size2 = sample_size2
 
         if not torch.cuda.is_available() and device == 'cuda':
             logger.warning('GPU is not available. Using CPU...')
@@ -60,9 +57,9 @@ class BAARD(Detector):
         # Register params
         self.params['n_classes'] = self.n_classes
         self.params['k1_neighbors'] = self.k1_neighbors
-        self.params['subsample_scale1'] = self.subsample_scale1
+        self.params['sample_size1'] = self.sample_size1
         self.params['k2_neighbors'] = self.k2_neighbors
-        self.params['subsample_scale2'] = self.subsample_scale2
+        self.params['sample_size2'] = self.sample_size2
         self.params['device'] = self.device
 
         # Initialize all 3 stages:
@@ -77,7 +74,7 @@ class BAARD(Detector):
             data_name,
             n_classes,
             k_neighbors=self.k1_neighbors,
-            subsample_scale=self.subsample_scale1,
+            sample_size=self.sample_size1,
             device=self.device,
         )
         self.decidability = DecidabilityStage(
@@ -85,7 +82,7 @@ class BAARD(Detector):
             data_name,
             n_classes,
             k_neighbors=self.k2_neighbors,
-            subsample_scale=self.subsample_scale2,
+            sample_size=self.sample_size2,
             device=self.device
         )
 
@@ -136,13 +133,11 @@ class BAARD(Detector):
             self.reliability.features_train = obj_rel['features_train']
             self.reliability.features_labels = obj_rel['features_labels']
             self.reliability.n_training_samples = obj_rel['n_training_samples']
-            self.reliability.n_subset = obj_rel['n_subset']
 
             # Load parameters for DecidabilityStage.
             self.decidability.features_train = obj_dec['features_train']
             self.decidability.features_labels = obj_dec['features_labels']
             self.decidability.n_training_samples = obj_dec['n_training_samples']
-            self.decidability.n_subset = obj_dec['n_subset']
             self.decidability.probs_correct = obj_dec['probs_correct']
         else:
             raise FileExistsError(f'{path} does not exist!')
