@@ -20,8 +20,14 @@ def eval_features(path_input, path_output, file_clean, file_adv,
     logger.info('Read adv from: %s', file_adv)
     path_clean = os.path.join(path_input, file_clean)
     path_adv = os.path.join(path_input, file_adv)
-    if not (os.path.exists(path_clean) and os.path.exists(path_adv)):
-        logger.warning('Cannot find %s Return empty DataFrame', path_adv)
+
+    errors = []
+    if not os.path.exists(path_clean):
+        errors.append(path_clean)
+    if not os.path.exists(path_adv):
+        errors.append(path_adv)
+    if len(errors) != 0:
+        logger.warning('Cannot find %s Return empty DataFrame', errors)
         return (
             DataFrame({'fpr': [], 'tpr': [], 'thresholds': []}),
             DataFrame({'auc': [0], '1fpr': [0], '5fpr': [0], '10fpr': [0]}),
