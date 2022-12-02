@@ -136,12 +136,12 @@ def train_clf_generate_adv(data_name, path_outputs, path_input, seed, attack_nam
     attack_norm = 'Linf'
     print(f'Attack Norm: {attack_norm}')
 
-    eps_list = filter_exist_eps(eps_list,
-                                path_outputs,
-                                'PGD',
-                                lnorm=attack_norm,
-                                n=len(X_test))
-    print('Uncompleted Epsilon', eps_list)
+    # eps_list = filter_exist_eps(eps_list,
+    #                             path_outputs,
+    #                             'PGD',
+    #                             lnorm=attack_norm,
+    #                             n=len(X_test))
+    # print('Uncompleted Epsilon', eps_list)
 
     path_log_results = os.path.join(path_outputs, f'{attack_name}-{attack_norm}-SuccessRate.csv')
     with open(path_log_results, 'a', encoding='UTF-8') as file:
@@ -156,6 +156,7 @@ def train_clf_generate_adv(data_name, path_outputs, path_input, seed, attack_nam
                     data_adv = pickle.load(open(path_adv, 'rb'))
                     X_adv = data_adv['X']
                 else:
+                    print('Training advx on test set...')
                     clip_range = (X_train.min(), X_train.max())
                     attack = get_attack(model, attack_name, clip_range, eps=e)
                     X_adv = attack.generate(X_test)
@@ -163,10 +164,27 @@ def train_clf_generate_adv(data_name, path_outputs, path_input, seed, attack_nam
                         'X': X_adv,
                         'y': y_test,
                     }
+                    print(f'Save to {path_adv}')
                     pickle.dump(data_adv, open(path_adv, 'wb'))
                 acc_adv = model.score(X_adv, y_test)
                 print(f'[Accuracy] Eps: {e:.2f} Adv: {acc_adv:.4f}')
                 file.write(','.join([f'{i}' for i in [e, acc_adv]]) + '\n')
+
+                # Also train advx on validation set
+                path_adv_val = os.path.join(path_outputs, f'{attack_name}-{attack_norm}-{e}-val.pickle')
+                if os.path.exists(path_adv_val):
+                    print(f'Found adversarial examples: {path_adv_val} Skip!')
+                else:
+                    print('Training advx on validation set set...')
+                    clip_range = (X_train.min(), X_train.max())
+                    attack = get_attack(model, attack_name, clip_range, eps=e)
+                    X_adv_val = attack.generate(X_val)
+                    data_adv_val = {
+                        'X': X_adv_val,
+                        'y': y_val,
+                    }
+                    print(f'Save to {path_adv_val}')
+                    pickle.dump(data_adv_val, open(path_adv_val, 'wb'))
             except BaseException as err:
                 print(f'WARNING: Catch an exception: {err}')
 

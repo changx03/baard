@@ -121,6 +121,7 @@ def train_clf_generate_adv(data_name, path_outputs, path_input, seed):
         data_adv = pickle.load(open(path_adv, 'rb'))
         X_adv = data_adv['X']
     else:
+        print('Train advx on test set...')
         art_clf = SklearnClassifier(model=model, clip_values=(X_train.min(), X_train.max()))
         attack = DecisionTreeAttack(classifier=art_clf, verbose=False)
         X_adv = attack.generate(X_test)
@@ -129,9 +130,27 @@ def train_clf_generate_adv(data_name, path_outputs, path_input, seed):
             'X': X_adv,
             'y': y_test,
         }
+        print(f'Save to {path_adv}')
         pickle.dump(data_adv, open(path_adv, 'wb'))
     acc_adv = model.score(X_adv, y_test)
     print(f'[Accuracy] Adv: {acc_adv:.4f}')
+
+    # Generate advx on validation set
+    path_adv_val = os.path.join(path_outputs, 'DecisionTreeAttack-val.pickle')
+    if os.path.exists(path_adv_val):
+        print(f'Found adversarial examples: {path_adv_val}')
+    else:
+        print('Train advx on validation set...')
+        art_clf = SklearnClassifier(model=model, clip_values=(X_train.min(), X_train.max()))
+        attack = DecisionTreeAttack(classifier=art_clf, verbose=False)
+        X_adv_val = attack.generate(X_val)
+        print(f'Save adversarial examples to: {path_adv_val}')
+        data_adv_val = {
+            'X': X_adv_val,
+            'y': y_val,
+        }
+        print(f'Save to {path_adv_val}')
+        pickle.dump(data_adv_val, open(path_adv_val, 'wb'))
 
 
 def parse_arguments():
