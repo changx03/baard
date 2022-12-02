@@ -5,7 +5,7 @@
 source ./.venv/bin/activate
 python -m pip install --upgrade .
 
-# A seed starts with 6 to indicate this is for ablation study. 
+# A seed starts with 6 to indicate this is for ablation study.
 # 1-5 are reserved for repeated experiment for grey-box evaluation.
 SEED=643896
 SIZE=1000
@@ -14,8 +14,8 @@ SIZE=1000
 echo "Running MNIST #######################################################"
 DATA="MNIST"
 # Attack:APGD
-python ./experiments/train_adv_examples.py --seed=$SEED --n_att=$SIZE --n_val=$SIZE -d=$DATA --attack=APGD --params='{"norm":"inf","eps_iter":0.03}' --eps="[0.03,0.09,0.16,0.22,0.28,0.34,0.41,0.47,0.53,0.59,0.66,0.72,0.78,0.84,0.91,0.97,1]"
-python ./experiments/train_adv_examples.py --seed=$SEED --n_att=$SIZE --n_val=$SIZE -d=$DATA --attack=APGD --params='{"norm":2,"eps_iter":0.1}' --eps="[0.5,1,2,3,4,5,6,7,8,9,10]"
+python ./experiments/train_adv_examples.py --seed=$SEED --n_att=$SIZE --n_val=$SIZE -d=$DATA --attack=APGD --params='{"norm":"inf","eps_iter":0.03}' --eps="[0.03,0.09,0.16,0.22,0.28,0.34,0.41,0.47,0.53,0.59,0.66,0.72,0.78,0.84,0.91,0.97,1.0]"
+python ./experiments/train_adv_examples.py --seed=$SEED --n_att=$SIZE --n_val=$SIZE -d=$DATA --attack=APGD --params='{"norm":2,"eps_iter":0.1}' --eps="[0.5,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0]"
 
 echo "Running CIFAR10 #####################################################"
 DATA="CIFAR10"
