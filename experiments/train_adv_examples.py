@@ -126,7 +126,7 @@ def generate_adv_examples(data: str,
             path_val_clean = os.path.join(path_outputs, f'ValClean-{n_val}.pt')
             torch.save(TensorDataset(X_val, y_val), path_val_clean)
     else:
-        print(f'Load existing `ValClean-{n_val}.pt`...')
+        print(f'Load from {path_adv_clean}')
         dataset_adv_clean = torch.load(path_adv_clean)
         dataloader_adv_clean = DataLoader(dataset_adv_clean, batch_size=val_loader.batch_size,
                                           num_workers=num_workers, shuffle=False)
@@ -135,7 +135,7 @@ def generate_adv_examples(data: str,
         path_val_clean = os.path.join(path_outputs, f'ValClean-{n_val}.pt')
         if n_val > 0 and not os.path.isfile(path_val_clean):
             print(f'WARNING: Validation dataset is missing! Delete `AdvClean-{n_att}.pt` and run the code again!')
-    del X_val, y_val, dataset_val_correct, loader_val_correct
+    # del X_val, y_val, dataset_val_correct, loader_val_correct
 
     # Step 3: Generate adversarial examples
     # Same trainer, the model has no change.
@@ -149,15 +149,15 @@ def generate_adv_examples(data: str,
     attack_norm = 2 if attack_name == ATTACKS[2] else str(adv_params['norm'])
     path_log_results = os.path.join(path_outputs, f'{attack_name}-L{attack_norm}-SuccessRate.csv')
 
-    # Get epsilon which hasn't rained.
-    eps = filter_exist_eps(eps,
-                           path_outputs,
-                           attack_name,
-                           lnorm=norm_parser(adv_params['norm']),
-                           n=X_adv_clean.size(0))
-    if len(eps) == 0:
-        print('No epsilon need to train. Exit.')
-        return
+    # # Get epsilon which hasn't rained.
+    # eps = filter_exist_eps(eps,
+    #                        path_outputs,
+    #                        attack_name,
+    #                        lnorm=norm_parser(adv_params['norm']),
+    #                        n=X_adv_clean.size(0))
+    # if len(eps) == 0:
+    #     print('No epsilon need to train. Exit.')
+    #     return
 
     with open(path_log_results, 'a', encoding='UTF-8') as file:
         file.write(','.join(['eps', 'success_rate']) + '\n')
@@ -176,6 +176,7 @@ def generate_adv_examples(data: str,
                     dataset_adv = torch.load(path_adv)
                     X_adv, _ = dataset2tensor(dataset_adv)
                 else:
+                    print('Training advx on test set...')
                     X_adv = torch.zeros_like(X_adv_clean)
                     loader_val_correct = DataLoader(TensorDataset(X_adv_clean), batch_size=ADV_BATCH_SIZE,
                                                     num_workers=num_workers, shuffle=False)
@@ -189,6 +190,7 @@ def generate_adv_examples(data: str,
                         start = end
 
                     # Save adversarial examples
+                    print(f'Save to {path_adv}')
                     torch.save(TensorDataset(X_adv, y_adv_clean), path_adv)
 
                 # Checking results
@@ -200,6 +202,29 @@ def generate_adv_examples(data: str,
 
                 print(f'[e={e}]{success_rate}% out of {len(preds_adv)} examples are correctly classified.')
                 file.write(','.join([f'{i}' for i in [e, success_rate]]) + '\n')
+
+                # Also train adversarial examples on ``ValClean''
+                path_adv_val = os.path.join(path_outputs, f'{attack_name}-L{attack_norm}-{n_att}-{e}-val.pt')
+                # Check results
+                if os.path.exists(path_adv_val):
+                    print(f'Found {path_adv_val} Skip!')
+                else:
+                    print('Training advx on validation set...')
+                    X_adv_val = torch.zeros_like(X_val)
+                    loader_val_correct = DataLoader(TensorDataset(X_val), batch_size=ADV_BATCH_SIZE,
+                                                    num_workers=num_workers, shuffle=False)
+                    start = 0
+                    pbar = tqdm(loader_val_correct, total=len(loader_val_correct))
+                    pbar.set_description(f'Running {attack_name} eps/c={e} attack')
+                    for batch in pbar:
+                        x_batch = batch[0]
+                        end = start + len(x_batch)
+                        X_adv_val[start:end] = attack(model, x_batch, **adv_params)
+                        start = end
+
+                    # Save adversarial examples
+                    print(f'Save to {path_adv_val}')
+                    torch.save(TensorDataset(X_adv_val, y_val), path_adv_val)
             except BaseException as err:
                 print(f'WARNING: Catch an exception: {err}')
 
