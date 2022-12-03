@@ -210,6 +210,9 @@ def generate_adv_examples(data: str,
                     print(f'Found {path_adv_val} Skip!')
                 else:
                     print('Training advx on validation set...')
+                    path_val_clean = os.path.join(path_outputs, f'ValClean-{n_val}.pt')
+                    dataset_val = torch.load(path_val_clean)
+                    X_val, y_val = dataset2tensor(dataset_val)
                     X_adv_val = torch.zeros_like(X_val)
                     loader_val_correct = DataLoader(TensorDataset(X_val), batch_size=ADV_BATCH_SIZE,
                                                     num_workers=num_workers, shuffle=False)
