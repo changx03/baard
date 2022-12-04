@@ -6,8 +6,9 @@ from typing import Union
 
 import numpy as np
 import pytorch_lightning as pl
-from pytorch_lightning import LightningModule
 import torch
+from pytorch_lightning import LightningModule
+from sklearn.model_selection import train_test_split
 from torch import Tensor
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
@@ -33,17 +34,27 @@ def get_model(data_name: str, path_checkpoint: str) -> LightningModule:
     return model
 
 
-def load_data(seed: int, data_name: str, path: str = 'results',
-              filename_clean: str = 'AdvClean-1000.pt',
-              filename_val: str = 'ValClean-1000.pt'
+def load_data(seed: int, data_name: str, model: LightningModule,
+              path: str = 'results', filename_clean: str = 'AdvClean-1000.pt'
               ) -> tuple[Tensor, Tensor, Tensor, Tensor]:
     """Load clean data"""
     path_base = os.path.join(path, f'exp{seed}', data_name)
     dataset_clean = torch.load(os.path.join(path_base, filename_clean))
     X_clean, y_clean = tr_utils.dataset2tensor(dataset_clean)
-    dataset_val = torch.load(os.path.join(path_base, filename_val))
-    X_val, y_val = tr_utils.dataset2tensor(dataset_val)
-    return X_val, y_val, X_clean, y_clean
+
+    # Get correctly classified examples from the training set.
+    loader_train = model.train_dataloader()
+    # Disable shuffle.
+    X_train, y_train = tr_utils.dataloader2tensor(loader_train)
+    loader_train = DataLoader(TensorDataset(X_train, y_train),
+                              num_workers=os.cpu_count(),
+                              shuffle=False,
+                              batch_size=loader_train.batch_size)
+    dataset_train_correct = tr_utils.get_correct_examples(model, loader_train, return_loader=False)
+    X_train_corr, y_train_corr = tr_utils.dataset2tensor(dataset_train_correct)
+    # Random sampling 5000 samples
+    _, X_train_subset, _, y_train_subset = train_test_split(X_train_corr, y_train_corr, test_size=5000)
+    return X_train_subset, y_train_subset, X_clean, y_clean
 
 
 def find_targets(model: LightningModule, X: Tensor, X_val: Tensor,
@@ -131,10 +142,11 @@ def generate_adv(model: LightningModule, X_clean: Tensor, X_target: Tensor,
 def parse_arguments():
     """Parse command line arguments.
     Example:
-    python ./experiments/baard_whitebox.py --data MNIST --seed 1234 --clean "AdvClean-100.pt" --norm 2 --epsiter 0.1 --eps 4
-    python ./experiments/baard_whitebox.py --data MNIST --seed 1234 --clean "AdvClean-100.pt" --norm inf --epsiter 0.03 --eps 0.22
-    python ./experiments/baard_whitebox.py --data CIFAR10 --seed 1234 --clean "AdvClean-100.pt" --norm 2 --epsiter 0.05 --eps 0.3
-    python ./experiments/baard_whitebox.py --data CIFAR10 --seed 1234 --clean "AdvClean-100.pt" --norm inf --epsiter 0.01 --eps 0.01
+    python ./experiments/baard_whitebox.py --data MNIST --seed 1234 --norm 2 --epsiter 0.1 --eps 4 --clean "AdvClean-100.pt"
+    python ./experiments/baard_whitebox.py --data MNIST --seed 1234 --norm 2 --epsiter 0.1 --eps 4 --clean "ValClean-1000.pt" --validation 1
+
+    python ./experiments/baard_whitebox.py --data MNIST --seed 1234 --norm inf --epsiter 0.03 --eps 0.22 --clean "AdvClean-100.pt"
+    python ./experiments/baard_whitebox.py --data MNIST --seed 1234 --norm inf --epsiter 0.03 --eps 0.22 --clean "ValClean-1000.pt" --validation 1
     """
     parser = ArgumentParser()
     parser.add_argument('--data', type=str, choices=clf.DATASETS, required=True)
@@ -144,10 +156,11 @@ def parse_arguments():
     parser.add_argument('--norm', type=str, choices=['inf', '2'], default=2)
     parser.add_argument('--epsiter', type=float, default=0.1)
     parser.add_argument('--eps', type=float, default=4.)
-    parser.add_argument('--val', type=str, default='ValClean-1000.pt')
     parser.add_argument('--checkpoint', type=str, default=None)
+    parser.add_argument('--validation', type=bool, default=False)
 
     args = parser.parse_args()
+    print('Received Arguments:', args)
     data_name = args.data
     seed = args.seed
     path_output = args.output
@@ -163,10 +176,10 @@ def parse_arguments():
     eps_iter = args.epsiter
     eps = args.eps
     filename_clean = args.clean
-    filename_val = args.val
     path_checkpoint = args.checkpoint
     if path_checkpoint is None:
         path_checkpoint = 'pretrained_clf'
+    is_validation = args.validation
 
     return {
         'data_name': data_name,
@@ -176,8 +189,8 @@ def parse_arguments():
         'eps_iter': eps_iter,
         'eps': eps,
         'filename_clean': filename_clean,
-        'filename_val': filename_val,
         'path_checkpoint': path_checkpoint,
+        'is_validation': is_validation,
     }
 
 
@@ -193,22 +206,25 @@ def main():
     eps_iter = args['eps_iter']
     eps = args['eps']
     filename_clean = args['filename_clean']
-    filename_val = args['filename_val']
     path_checkpoint = args['path_checkpoint']
+    is_validation = args['is_validation']
 
     pl.seed_everything(seed)
 
     model = get_model(data_name, path_checkpoint)
-    X_val, y_val, X_clean, y_clean = load_data(
-        seed, data_name,
-        filename_clean=filename_clean, filename_val=filename_val)
+    X_train, y_train, X_clean, y_clean = load_data(
+        seed, data_name, model,
+        filename_clean=filename_clean)
     latent_net = ApplicabilityStage.get_latent_net(model, data_name=data_name)
-    X_nearest_target = find_targets(model, X_clean, X_val, latent_net=latent_net)
+    X_nearest_target = find_targets(model, X_clean, X_train, latent_net=latent_net)
     X_adv = generate_adv(model, X_clean, X_nearest_target,
                          eps_iter=eps_iter, norm=norm, eps=eps,
                          n_iter=100, batch_size=32)
 
-    path_output = os.path.join(path_output, f'whitebox-L{norm}-{X_adv.size(0)}-{eps}.pt')
+    if is_validation:
+        path_output = os.path.join(path_output, f'whitebox-L{norm}-{X_adv.size(0)}-{eps}-val.pt')
+    else:
+        path_output = os.path.join(path_output, f'whitebox-L{norm}-{X_adv.size(0)}-{eps}.pt')
     print('Save results to:', path_output)
     torch.save(TensorDataset(X_adv, y_clean), path_output)
 
