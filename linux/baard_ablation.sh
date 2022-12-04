@@ -7,7 +7,8 @@
 source ./.venv/bin/activate
 python -m pip install --upgrade .
 
-SEED=643896
+# SEED=643896
+SEED=945269
 ATTACK="APGD"
 NORMS=("inf" "2")
 DETECTORS=("BAARD-S1" "BAARD-S2" "BAARD-S3" "BAARD")

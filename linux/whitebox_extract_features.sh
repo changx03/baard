@@ -10,7 +10,8 @@ python -m pip install --upgrade .
 echo "Compute accuracy on adversarial examples. ###############################"
 python ./experiments/whitebox_save_acc.py
 
-SEED=727328
+# SEED=727328
+SEED=829257
 ATTACK="whitebox"
 NORMS=("inf" "2")
 DETECTORS=("BAARD-S1" "BAARD-S2" "BAARD-S3" "BAARD")
