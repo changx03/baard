@@ -60,6 +60,8 @@ def find_available_attacks(path_attack: str,
     l_norm = norm_parser(l_norm)
 
     files = glob(os.path.join(path_attack, f'{attack_name}-{l_norm}-*.pt'))
+    # Remove everything ends with ``val.pt''.
+    files = [f for f in files if (f[-len('-val.pt'):] != '-val.pt')]
     file_names = [os.path.basename(f) for f in files]
     sample_size_set = set()
     eps_file_list = []
@@ -107,6 +109,8 @@ def find_available_attacks_sklearn(path_attack: str,
     """Find pre-trained adversarial examples. sklearn has a different filename format.
     """
     files = glob(os.path.join(path_attack, f'{attack_name}*.pickle'))
+    # Remove everything ends with ``-val.pickle''.
+    files = [f for f in files if (f[-len('-val.pickle'):] != '-val.pickle')]
     file_names = [os.path.basename(f) for f in files]
     if attack_name == 'DecisionTreeAttack':
         eps_file_list = ['0']

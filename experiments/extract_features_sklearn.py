@@ -94,6 +94,27 @@ def extract_and_save_features(detector, attack_name, data_name, adv_files, att_e
                 torch.save(features, path_features)
             print('#' * 80)
 
+        # Also extract from the validation set
+        print('[Before val:]', adv_files)
+        adv_files = [f[:-len('.pickle')] + '-val.pickle' for f in adv_files]
+        adv_files[0] = os.path.join(Path(adv_files[0]).parent, 'ValClean.pickle')
+        for eps, path_data in zip(att_eps_list, adv_files):
+            path_features = os.path.join(
+                path, detector_name, attack_name,
+                f'{detector_name}-{data_name}-{attack_name}-{eps}-val.pt')
+            if os.path.exists(path_features):
+                print(f'Found {path_features} Skip!')
+            else:
+                file.write(','.join([str(eps), path_data]) + '\n')
+                print(f'Running {detector_name} on {data_name} (Val set) with eps={eps}')
+                data = pickle.load(open(path_data, 'rb'))
+                X = data['X']
+                features = detector.extract_features(X)
+                path_features = create_parent_dir(path_features, file_ext='.pt')
+                print(f'Save features to: {path_features}')
+                torch.save(features, path_features)
+            print('#' * 80)
+
 
 def extract_features(seed: int,
                      data_name: str,

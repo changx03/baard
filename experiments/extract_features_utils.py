@@ -1,6 +1,7 @@
 """Utility functions for extracting features."""
 import os
 import warnings
+from pathlib import Path
 from typing import Any, List
 
 import torch
@@ -225,15 +226,45 @@ def extract_and_save_features(detector: Detector, attack_name: str, data_name: s
             if detector_name == 'MLLooDetector' or detector_name == 'LIDDetector':
                 extract_proba(detector, detector_name, path_output, data_name, attack_name, l_norm, eps)
 
+        # Also extract from the validation set
+        adv_files = [f[:-len('.pt')] + '-val.pt' for f in adv_files]
+        adv_files[0] = os.path.join(Path(adv_files[0]).parent, 'ValClean-1000.pt')
+        for eps, path_data in zip(att_eps_list, adv_files):
+            path_features = os.path.join(path_output, detector_name, f'{attack_name}-{l_norm}',
+                                         f'{detector_name}-{data_name}-{attack_name}-{l_norm}-{eps}-val.pt')
+            if not os.path.exists(path_features):
+                print(f'Running {detector_name} on {data_name} (Val set) with eps={eps}')
+                if not os.path.exists(path_data):
+                    warnings.warn(f'Cannot find {path_data} Skip!')
+                    continue
+                dataset = torch.load(path_data)
+                X, _ = dataset2tensor(dataset)
+                features = detector.extract_features(X)
+                path_features = create_parent_dir(path_features, file_ext='.pt')
+                print(f'Save features to: {path_features}')
+                torch.save(features, path_features)
+            else:
+                print(f'Found {path_features} Skip!')
+            print('#' * 80)
 
-def extract_proba(detector: MLLooDetector, detector_name, path_output, data_name, attack_name, l_norm, eps):
+            if detector_name == 'MLLooDetector' or detector_name == 'LIDDetector':
+                extract_proba(detector, detector_name, path_output, data_name, attack_name, l_norm, eps, is_valid=True)
+
+
+def extract_proba(detector: MLLooDetector, detector_name, path_output, data_name, attack_name, l_norm, eps, is_valid=False):
     """ML-LOO and LID output a vector that cannot be fit with simple logistic regression model. Compute probabilities
     instead.
     """
-    path_features = os.path.join(path_output, detector_name, f'{attack_name}-{l_norm}',
-                                 f'{detector_name}-{data_name}-{attack_name}-{l_norm}-{eps}.pt')
-    path_probas = os.path.join(path_output, detector_name, f'{attack_name}-{l_norm}',
-                               f'{detector_name}(proba)-{data_name}-{attack_name}-{l_norm}-{eps}.pt')
+    if is_valid:
+        path_features = os.path.join(path_output, detector_name, f'{attack_name}-{l_norm}',
+                                     f'{detector_name}-{data_name}-{attack_name}-{l_norm}-{eps}-val.pt')
+        path_probas = os.path.join(path_output, detector_name, f'{attack_name}-{l_norm}',
+                                   f'{detector_name}(proba)-{data_name}-{attack_name}-{l_norm}-{eps}-val.pt')
+    else:
+        path_features = os.path.join(path_output, detector_name, f'{attack_name}-{l_norm}',
+                                     f'{detector_name}-{data_name}-{attack_name}-{l_norm}-{eps}.pt')
+        path_probas = os.path.join(path_output, detector_name, f'{attack_name}-{l_norm}',
+                                   f'{detector_name}(proba)-{data_name}-{attack_name}-{l_norm}-{eps}.pt')
     if not os.path.exists(path_probas):
         features = torch.load(path_features)
         if detector_name == 'MLLooDetector':  # Only for ML-LOO
