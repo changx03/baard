@@ -215,18 +215,22 @@ def main():
     X_train, y_train, X_clean, y_clean = load_data(
         seed, data_name, model,
         filename_clean=filename_clean)
-    latent_net = ApplicabilityStage.get_latent_net(model, data_name=data_name)
-    X_nearest_target = find_targets(model, X_clean, X_train, latent_net=latent_net)
-    X_adv = generate_adv(model, X_clean, X_nearest_target,
-                         eps_iter=eps_iter, norm=norm, eps=eps,
-                         n_iter=100, batch_size=32)
-
     if is_validation:
-        path_output = os.path.join(path_output, f'whitebox-L{norm}-{X_adv.size(0)}-{eps}-val.pt')
+        path_output = os.path.join(path_output, f'whitebox-L{norm}-{X_clean.size(0)}-{eps}-val.pt')
     else:
-        path_output = os.path.join(path_output, f'whitebox-L{norm}-{X_adv.size(0)}-{eps}.pt')
-    print('Save results to:', path_output)
-    torch.save(TensorDataset(X_adv, y_clean), path_output)
+        path_output = os.path.join(path_output, f'whitebox-L{norm}-{X_clean.size(0)}-{eps}.pt')
+
+    if os.path.exists(path_output):
+        print(f'Found {path_output} Skip!')
+    else:
+        latent_net = ApplicabilityStage.get_latent_net(model, data_name=data_name)
+        X_nearest_target = find_targets(model, X_clean, X_train, latent_net=latent_net)
+        X_adv = generate_adv(model, X_clean, X_nearest_target,
+                             eps_iter=eps_iter, norm=norm, eps=eps,
+                             n_iter=100, batch_size=32)
+
+        print('Save results to:', path_output)
+        torch.save(TensorDataset(X_adv, y_clean), path_output)
 
 
 if __name__ == '__main__':
