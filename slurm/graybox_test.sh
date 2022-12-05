@@ -1,9 +1,9 @@
 #!/bin/bash -e
-#SBATCH --job-name=graybox543
-#SBATCH --output=logs/graybox543_%a.out
-#SBATCH --time=48:00:00
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=20G
+#SBATCH --job-name=graybox_test
+#SBATCH --output=logs/graybox_test_%a.out
+#SBATCH --time=10:00
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=8G
 
 module load CUDA
 module load Python/3.9.9-gimkl-2020a
