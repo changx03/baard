@@ -3,10 +3,8 @@
 #SBATCH --output=logs/graybox_test_%a.out
 #SBATCH --time=10:00
 #SBATCH --cpus-per-task=4
-#SBATCH --gpus-per-node=1
 #SBATCH --mem=8G
 
-module load CUDA/11.6.2
 module load Python/3.9.9-gimkl-2020a
 source /nesi/project/uoa03637/baard_v4/.venv/bin/activate
 
