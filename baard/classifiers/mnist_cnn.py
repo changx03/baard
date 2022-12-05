@@ -12,8 +12,7 @@ from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.loggers import TensorBoardLogger
 from torch.utils.data import DataLoader
 
-PATH_ROOT = Path(os.getcwd()).absolute()
-PATH_DATA = 'data'
+PATH_ROOT = Path(os.getcwd())
 PATH_DEFAULT_LOGS = os.path.join(PATH_ROOT, 'logs')
 NUM_WORKERS = os.cpu_count()
 BATCH_SIZE = 256 if torch.cuda.is_available() else 32
@@ -26,7 +25,6 @@ class MNIST_CNN(pl.LightningModule):
     def __init__(self,
                  lr=0.05,
                  batch_size=BATCH_SIZE,
-                 path_data=PATH_DATA,
                  num_workers=NUM_WORKERS):
         super(MNIST_CNN, self).__init__()
 
@@ -111,16 +109,12 @@ class MNIST_CNN(pl.LightningModule):
         }
 
     def train_dataloader(self):
-        # dataset_train = tv.datasets.MNIST(self.hparams.path_data, train=True,
-        #                                   download=True, transform=self.transforms)
         dataset_train = tv.datasets.MNIST('data', train=True,
                                           download=True, transform=self.transforms)
         return DataLoader(dataset_train, batch_size=self.hparams.batch_size,
                           shuffle=True, num_workers=self.hparams.num_workers)
 
     def val_dataloader(self):
-        # dataset_test = tv.datasets.MNIST(self.hparams.path_data, train=False,
-        #                                  download=True, transform=self.transforms)
         dataset_test = tv.datasets.MNIST('data', train=False,
                                          download=True, transform=self.transforms)
         return DataLoader(dataset_test, batch_size=self.hparams.batch_size,
@@ -129,7 +123,7 @@ class MNIST_CNN(pl.LightningModule):
 
 if __name__ == '__main__':
     # Examples:
-    # python ./classifiers/mnist_cnn.py
+    # python ./baard/classifiers/mnist_cnn.py
 
     parser = ArgumentParser()
     parser = pl.Trainer.add_argparse_args(parser)
@@ -153,7 +147,7 @@ if __name__ == '__main__':
 
     pl.seed_everything(args.seed)
 
-    model = MNIST_CNN()
+    my_model = MNIST_CNN()
     trainer = pl.Trainer.from_argparse_args(
         args,
         accelerator='auto',
@@ -181,10 +175,10 @@ if __name__ == '__main__':
     # )
     ############################################################################
 
-    trainer.fit(model)
+    trainer.fit(my_model)
 
     print('On train set:')
-    trainer.test(model, model.train_dataloader())
+    trainer.test(my_model, my_model.train_dataloader())
 
     print('On test set:')
-    trainer.test(model, model.val_dataloader())
+    trainer.test(my_model, my_model.val_dataloader())
