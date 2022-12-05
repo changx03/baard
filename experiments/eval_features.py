@@ -13,19 +13,35 @@ from baard.utils.eval_utils import compute_roc_auc, tpr_at_n_fpr
 logger = logging.getLogger(__name__)
 
 
-def eval_features(path_input, path_output, file_clean, file_adv,
+def get_val_filename(filename):
+    """Add `-val` at the end."""
+    name, ext = os.path.splitext(filename)
+    return name + '-val' + ext
+
+
+def eval_features(path_input, path_output, file_test_clean, file_test_adv,
                   filename_output=None) -> Union[DataFrame, DataFrame]:
     """Compute ans save ROC, AUC, TPR at 1%, 5% and 10% FPR. Returns (ROC, others).
     """
-    logger.info('Read adv from: %s', file_adv)
-    path_clean = os.path.join(path_input, file_clean)
-    path_adv = os.path.join(path_input, file_adv)
+    logger.info('Read adv from: %s', file_test_adv)
+    path_test_clean = os.path.join(path_input, file_test_clean)
+    path_test_adv = os.path.join(path_input, file_test_adv)
+
+    # The validation set always has `-val` at the end.
+    file_val_clean = get_val_filename(file_test_clean)
+    file_val_val = get_val_filename(file_test_adv)
+    path_val_clean = os.path.join(path_input, file_val_clean)
+    path_val_adv = os.path.join(path_input, file_val_val)
 
     errors = []
-    if not os.path.exists(path_clean):
-        errors.append(path_clean)
-    if not os.path.exists(path_adv):
-        errors.append(path_adv)
+    if not os.path.exists(path_test_clean):
+        errors.append(path_test_clean)
+    if not os.path.exists(path_test_adv):
+        errors.append(path_test_adv)
+    if not os.path.exists(path_val_clean):
+        errors.append(path_val_clean)
+    if not os.path.exists(path_val_adv):
+        errors.append(path_val_adv)
     if len(errors) != 0:
         logger.warning('Cannot find %s Return empty DataFrame', errors)
         return (
@@ -33,16 +49,19 @@ def eval_features(path_input, path_output, file_clean, file_adv,
             DataFrame({'auc': [0], '1fpr': [0], '5fpr': [0], '10fpr': [0]}),
         )
 
-    features_clean = torch.load(path_clean)
-    features_adv = torch.load(path_adv)
-    fpr, tpr, auc_score, thresholds = compute_roc_auc(features_clean, features_adv)
+    test_clean = torch.load(path_test_clean)
+    test_adv = torch.load(path_test_adv)
+    train_clean = torch.load(path_val_clean)
+    train_adv = torch.load(path_val_adv)
+    fpr, tpr, auc_score, thresholds = compute_roc_auc(
+        test_clean, test_adv, train_clean, train_adv)
     tpr_1fpr, _ = tpr_at_n_fpr(fpr, tpr, thresholds, n_fpr=0.01)
     tpr_5fpr, _ = tpr_at_n_fpr(fpr, tpr, thresholds, n_fpr=0.05)
     tpr_10fpr, _ = tpr_at_n_fpr(fpr, tpr, thresholds, n_fpr=0.1)
 
     # Use `file_adv` name to store
     if filename_output is None:
-        filename_output = Path(file_adv).stem  # Remove extension
+        filename_output = Path(file_test_adv).stem  # Remove extension
     # Use DataFrame to save ROC
     data_roc = {
         'fpr': fpr,

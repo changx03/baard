@@ -2,6 +2,7 @@
 import numpy as np
 import sklearn.metrics as metrics
 from sklearn.linear_model import LogisticRegressionCV
+from numpy.typing import ArrayLike
 
 
 def tpr_at_n_fpr(fprs, tprs, thresholds, n_fpr: float = 0.05):
@@ -22,11 +23,13 @@ def tpr_at_n_fpr(fprs, tprs, thresholds, n_fpr: float = 0.05):
     return tpr_at_fpr, threshold_at_fpr
 
 
-def compute_roc_auc(features_clean, features_adv):
-    """Return FPR, TPR, ROC_AUC and thresholds."""
-    assert features_clean.shape == features_adv.shape, \
+def combine_extracted_features(X_clean: ArrayLike, X_adv: ArrayLike):
+    """Transform clean and adversarial features into one dataset, with adversarial
+    labelled as 1 and clean labeled as 0.
+    """
+    assert X_clean.shape == X_adv.shape, \
         'Clean and their counter adv examples should have the same shape!'
-    features_mix = np.concatenate([features_clean, features_adv])
+    features_mix = np.concatenate([X_clean, X_adv])
     n_mix = len(features_mix)
     # Fit regression even with only 1 feature per sample!
     features_mix = np.reshape(features_mix, (n_mix, -1))
@@ -35,39 +38,23 @@ def compute_roc_auc(features_clean, features_adv):
     features_mix = np.nan_to_num(features_mix, nan=9999, posinf=9999, neginf=-9999)
 
     # Prepare labels: clean: 0, adversarial examples: 1
-    labels_mix = np.concatenate(
-        [np.zeros(len(features_clean)), np.ones(len(features_adv))])
+    labels_mix = np.concatenate([np.zeros(len(X_clean)), np.ones(len(X_adv))])
+    return features_mix, labels_mix
+
+
+def compute_roc_auc(test_clean: ArrayLike, test_adv: ArrayLike,
+                    train_clean: ArrayLike, train_adv: ArrayLike
+                    ) -> tuple[ArrayLike, ArrayLike, float, float]:
+    """Return FPR, TPR, ROC_AUC and thresholds."""
+    X_train, y_train = combine_extracted_features(train_clean, train_adv)
+    X_test, y_test = combine_extracted_features(test_clean, test_adv)
 
     regressor = LogisticRegressionCV(max_iter=5000)
-    regressor.fit(features_mix, labels_mix)
-    pred = regressor.predict_proba(features_mix)
+    regressor.fit(X_train, y_train)
+    pred = regressor.predict_proba(X_test)
     pred = pred[:, 1]
 
-    fpr, tpr, thresholds = metrics.roc_curve(labels_mix, pred)
+    fpr, tpr, thresholds = metrics.roc_curve(y_test, pred)
     auc_score = metrics.auc(fpr, tpr)
 
     return fpr, tpr, auc_score, thresholds
-
-
-# def test_compute_roc_auc():
-#     import os
-#     import torch
-
-#     detector_name = 'DecidabilityStage_tuneK'
-#     _detector_name = detector_name.split('_')[0]
-#     data_name = 'CIFAR10'
-#     # attack_name = 'APGD-inf'
-#     # eps = 0.01
-#     attack_name = 'APGD-2'
-#     eps = 0.3
-#     k = 3
-#     path = os.path.join('results', 'exp643896', data_name, detector_name, attack_name)
-#     file_clean = f'{_detector_name}-{k}-{data_name}-{attack_name}-clean.pt'
-#     features_clean = torch.load(os.path.join(path, file_clean))
-#     file_adv = f'{_detector_name}-{k}-{data_name}-{attack_name}-{eps}.pt'
-#     features_adv = torch.load(os.path.join(path, file_adv))
-#     compute_roc_auc(features_clean, features_adv)
-
-
-# if __name__ == '__main__':
-#     test_compute_roc_auc()
