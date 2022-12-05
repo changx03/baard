@@ -4,10 +4,10 @@
 #SBATCH --time=48:00:00
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=20G
-#SBATCH --gres=gpu:1
+#SBATCH --gpus-per-node=1
 #SBATCH --array=0-9
 
-module load CUDA
+module load CUDA/11.6.2
 module load Python/3.9.9-gimkl-2020a
 source /nesi/project/uoa03637/baard_v4/.venv/bin/activate
 
