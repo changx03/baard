@@ -2,8 +2,8 @@
 #SBATCH --job-name=graybox543
 #SBATCH --output=logs/graybox543_%j_%a.out
 #SBATCH --time=48:00:00
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=20G
+#SBATCH --cpus-per-task=24
+#SBATCH --mem=24G
 #SBATCH --gpus-per-node=1
 #SBATCH --array=0-9
 
