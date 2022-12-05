@@ -90,7 +90,8 @@ def generate_adv_examples(data: str,
     # Step 1: Get correct labelled data
     model = get_model(data)
     val_loader = model.val_dataloader()
-    num_workers = os.cpu_count()
+    # num_workers = os.cpu_count()
+    num_workers = 16
     print('num_workers:', num_workers)
     path_correct_val_dataset = os.path.join(path_outputs, 'CorrectValDataset.pt')
 

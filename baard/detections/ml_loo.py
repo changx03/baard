@@ -105,8 +105,11 @@ class MLLooDetector(Detector):
 
         # Train adversarial examples
         X_adv = torch.zeros_like(X)
-        dataloader_adv = DataLoader(TensorDataset(X), batch_size=ADV_BATCH_SIZE,
-                                    num_workers=os.cpu_count(), shuffle=False)
+        dataloader_adv = DataLoader(TensorDataset(X),
+                                    batch_size=ADV_BATCH_SIZE,
+                                    # num_workers=os.cpu_count(),
+                                    num_workers=16,
+                                    shuffle=False)
         start = 0
         pbar = tqdm(dataloader_adv, total=len(dataloader_adv))
         pbar.set_description('Running APGD mini-batch for ML-Loo', refresh=False)

@@ -86,8 +86,10 @@ class LIDDetector(Detector):
         X_noise = self.add_gaussian_noise(X, self.noise_eps, self.clip_range)
 
         X_adv = torch.zeros_like(X)
+        # num_workers = os.cpu_count()
+        num_workers = 16
         dataloader_adv = DataLoader(TensorDataset(X), batch_size=ADV_BATCH_SIZE,
-                                    num_workers=os.cpu_count(), shuffle=False)
+                                    num_workers=num_workers, shuffle=False)
         start = 0
         pbar = tqdm(dataloader_adv, total=len(dataloader_adv))
         pbar.set_description('Running APGD mini-batch for LID', refresh=False)

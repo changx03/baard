@@ -47,7 +47,8 @@ def load_data(seed: int, data_name: str, model: LightningModule,
     # Disable shuffle.
     X_train, y_train = tr_utils.dataloader2tensor(loader_train)
     loader_train = DataLoader(TensorDataset(X_train, y_train),
-                              num_workers=os.cpu_count(),
+                              #   num_workers=os.cpu_count(),
+                              num_workers=16,
                               shuffle=False,
                               batch_size=loader_train.batch_size)
     dataset_train_correct = tr_utils.get_correct_examples(model, loader_train, return_loader=False)
@@ -63,7 +64,8 @@ def find_targets(model: LightningModule, X: Tensor, X_val: Tensor,
     """Find target examples for each X."""
     # Find the original prediction from the classifier. Avoid label leaking.
     if num_workers is None:
-        num_workers = os.cpu_count()
+        # num_workers = os.cpu_count()
+        num_workers = 16
     dataloader = DataLoader(
         TensorDataset(X), batch_size=128, shuffle=False, num_workers=num_workers)
     Y = tr_utils.predict(model, dataloader)
@@ -113,7 +115,8 @@ def generate_adv(model: LightningModule, X_clean: Tensor, X_target: Tensor,
                  ) -> Tensor:
     """Generate targeted white-box adaptive adversarial examples"""
     if num_workers is None:
-        num_workers = os.cpu_count()
+        # num_workers = os.cpu_count()
+        num_workers = 16
     dataset = TensorDataset(X_clean, X_target)
     dataloader = DataLoader(
         dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)

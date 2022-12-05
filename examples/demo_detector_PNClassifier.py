@@ -51,7 +51,8 @@ def run_demo():
 
     model = MNIST_CNN.load_from_checkpoint(PATH_CHECKPOINT)
     batch_size = model.train_dataloader().batch_size
-    num_workers = os.cpu_count()
+    # num_workers = os.cpu_count()
+    num_workers = 16
 
     # Train PN Classifier
     ############################################################################

@@ -17,7 +17,8 @@ class Detector(ABC):
         self.model = model
         self.data_name = data_name
 
-        self.num_workers = os.cpu_count()
+        # self.num_workers = os.cpu_count()
+        self.num_workers = 16
 
         # Parameters from LightningModule:
         self.batch_size = self.model.train_dataloader().batch_size

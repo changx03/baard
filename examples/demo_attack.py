@@ -54,8 +54,10 @@ def generate_attack():
     x, y = dataloader2tensor(dataloader)
 
     dataset = TensorDataset(x[:5])
+    # num_workers = os.cpu_count()
+    num_workers = 16
     loader = DataLoader(dataset, batch_size=val_dataloader.batch_size,
-                        num_workers=os.cpu_count(), shuffle=False)
+                        num_workers=num_workers, shuffle=False)
 
     trainer = pl.Trainer(accelerator='auto',
                          logger=False,

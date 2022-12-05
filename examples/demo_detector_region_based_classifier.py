@@ -83,7 +83,8 @@ def run_demo():
     preds_adv = detector.predict(X_eval_adv)
     dataloader = DataLoader(TensorDataset(X_eval_adv),
                             batch_size=detector.batch_size,
-                            num_workers=os.cpu_count(),
+                            # num_workers=os.cpu_count(),
+                            num_workers=16,
                             shuffle=False)
     preds_adv_origin = predict(my_model, dataloader)
     print(' True:', y_eval_true)
