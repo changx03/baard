@@ -20,13 +20,13 @@ for SEED in ${SEEDS[@]}; do
         ATTACK="APGD"
         NORMS=("inf" "2")
         for NORM in ${NORMS[@]}; do
-            echo "Running $DETECTOR on $DATA with $ATTACK L$NORM"
+            echo "Running ${DETECTORS[$SLURM_ARRAY_TASK_ID]} on $DATA with $ATTACK L$NORM"
             python /nesi/project/uoa03637/baard_v4/experiments/extract_features.py -s $SEED --data $DATA --attack $ATTACK -l $NORM --detector ${DETECTORS[$SLURM_ARRAY_TASK_ID]}
         done
 
         ATTACK="CW2"
         NORM="2"
-        echo "Running $DETECTOR on $DATA with $ATTACK L$NORM"
+        echo "Running ${DETECTORS[$SLURM_ARRAY_TASK_ID]} on $DATA with $ATTACK L$NORM"
         python /nesi/project/uoa03637/baard_v4/experiments/extract_features.py -s $SEED --data $DATA --attack $ATTACK -l $NORM --detector ${DETECTORS[$SLURM_ARRAY_TASK_ID]}
     done
 done
