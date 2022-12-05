@@ -9,7 +9,7 @@
 
 module load CUDA
 module load Python/3.9.9-gimkl-2020a
-source /nesi/project/uoa03637/baard_v4/venv/bin/activate
+source /nesi/project/uoa03637/baard_v4/.venv/bin/activate
 
 SEEDS=(543597 466364 382347)
 DETECTORS=("BAARD-S1" "BAARD-S2" "BAARD-S3" "BAARD" "FS" "LID" "ML-LOO" "Odds" "PN" "RC")

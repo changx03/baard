@@ -7,7 +7,7 @@
 
 module load CUDA
 module load Python/3.9.9-gimkl-2020a
-source /nesi/project/uoa03637/baard_v4/venv/bin/activate
+source /nesi/project/uoa03637/baard_v4/.venv/bin/activate
 
 SEED=382347
 DATA="MNIST"
