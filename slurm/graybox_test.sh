@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #SBATCH --job-name=graybox_test
-#SBATCH --output=logs/graybox_test_%a.out
+#SBATCH --output=logs/graybox_test_%j_%a.out
 #SBATCH --time=10:00
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=8G

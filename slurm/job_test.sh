@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #SBATCH --job-name=test_job
-#SBATCH --output=logs/test_job_%a.out
+#SBATCH --output=logs/test_job_%j_%a.out
 #SBATCH --time=5:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=2G

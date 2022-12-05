@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #SBATCH --job-name=graybox543
-#SBATCH --output=logs/graybox543_%a.out
+#SBATCH --output=logs/graybox543_%j_%a.out
 #SBATCH --time=48:00:00
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=20G
