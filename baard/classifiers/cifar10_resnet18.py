@@ -13,7 +13,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from torch.utils.data import DataLoader
 
 PATH_ROOT = Path(os.getcwd()).absolute()
-PATH_DATA = os.path.join(PATH_ROOT, 'data')
+PATH_DATA = 'data'
 PATH_DEFAULT_LOGS = os.path.join(PATH_ROOT, 'logs')
 NUM_WORKERS = os.cpu_count()
 BATCH_SIZE = 256 if torch.cuda.is_available() else 32
@@ -115,14 +115,18 @@ class CIFAR10_ResNet18(pl.LightningModule):
         }
 
     def train_dataloader(self):
-        dataset_train = tv.datasets.CIFAR10(self.hparams.path_data, train=True,
+        # dataset_train = tv.datasets.CIFAR10(self.hparams.path_data, train=True,
+        #                                     download=True, transform=self.train_transforms)
+        dataset_train = tv.datasets.CIFAR10('data', train=True,
                                             download=True, transform=self.train_transforms)
         loader_train = DataLoader(dataset_train, batch_size=self.hparams.batch_size,
                                   shuffle=True, num_workers=self.hparams.num_workers)
         return loader_train
 
     def val_dataloader(self):
-        dataset_test = tv.datasets.CIFAR10(self.hparams.path_data, train=False,
+        # dataset_test = tv.datasets.CIFAR10(self.hparams.path_data, train=False,
+        #                                    download=True, transform=self.test_transforms)
+        dataset_test = tv.datasets.CIFAR10('data', train=False,
                                            download=True, transform=self.test_transforms)
         loader_test = DataLoader(dataset_test, batch_size=self.hparams.batch_size,
                                  shuffle=False, num_workers=self.hparams.num_workers)

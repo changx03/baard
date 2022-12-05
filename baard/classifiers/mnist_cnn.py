@@ -111,13 +111,17 @@ class MNIST_CNN(pl.LightningModule):
         }
 
     def train_dataloader(self):
-        dataset_train = tv.datasets.MNIST(self.hparams.path_data, train=True,
+        # dataset_train = tv.datasets.MNIST(self.hparams.path_data, train=True,
+        #                                   download=True, transform=self.transforms)
+        dataset_train = tv.datasets.MNIST('data', train=True,
                                           download=True, transform=self.transforms)
         return DataLoader(dataset_train, batch_size=self.hparams.batch_size,
                           shuffle=True, num_workers=self.hparams.num_workers)
 
     def val_dataloader(self):
-        dataset_test = tv.datasets.MNIST(self.hparams.path_data, train=False,
+        # dataset_test = tv.datasets.MNIST(self.hparams.path_data, train=False,
+        #                                  download=True, transform=self.transforms)
+        dataset_test = tv.datasets.MNIST('data', train=False,
                                          download=True, transform=self.transforms)
         return DataLoader(dataset_test, batch_size=self.hparams.batch_size,
                           shuffle=False, num_workers=self.hparams.num_workers)
