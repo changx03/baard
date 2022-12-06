@@ -11,7 +11,8 @@ from torch.utils.data import DataLoader
 from baard.classifiers import get_lightning_module
 from baard.utils.torch_utils import get_score
 
-SEED = 727328
+# SEED = 727328
+SEED = 829257  # Using a new seed
 PATH_ROOT = os.getcwd()
 PATH_RESULTS = os.path.join(PATH_ROOT, 'results', f'exp{SEED}')
 DATA_NAMES = ['MNIST', 'CIFAR10']
@@ -36,6 +37,7 @@ def compute_list_acc(model, data_name, norm, attack_name='whitebox'):
         PATH_RESULTS, data_name, f'{attack_name}-L{norm}-1000-*.pt'
     )
     dataset_list = glob(path_name)
+    dataset_list = [d for d in dataset_list if is_float(Path(d).stem.split('-')[-1])]
 
     acc = []
     for d in dataset_list:
@@ -45,6 +47,17 @@ def compute_list_acc(model, data_name, norm, attack_name='whitebox'):
         _acc = get_score(model, dataloader)
         acc.append(_acc)
     return np.array(acc), dataset_list
+
+
+def is_float(element: any) -> bool:
+    # If you expect None to be passed:
+    if element is None:
+        return False
+    try:
+        float(element)
+        return True
+    except ValueError:
+        return False
 
 
 def save_acc():
