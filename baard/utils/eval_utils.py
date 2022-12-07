@@ -49,7 +49,7 @@ def compute_roc_auc(test_clean: ArrayLike, test_adv: ArrayLike,
     X_train, y_train = combine_extracted_features(train_clean, train_adv)
     X_test, y_test = combine_extracted_features(test_clean, test_adv)
 
-    regressor = LogisticRegressionCV(max_iter=5000)
+    regressor = LogisticRegressionCV(max_iter=50000)
     regressor.fit(X_train, y_train)
     pred = regressor.predict_proba(X_test)
     pred = pred[:, 1]
