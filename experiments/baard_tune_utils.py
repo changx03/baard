@@ -78,7 +78,8 @@ def baard_tune_k(path_output: str, detector_name: str, data_name: str, attack_na
 def baard_tune_sample_size(path_output: str, detector_name: str, data_name: str, attack_name: str, l_norm: str,
                            path_adv: str, eps: str, k: str) -> None:
     """Tune BAARD Stage 2: Reliability."""
-    sample_size_list = np.concatenate([100, 500], np.arange(1000, 50000, 1000)).astype(int)
+    # sample_size_list = np.concatenate([100, 500], np.arange(1000, 50000, 1000)).astype(int)
+    sample_size_list = np.arange(1000, 10001, 1000)
     path_checkpoint = get_pretrained_model_path(data_name)
     model = get_lightning_module(data_name).load_from_checkpoint(path_checkpoint)
 
