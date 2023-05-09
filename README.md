@@ -1,5 +1,15 @@
 # BAARD: Blocking Adversarial examples by testing for Applicability, Reliability and Decidability
 
+BAARD is a framework for detecting adversarial examples.
+
+This is the repository for the paper -- _BAARD: Blocking Adversarial examples by testing for Applicability, Reliability and Decidability_, which is accepted by PAKDD 2023.
+
+(TODO: Paper link will be updated.)
+
+## Abstract
+
+Adversarial defenses protect machine learning models from adversarial attacks, but are often tailored to one type of model or attack. The lack of information on unknown potential attacks makes detecting adversarial examples challenging. Additionally, attackers do not need to follow the rules made by the defender. To address this problem, we take inspiration from the concept of Applicability Domain in cheminformatics. Cheminformatics models struggle to make accurate predictions because only a limited number of compounds are known and available for training. Applicability Domain defines a domain based on the known compounds and rejects any unknown compound that falls outside the domain. Similarly, adversarial examples start as harmless inputs, but can be manipulated to evade reliable classification by moving outside the domain of the classifier. We are the first to identify the similarity between Applicability Domain and adversarial detection. Instead of focusing on unknown attacks, we focus on what is known, the training data. We propose a simple yet robust triple-stage data-driven framework that checks the input globally and locally, and confirms that they are coherent with the model's output. This framework can be applied to any classification model and is not limited to specific attacks. We demonstrate these three stages work as one unit, effectively detecting various attacks, even for a white-box scenario.
+
 ## Install
 
 Required packages:
@@ -113,7 +123,7 @@ python ./experiments/train_adv_examples.py [-s SEED] [-d DATASET_NAME] [--n_att 
 ### Available options
 
 - '-s', '--seed': Seed value. The **output folder name** is based on the seed value.
-- '-d', '--data': Dataset. Either `MNIST` or `CIFAR10`. (TODO: Add SVHN, and tabular datasets.)
+- '-d', '--data': Dataset. Either `MNIST` or `CIFAR10`.
 - '--n_att': Number of adversarial examples want to generate. Default is `100`. Use `1000` for the actual experiment.
 - '--n_val': Number of validation examples. The validation set comes from the correctly classified test set.
   This set will be used by the defense. In the experiment, use `1000`. `n_att + n_val` must be smaller than test set. Default is `1000`.
@@ -121,6 +131,20 @@ python ./experiments/train_adv_examples.py [-s SEED] [-d DATASET_NAME] [--n_att 
 - '--eps': A list of epsilons as a JSON string. e.g., --eps="[0.06, 0.13, 0.25]". In C&W attack, this controls the confidence parameter c. Default is "[0.06]".
 - '--params': Parameters for the adversarial attack as a JSON string. e.g., `{"norm":"inf", "clip_min":0, "clip_max":1}`.
   This JSON string will be converted into a dictionary and pass directly to the attack. Check `./baard/attacks` to see the specific parameters for each attack.
+
+### List of tabular datasets
+
+We prepared several tabular data for testing. The code [here](experiments/tabular_preprocessing.ipynb) shows the preprocessing process.
+
+- `abalone`
+- `banknote`
+- `BC`
+- `CMC`
+- `HTRU2`
+- `phoneme`
+- `ringnorm`
+- `texture`
+- `yeast`
 
 ### NOTE
 
@@ -133,10 +157,6 @@ Generating 100 adversarial examples on `MNIST` using FGSM on L2 norm with Epsilo
 ```bash
 python ./experiments/train_adv_examples.py -d=MNIST --attack=FGSM --params='{"norm":"inf", "clip_min":0, "clip_max":1}' --eps="[0.06]" --n_att=100 --n_val=1000
 ```
-
-## Extracting Features Using Detectors
-
-TODO: Explain the code.
 
 ## Code demo
 
