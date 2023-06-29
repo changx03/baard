@@ -4,7 +4,7 @@ BAARD is a framework for detecting adversarial examples.
 
 This is the repository for the paper -- _BAARD: Blocking Adversarial examples by testing for Applicability, Reliability and Decidability_, which is accepted by PAKDD 2023.
 
-(TODO: Paper link will be updated.)
+Paper link: [https://doi.org/10.1007/978-3-031-33374-3_1](https://link.springer.com/chapter/10.1007/978-3-031-33374-3_1)
 
 ## Abstract
 
